@@ -101,7 +101,7 @@ const static ss_t SS_FULL = 0UL;
 #define SS_SIZE (sizeof(ss_t)*8)
 
 // slot set group
-#define SSG_COUNT (16/sizeof(ss_t))
+#define SSG_COUNT (8/sizeof(ss_t))
 #define SSG_SIZE (SSG_COUNT*SS_SIZE)
 
 typedef struct _ssg {
@@ -170,7 +170,7 @@ struct _pool {
 	pool* successor;
 };
 
-pool* pool_init(unsigned objsize)
+pool* pool_create(unsigned objsize)
 {
 	pool* pl;
 	unsigned char* buf;
@@ -204,7 +204,7 @@ void* pool_alloc(pool* pl)
 	assert(pl);
 	if (ssg_full(pl->slots)) {
 		if (!pl->successor) {
-			pl->successor = pool_init(pl->objsize);
+			pl->successor = pool_create(pl->objsize);
 		}
 		return pool_alloc(pl->successor);
 	} else {
@@ -228,9 +228,9 @@ void pool_free(pool* pl, void* ptr)
 		assert(ssg_test(pl->slots, slot)); // check we had it marked
 		pl->slots = ssg_unmark(pl->slots, slot);
 	} else {
-		if (pl->successor)
+		if (pl->successor) {
 			pool_free(pl->successor, ptr);
-		else {
+		} else {
 			assert(0 && "trying to free a non-allocated pointer");
 		}
 	}

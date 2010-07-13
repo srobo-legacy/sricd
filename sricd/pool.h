@@ -8,7 +8,7 @@ extern "C"
 
 typedef struct _pool pool;
 
-pool* pool_init(unsigned objsize);
+pool* pool_create(unsigned objsize);
 void pool_destroy(pool* pl);
 
 void* pool_alloc(pool* pl);
