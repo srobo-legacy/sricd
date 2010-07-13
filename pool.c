@@ -32,7 +32,41 @@ static inline unsigned dbpot(unsigned x, unsigned y)
 // slot set
 typedef unsigned long ss_t;
 
+#ifdef __ARM__
+#define REVERSE_SS
+#endif
+
 // find an unmarked location
+#ifdef REVERSE_SS
+
+#define SIGNBIT 0x80000000
+
+static inline int ss_find(ss_t x)
+{
+	return __builtin_clz(x);
+}
+
+static inline bool ss_test(ss_t x, int idx)
+{
+	ss_t mask = SIGNBIT;
+	mask >>= idx;
+	return (x & mask) == 0;
+}
+
+static inline ss_t ss_mark(ss_t x, int idx)
+{
+	ss_t mask = SIGNBIT;
+	mask >>= idx;
+	return x & ~mask;
+}
+
+static inline ss_t ss_unmark(ss_t x, int idx)
+{
+	ss_t mask = SIGNBIT;
+	mask >>= idx;
+	return x | mask;
+}
+#else
 static inline int ss_find(ss_t x)
 {
 	return __builtin_ctz(x);
@@ -58,6 +92,7 @@ static inline ss_t ss_unmark(ss_t x, int idx)
 	mask <<= idx;
 	return x | mask;
 }
+#endif
 
 const static ss_t SS_EMPTY = -1UL;
 const static ss_t SS_FULL = 0UL;
