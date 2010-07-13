@@ -17,6 +17,12 @@ static unsigned npot(unsigned x)
 	return x;
 }
 
+// calculate x*y fast, given that y is a power of two
+static inline unsigned mbpot(unsigned x, unsigned y)
+{
+	return x << (__builtin_ctz(y));
+}
+
 // calculate x/y fast, given that y is a power of two
 static inline unsigned dbpot(unsigned x, unsigned y)
 {
@@ -103,7 +109,7 @@ void* pool_alloc(pool* pl)
 		return pool_alloc(pl->successor);
 	} else {
 		int pos = ss_find(pl->slots);
-		unsigned char* loc = pl->source + (pl->objsize*pos);
+		unsigned char* loc = pl->source + mbpot(pos, pl->objsize);
 		pl->slots = ss_mark(pl->slots, pos);
 		return loc;
 	}
