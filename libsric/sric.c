@@ -37,6 +37,7 @@ sric_context sric_init(void)
 	address.sun_family = AF_UNIX;
 	strcpy(address.sun_path, SRICD_PATH);
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	len = strlen(SRICD_PATH) + sizeof(address.sun_family);
 	if (!fd) return 0;
 	if (connect(fd, (const struct sockaddr*)&address, len)) {
 		close(fd);
