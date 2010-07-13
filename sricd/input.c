@@ -13,7 +13,8 @@ struct _input_listener
 {
 	int fd;
 	input_event callback;
-	input_error_event err_callback;
+	input_event err_callback;
+	input_event out_callback;
 	void* userdata;
 	input_listener* next;
 };
@@ -33,7 +34,31 @@ static void invoke_and_drop(int fd)
 				listener_first = cur->next;
 			}
 			--listener_count;
-			cur->callback(cur->fd, cur->userdata);
+			if (cur->callback)
+				cur->callback(cur->fd, cur->userdata);
+			pool_free(listener_pool, cur);
+			return;
+		} else {
+			prev = cur;
+			cur = cur->next;
+		}
+	}
+}
+
+static void out_and_drop(int fd)
+{
+	input_listener* prev = NULL;
+	input_listener* cur = listener_first;
+	while (cur) {
+		if (cur->fd == fd) {
+			if (prev) {
+				prev->next = cur->next;
+			} else {
+				listener_first = cur->next;
+			}
+			--listener_count;
+			if (cur->out_callback)
+				cur->out_callback(cur->fd, cur->userdata);
 			pool_free(listener_pool, cur);
 			return;
 		} else {
@@ -55,7 +80,8 @@ static void error_and_drop(int fd)
 				listener_first = cur->next;
 			}
 			--listener_count;
-			cur->err_callback(cur->fd, cur->userdata);
+			if (cur->err_callback)
+				cur->err_callback(cur->fd, cur->userdata);
 			pool_free(listener_pool, cur);
 			return;
 		} else {
@@ -70,11 +96,13 @@ void input_init(void)
 	listener_pool = pool_create(sizeof(input_listener));
 }
 
-void input_listen(int fd, input_event callback, input_error_event err_callback, void* ud)
+void input_listen(int fd, input_event callback,
+                          input_event err_callback,
+                          input_event out_callback, void* ud)
 {
 	input_listener* new = pool_alloc(listener_pool);
 	assert(fd > 0);
-	assert(callback || err_callback);
+	assert(callback || err_callback || out_callback);
 	new->fd = fd;
 	new->callback = callback;
 	new->err_callback = err_callback;
@@ -95,6 +123,8 @@ void input_update(void)
 	while (listener) {
 		descriptors[i].fd = listener->fd;
 		descriptors[i].events = POLLIN;
+		if (listener->out_callback)
+			descriptors[i].events |= POLLOUT;
 		descriptors[i].revents = 0;
 		listener = listener->next;
 		++i;
@@ -112,7 +142,9 @@ void input_update(void)
 	for (i = 0; i < rv; ++i) {
 		if (descriptors[i].revents & POLLIN) {
 			invoke_and_drop(descriptors[i].fd);
-		} else if (descriptors[i].revents & (POLLHUP | POLLERR)) {
+		} else if (descriptors[i].revents & POLLOUT) {
+			out_and_drop(descriptors[i].fd);
+		} else if (descriptors[i].revents & (POLLHUP | POLLERR | POLLNVAL)) {
 			error_and_drop(descriptors[i].fd);
 		}
 	}

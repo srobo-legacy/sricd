@@ -12,7 +12,7 @@ extern "C"
 
 typedef struct _tx {
 	int address;
-	int tag; // if tag == -1, this is a response
+	void* tag; // if tag == NULL, this is a response
 	int payload_length;
 	char payload[PAYLOAD_MAX];
 } tx;
