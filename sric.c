@@ -1,0 +1,241 @@
+#include "sric.h"
+#include <assert.h>
+#include <string.h>
+#include <poll.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <arpa/inet.h>
+#include <sys/un.h>
+
+static const char* SRICD_PATH = "/tmp/sricd.sock";
+
+static const unsigned char SRICD_TX = 0;
+static const unsigned char SRICD_NOTE_FLAGS = 1;
+static const unsigned char SRICD_POLL_RX = 2;
+static const unsigned char SRICD_POLL_NOTE = 3;
+static const unsigned char SRICD_NOTE_CLEAR = 4;
+
+static const unsigned char SRIC_E_BADADDR = 1;
+static const unsigned char SRIC_E_TIMEOUT = 2;
+
+struct _sric_context {
+	int fd;
+	sric_error error;
+	uint64_t noteflags[SRIC_HIGH_ADDRESS];
+};
+
+sric_context sric_init(void)
+{
+	struct sockaddr_un address;
+	socklen_t len;
+	int fd;
+	sric_context ctx;
+	address.sun_family = AF_UNIX;
+	strcpy(address.sun_path, SRICD_PATH);
+	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (!fd) return 0;
+	if (connect(fd, (const struct sockaddr*)&address, len)) {
+		close(fd);
+		return 0;
+	}
+	ctx = malloc(sizeof(sric_context));
+	assert(ctx);
+	memset(ctx, 0, sizeof(*ctx));
+	ctx->fd = fd;
+	return ctx;
+}
+
+void sric_quit(sric_context ctx)
+{
+	close(ctx->fd);
+	free(ctx);
+}
+
+sric_error sric_get_error(sric_context ctx)
+{
+	return ctx ? ctx->error : SRIC_ERROR_SRICD;
+}
+
+void sric_clear_error(sric_context ctx)
+{
+	if (ctx)
+		ctx->error = SRIC_ERROR_NONE;
+}
+
+static bool check_address(sric_context ctx, int address, bool allow_broadcast)
+{
+	if (address < 0) {
+		ctx->error = SRIC_ERROR_NOSUCHADDRESS;
+		return false;
+	} else if (address == 0 && !allow_broadcast) {
+		ctx->error = SRIC_ERROR_BROADCAST;
+		return false;
+	} else if (address == 1) {
+		ctx->error = SRIC_ERROR_LOOP;
+		return false;
+	} else if (address >= SRIC_HIGH_ADDRESS) {
+		ctx->error = SRIC_ERROR_NOSUCHADDRESS;
+		return false;
+	}
+	return true;
+}
+
+static bool check_frame(sric_context ctx, const sric_frame* frame)
+{
+	assert(ctx);
+	assert(frame);
+	if (!check_address(ctx, frame->address, true)) {
+		return false;
+	} else if (frame->note != -1) {
+		ctx->error = SRIC_ERROR_NOSENDNOTE;
+		return false;
+	} else if (frame->payload_length < 0) {
+		ctx->error = SRIC_ERROR_BADPAYLOAD;
+		return false;
+	} else if (frame->payload_length > SRIC_MAX_PAYLOAD_SIZE) {
+		ctx->error = SRIC_ERROR_BADPAYLOAD;
+		return false;
+	}
+	return true;
+}
+
+static bool send_command(sric_context ctx, const unsigned char* data, int length)
+{
+	unsigned char result;
+	ssize_t rv;
+	assert(ctx);
+	assert(data);
+	assert(length >= 1);
+	rv = write(ctx->fd, data, length);
+	if (rv != length) {
+		ctx->error = SRIC_ERROR_SRICD;
+		return false;
+	}
+	rv = read(ctx->fd, &result, 1);
+	if (rv != 1) {
+		ctx->error = SRIC_ERROR_SRICD;
+		return false;
+	} else if (result == SRIC_E_BADADDR) {
+		ctx->error = SRIC_ERROR_BADPAYLOAD;
+		return false;
+	} else if (result != 0) {
+		ctx->error = SRIC_ERROR_SRICD;
+		return false;
+	}
+	return true;
+}
+
+static bool read_data(sric_context ctx, void* ptr, int length)
+{
+	ssize_t rv;
+	assert(ptr);
+	assert(length);
+	assert(ctx);
+	rv = read(ctx->fd, ptr, length);
+	if (rv != length) {
+		ctx->error = SRIC_ERROR_SRICD;
+		return false;
+	}
+	return true;
+}
+
+bool sric_tx(sric_context ctx, const sric_frame* frame)
+{
+	unsigned char command[SRIC_MAX_PAYLOAD_SIZE + 5];
+	assert(frame);
+	if (!ctx) return false;
+	sric_clear_error(ctx);
+	if (!check_frame(ctx, frame)) return false;
+	// send some stuff
+	command[0] = SRICD_TX;
+	command[1] = (frame->address & 0xFF);
+	command[2] = ((frame->address >> 8) & 0xFF);
+	command[3] = (frame->payload_length & 0xFF);
+	command[4] = ((frame->payload_length >> 8) & 0xFF);
+	memcpy(command + 5, frame->payload, frame->payload_length);
+	return send_command(ctx, command, 5 + frame->payload_length);
+}
+
+static bool sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned char type)
+{
+	short sdata;
+	unsigned char command[5];
+	assert(frame);
+	if (!ctx) return false;
+	sric_clear_error(ctx);
+	command[0] = type;
+	command[1] = ((timeout >>  0) & 0xFF);
+	command[2] = ((timeout >>  8) & 0xFF);
+	command[3] = ((timeout >> 16) & 0xFF);
+	command[4] = ((timeout >> 24) & 0xFF);
+	if (!send_command(ctx, command, sizeof(command)))
+		return false;
+	// read the response
+	if (!read_data(ctx, &sdata, 2))
+		return false;
+	frame->address = sdata;
+	if (!read_data(ctx, &sdata, 2))
+		return false;
+	frame->note = sdata;
+	if (!read_data(ctx, &sdata, 2))
+		return false;
+	frame->payload_length = sdata;
+	return read_data(ctx, frame->payload, frame->payload_length);
+}
+
+bool sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout)
+{
+	return sric_poll(ctx, frame, timeout, SRICD_POLL_RX);
+}
+
+bool sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
+{
+	unsigned char command[11];
+	if (!ctx) return false;
+	sric_clear_error(ctx);
+	if (!check_address(ctx, device, false)) return false;
+	if (ctx->noteflags[device] != flags) {
+		// do stuff
+		ctx->noteflags[device] = flags;
+		// send some stuff
+		command[ 0] = SRICD_NOTE_FLAGS;
+		command[ 1] = (device & 0xFF);
+		command[ 2] = ((device >> 8) & 0xFF);
+		command[ 3] = ((flags >>  0) & 0xFF);
+		command[ 4] = ((flags >>  8) & 0xFF);
+		command[ 5] = ((flags >> 16) & 0xFF);
+		command[ 6] = ((flags >> 24) & 0xFF);
+		command[ 7] = ((flags >> 32) & 0xFF);
+		command[ 8] = ((flags >> 40) & 0xFF);
+		command[ 9] = ((flags >> 48) & 0xFF);
+		command[10] = ((flags >> 56) & 0xFF);
+		return send_command(ctx, command, sizeof(command));
+	} else {
+		// trivial: flags have not changed
+		return true;
+	}
+}
+
+uint64_t sric_note_get_flags(sric_context ctx, int device)
+{
+	if (!ctx) return 0;
+	sric_clear_error(ctx);
+	if (!check_address(ctx, device, false)) return 0;
+	return ctx->noteflags[device];
+}
+
+bool sric_note_unregister_all(sric_context ctx)
+{
+	int i;
+	if (!ctx) return false;
+	memset(ctx->noteflags, 0, sizeof(ctx->noteflags));
+	sric_clear_error(ctx);
+	return send_command(ctx, &SRICD_NOTE_CLEAR, 1);
+}
+
+bool sric_poll_note(sric_context ctx, sric_frame* frame, int timeout)
+{
+	return sric_poll(ctx, frame, timeout, SRICD_POLL_NOTE);
+}
