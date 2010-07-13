@@ -32,6 +32,11 @@ typedef struct _sric_frame {
 	unsigned char payload[SRIC_MAX_PAYLOAD_SIZE];
 } sric_frame;
 
+typedef struct _sric_device {
+	int address;
+	int type;
+} sric_device;
+
 sric_context sric_init(void);
 void sric_quit(sric_context ctx);
 
@@ -58,6 +63,9 @@ bool sric_note_unregister_all(sric_context ctx);
 bool sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
 inline static bool sric_note(sric_context ctx, sric_frame* frame)
 	{ return sric_poll_note(ctx, frame, -1); }
+
+// pass NULL as the first device
+const sric_device* sric_enumerate_devices(sric_context ctx, const sric_device* device);
 
 #ifdef __cplusplus
 }

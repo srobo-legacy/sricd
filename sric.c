@@ -16,6 +16,7 @@ static const unsigned char SRICD_NOTE_FLAGS = 1;
 static const unsigned char SRICD_POLL_RX = 2;
 static const unsigned char SRICD_POLL_NOTE = 3;
 static const unsigned char SRICD_NOTE_CLEAR = 4;
+static const unsigned char SRICD_LIST_DEVICES = 5;
 
 static const unsigned char SRIC_E_BADADDR = 1;
 static const unsigned char SRIC_E_TIMEOUT = 2;
@@ -24,6 +25,7 @@ struct _sric_context {
 	int fd;
 	sric_error error;
 	uint64_t noteflags[SRIC_HIGH_ADDRESS];
+	sric_device* devices;
 };
 
 sric_context sric_init(void)
@@ -175,13 +177,13 @@ static bool sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned
 	// read the response
 	if (!read_data(ctx, &sdata, 2))
 		return false;
-	frame->address = sdata;
+	frame->address = ntohs(sdata);
 	if (!read_data(ctx, &sdata, 2))
 		return false;
-	frame->note = sdata;
+	frame->note = ntohs(sdata);
 	if (!read_data(ctx, &sdata, 2))
 		return false;
-	frame->payload_length = sdata;
+	frame->payload_length = ntohs(sdata);
 	return read_data(ctx, frame->payload, frame->payload_length);
 }
 
@@ -238,4 +240,55 @@ bool sric_note_unregister_all(sric_context ctx)
 bool sric_poll_note(sric_context ctx, sric_frame* frame, int timeout)
 {
 	return sric_poll(ctx, frame, timeout, SRICD_POLL_NOTE);
+}
+
+static void sric_refresh_devices(sric_context ctx)
+{
+	unsigned short device_count = 0, i;
+	short data;
+	assert(ctx);
+	if (ctx->devices) {
+		free(ctx->devices);
+		ctx->devices = 0;
+	}
+	if (!send_command(ctx, &SRICD_LIST_DEVICES, 1)) {
+		return;
+	}
+	if (!read_data(ctx, &device_count, 2)) {
+		return;
+	}
+	device_count = ntohs(device_count);
+	ctx->devices = malloc(sizeof(sric_device) * device_count);
+	for (i = 0; i < device_count; ++i) {
+		if (!read_data(ctx, &data, 2)) {
+			free(ctx->devices);
+			ctx->devices = 0;
+			return;
+		}
+		data = ntohs(data);
+		ctx->devices[i].address = data;
+		if (!read_data(ctx, &data, 2)) {
+			free(ctx->devices);
+			ctx->devices = 0;
+			return;
+		}
+		data = ntohs(data);
+		ctx->devices[i].type = data;
+	}
+}
+
+const sric_device* sric_enumerate_devices(sric_context ctx, const sric_device* device)
+{
+	if (!ctx) return NULL;
+	if (!device) {
+		sric_refresh_devices(ctx);
+		// if there are no devices,
+		// ctx->devices will be NULL
+		// so this will return NULL
+		return &ctx->devices[0];
+	} else {
+		// the array is contiguous, get the next one
+		device = device + 1;
+		return device->type == -1 ? NULL : device;
+	}
 }
