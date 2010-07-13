@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 // some maths utility functions
 // next power of two
@@ -41,52 +42,52 @@ typedef unsigned long ss_t;
 
 #define SIGNBIT 0x80000000
 
-static inline int ss_find(ss_t x)
+static inline unsigned ss_find(ss_t x)
 {
 	return __builtin_clz(x);
 }
 
-static inline bool ss_test(ss_t x, int idx)
+static inline bool ss_test(ss_t x, unsigned idx)
 {
 	ss_t mask = SIGNBIT;
 	mask >>= idx;
 	return (x & mask) == 0;
 }
 
-static inline ss_t ss_mark(ss_t x, int idx)
+static inline ss_t ss_mark(ss_t x, unsigned idx)
 {
 	ss_t mask = SIGNBIT;
 	mask >>= idx;
 	return x & ~mask;
 }
 
-static inline ss_t ss_unmark(ss_t x, int idx)
+static inline ss_t ss_unmark(ss_t x, unsigned idx)
 {
 	ss_t mask = SIGNBIT;
 	mask >>= idx;
 	return x | mask;
 }
 #else
-static inline int ss_find(ss_t x)
+static inline unsigned ss_find(ss_t x)
 {
 	return __builtin_ctz(x);
 }
 
-static inline bool ss_test(ss_t x, int idx)
+static inline bool ss_test(ss_t x, unsigned idx)
 {
 	ss_t mask = 1;
 	mask <<= idx;
 	return (x & mask) == 0;
 }
 
-static inline ss_t ss_mark(ss_t x, int idx)
+static inline ss_t ss_mark(ss_t x, unsigned idx)
 {
 	ss_t mask = 1;
 	mask <<= idx;
 	return x & ~mask;
 }
 
-static inline ss_t ss_unmark(ss_t x, int idx)
+static inline ss_t ss_unmark(ss_t x, unsigned idx)
 {
 	ss_t mask = 1;
 	mask <<= idx;
@@ -99,9 +100,72 @@ const static ss_t SS_FULL = 0UL;
 
 #define SS_SIZE (sizeof(ss_t)*8)
 
+// slot set group
+#define SSG_COUNT (16/sizeof(ss_t))
+#define SSG_SIZE (SSG_COUNT*SS_SIZE)
+
+typedef struct _ssg {
+	ss_t s[SSG_COUNT];
+} ssg_t;
+
+static inline bool ssg_full(ssg_t x)
+{
+	int i;
+	for (i = 0; i < SSG_COUNT; ++i) {
+		if (x.s[i] != SS_FULL) return false;
+	}
+	return true;
+}
+
+static inline int ssg_find(ssg_t x)
+{
+	int i, pos = 0;
+	for (i = 0; i < SSG_COUNT; ++i) {
+		if (x.s[i] != SS_FULL) {
+			return pos + ss_find(x.s[i]);
+		}
+		pos += SS_SIZE;
+	}
+	return 0;
+}
+
+static inline unsigned _ssg_bucket(unsigned idx)
+{
+	return idx / SSG_COUNT;
+}
+
+static inline unsigned _ssg_subindex(unsigned idx)
+{
+	return idx % SSG_COUNT;
+}
+
+static inline bool ssg_test(ssg_t x, int idx)
+{
+	return ss_test(x.s[_ssg_bucket(idx)], _ssg_subindex(idx));
+}
+
+static inline ssg_t ssg_mark(ssg_t x, int idx)
+{
+	x.s[_ssg_bucket(idx)] = ss_mark(x.s[_ssg_bucket(idx)], _ssg_subindex(idx));
+	return x;
+}
+
+static inline ssg_t ssg_unmark(ssg_t x, int idx)
+{
+	x.s[_ssg_bucket(idx)] = ss_unmark(x.s[_ssg_bucket(idx)], _ssg_subindex(idx));
+	return x;
+}
+
+static inline ssg_t ssg_empty()
+{
+	ssg_t x;
+	memset(&x, 0, sizeof(x));
+	return x;
+}
+
 struct _pool {
-	unsigned objsize;
-	ss_t slots;
+	unsigned objsize, l2s; // l2s = log2(objsize)
+	ssg_t slots;
 	unsigned char* source;
 	pool* successor;
 };
@@ -112,11 +176,12 @@ pool* pool_init(unsigned objsize)
 	unsigned char* buf;
 	assert(objsize);
 	objsize = npot(objsize);
-	buf = malloc(SS_SIZE*objsize + sizeof(pool));
+	buf = malloc(SSG_SIZE*objsize + sizeof(pool));
 	assert(buf);
-	pl = (pool*)(buf + SS_SIZE*objsize);
+	pl = (pool*)(buf + SSG_SIZE*objsize);
 	pl->objsize = objsize;
-	pl->slots = SS_EMPTY;
+	pl->l2s = __builtin_ctz(objsize);
+	pl->slots = ssg_empty();
 	pl->source = buf;
 	pl->successor = 0;
 	return pl;
@@ -137,15 +202,16 @@ void pool_destroy(pool* pl)
 void* pool_alloc(pool* pl)
 {
 	assert(pl);
-	if (pl->slots == SS_FULL) {
+	if (ssg_full(pl->slots)) {
 		if (!pl->successor) {
 			pl->successor = pool_init(pl->objsize);
 		}
 		return pool_alloc(pl->successor);
 	} else {
-		int pos = ss_find(pl->slots);
-		unsigned char* loc = pl->source + mbpot(pos, pl->objsize);
-		pl->slots = ss_mark(pl->slots, pos);
+		int pos = ssg_find(pl->slots);
+		// fast multiply
+		unsigned char* loc = pl->source + (pos << pl->l2s);
+		pl->slots = ssg_mark(pl->slots, pos);
 		return loc;
 	}
 }
@@ -157,9 +223,10 @@ void pool_free(pool* pl, void* ptr)
 	if (!ptr) return;
 	if (p >= pl->source && p < (unsigned char*)pl) {
 		// in range - calculate slot
-		int slot = dbpot((unsigned)(p - pl->source), pl->objsize);
-		assert(ss_test(pl->slots, slot)); // check we had it marked
-		pl->slots = ss_unmark(pl->slots, slot);
+		// fast divide
+		int slot = (unsigned)(p - pl->source) >> pl->l2s;
+		assert(ssg_test(pl->slots, slot)); // check we had it marked
+		pl->slots = ssg_unmark(pl->slots, slot);
 	} else {
 		if (pl->successor)
 			pool_free(pl->successor, ptr);
