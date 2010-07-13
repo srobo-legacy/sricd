@@ -258,7 +258,7 @@ static void sric_refresh_devices(sric_context ctx)
 		return;
 	}
 	device_count = ntohs(device_count);
-	ctx->devices = malloc(sizeof(sric_device) * device_count);
+	ctx->devices = malloc(sizeof(sric_device) * (device_count + 1));
 	for (i = 0; i < device_count; ++i) {
 		if (!read_data(ctx, &data, 2)) {
 			free(ctx->devices);
@@ -275,6 +275,9 @@ static void sric_refresh_devices(sric_context ctx)
 		data = ntohs(data);
 		ctx->devices[i].type = data;
 	}
+	// add the sentinel
+	ctx->devices[i].address = 0;
+	ctx->devices[i].type = -1;
 }
 
 const sric_device* sric_enumerate_devices(sric_context ctx, const sric_device* device)
