@@ -5,6 +5,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include "log.h"
+#include <unistd.h>
 
 static pool* listener_pool;
 
@@ -118,8 +119,12 @@ void input_update(int timeout)
 	struct pollfd* descriptors;
 	input_listener* listener = listener_first;
 	int i = 0, rv;
-	if (!listener)
+	wlog("input with timeout %d", timeout);
+	if (!listener) {
+		wlog("no listeners to poll - calling usleep instead");
+		usleep(timeout * 1000);
 		return;
+	}
 	descriptors = alloca(sizeof(struct pollfd) * listener_count);
 	while (listener) {
 		descriptors[i].fd = listener->fd;
