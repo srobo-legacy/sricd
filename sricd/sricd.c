@@ -7,6 +7,7 @@
 #include <assert.h>
 #include "log.h"
 #include "sched.h"
+#include <fcntl.h>
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
 
@@ -26,6 +27,29 @@ static void print_version_and_exit()
 {
 	printf("sricd version 0.1\n");
 	exit(0);
+}
+
+static void background()
+{
+	/*int fd, rc;
+	pid_t f = fork();
+	if (f <= 0) {
+		_exit(0);
+	} else {
+		f = setsid();
+		perror("death");
+		assert(f >= 0);
+		rc = chdir("/");
+		assert(rc == 0);
+		fd = open("/dev/null", O_RDWR);
+		assert(fd > 2);
+		rc = dup2(fd, 0);
+		rc |= dup2(fd, 1);
+		rc |= dup2(fd, 2);
+		assert(rc == 0);
+		close(fd);
+	}*/
+	daemon(0, 0);
 }
 
 int main(int argc, char** argv)
@@ -62,8 +86,8 @@ int main(int argc, char** argv)
 	}
 	init(socket_path);
 	if (!fg) {
-		wlog("calling daemon(0, 0)");
-		daemon(0, 0);
+		wlog("backgrounding");
+		background();
 	}
 	rv = gettimeofday(&tv2, 0);
 	assert(rv == 0);
