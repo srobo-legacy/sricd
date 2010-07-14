@@ -51,8 +51,6 @@ static void ipc_new(int sock, void* x)
 	// do stuff with new here
 	c = client_create(new);
 	input_listen(new, ipc_client_incoming, ipc_client_death, NULL, c);
-	wlog("generating some FIFOs");
-	client_open_fifos(c);
 }
 
 static void ipc_client_incoming(int fd, void* client_object)
