@@ -1,0 +1,4 @@
+sricd/sricd
+libsric/libsric.a
+*.o
+depend
