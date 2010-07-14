@@ -11,6 +11,7 @@ queue* queue_create(unsigned objsize)
 	q->tail = NULL;
 	q->last = NULL;
 	q->pool = p;
+	return q;
 }
 
 void queue_destroy(queue* q)
