@@ -6,6 +6,7 @@
 #include <sys/time.h>
 #include <assert.h>
 #include "log.h"
+#include "sched.h"
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
 
@@ -71,7 +72,9 @@ int main(int argc, char** argv)
 	startup_time = time2 - time1;
 	wlog("startup took %lluµs", startup_time);
 	wlog("entering main loop");
-	while (1)
+	while (1) {
+		sched_tick();
 		input_update();
+	}
 	return 0;
 }
