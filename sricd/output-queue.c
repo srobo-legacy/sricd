@@ -1,6 +1,7 @@
 #include "output-queue.h"
 #include "pool.h"
 #include <stdlib.h>
+#include <string.h>
 
 #define NPRIOS 4
 
@@ -11,7 +12,8 @@ void txq_init(void)
 {
 	int i;
 	for (i = 0; i < NPRIOS; ++i) {
-		tx_queues[i] = queue_init(sizeof(tx));
+		tx_queues[i] = queue_create(sizeof(tx));
+	}
 }
 
 void txq_push(const tx* tx, int prio)

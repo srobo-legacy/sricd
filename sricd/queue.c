@@ -1,13 +1,6 @@
 #include "queue.h"
 #include <assert.h>
 
-struct _queue {
-	void* head;
-	void* tail;
-	void* last;
-	pool* pool;
-};
-
 static pool* queue_pool;
 
 void queue_init(void)

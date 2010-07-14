@@ -12,6 +12,13 @@ extern "C"
 
 typedef struct _queue queue;
 
+struct _queue {
+	void* head;
+	void* tail;
+	void* last;
+	pool* pool;
+};
+
 void queue_init(void);
 
 queue* queue_create(unsigned objsize);
