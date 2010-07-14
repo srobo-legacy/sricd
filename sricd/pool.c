@@ -18,18 +18,6 @@ static unsigned npot(unsigned x)
 	return x;
 }
 
-// calculate x*y fast, given that y is a power of two
-static inline unsigned mbpot(unsigned x, unsigned y)
-{
-	return x << (__builtin_ctz(y));
-}
-
-// calculate x/y fast, given that y is a power of two
-static inline unsigned dbpot(unsigned x, unsigned y)
-{
-	return x >> (__builtin_ctz(y));
-}
-
 // slot set
 typedef unsigned long ss_t;
 
