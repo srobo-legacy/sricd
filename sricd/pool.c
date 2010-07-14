@@ -159,7 +159,7 @@ static inline ssg_t ssg_unmark(ssg_t x, int idx)
 static inline ssg_t ssg_empty()
 {
 	ssg_t x;
-	memset(&x, 0, sizeof(x));
+	memset(&x, 0xFF, sizeof(x));
 	return x;
 }
 

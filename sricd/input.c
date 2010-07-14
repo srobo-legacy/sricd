@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdlib.h>
+#include "log.h"
 
 static pool* listener_pool;
 
@@ -135,8 +136,11 @@ void input_update(void)
 		if (errno == EAGAIN || errno == EINTR) {
 			// interruption, try again
 			// oh the wonders of the humble tail call
+			wlog("input poll was interrupted");
 			input_update();
 			return;
+		} else {
+			wlog("another input error - %s", strerror(errno));
 		}
 	}
 	for (i = 0; i < rv; ++i) {

@@ -2,6 +2,7 @@
 #include "pool.h"
 #include <stdlib.h>
 #include <string.h>
+#include "log.h"
 
 #define NPRIOS 4
 
@@ -11,6 +12,7 @@ static int count = 0;
 void txq_init(void)
 {
 	int i;
+	wlog("starting %d tx priority levels", NPRIOS);
 	for (i = 0; i < NPRIOS; ++i) {
 		tx_queues[i] = queue_create(sizeof(tx));
 	}

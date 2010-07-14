@@ -6,7 +6,7 @@ extern "C"
 {
 #endif
 
-void init();
+void init(const char* socket_path);
 
 #ifdef __cplusplus
 }
