@@ -113,7 +113,7 @@ void input_listen(int fd, input_event callback,
 	listener_first = new;
 }
 
-void input_update(void)
+void input_update(int timeout)
 {
 	struct pollfd* descriptors;
 	input_listener* listener = listener_first;
@@ -130,18 +130,15 @@ void input_update(void)
 		listener = listener->next;
 		++i;
 	}
-	rv = poll(descriptors, listener_count, 1000);
+	rv = poll(descriptors, listener_count, timeout);
 	if (rv == 0) return;
 	if (rv < 0) {
 		if (errno == EAGAIN || errno == EINTR) {
-			// interruption, try again
-			// oh the wonders of the humble tail call
 			wlog("input poll was interrupted");
-			input_update();
-			return;
 		} else {
 			wlog("another input error - %s", strerror(errno));
 		}
+		return;
 	}
 	for (i = 0; i < rv; ++i) {
 		if (descriptors[i].revents & POLLIN) {

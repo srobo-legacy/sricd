@@ -30,7 +30,7 @@ static void print_version_and_exit()
 
 int main(int argc, char** argv)
 {
-	int arg, rv;
+	int arg, rv, to;
 	int fg = 0;
 	unsigned long long time1, time2, startup_time;
 	struct timeval tv1, tv2;
@@ -74,7 +74,8 @@ int main(int argc, char** argv)
 	wlog("entering main loop");
 	while (1) {
 		sched_tick();
-		input_update();
+		to = sched_next_event();
+		input_update(to);
 	}
 	return 0;
 }
