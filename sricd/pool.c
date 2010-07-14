@@ -170,22 +170,26 @@ struct _pool {
 	pool* successor;
 };
 
+static unsigned char* pool_source(pool* p)
+{
+	return ((unsigned char*)p) + sizeof(pool);
+}
+
 pool* pool_create_extra(unsigned objsize, unsigned extradata, void** edata)
 {
 	pool* pl;
 	unsigned char* buf;
 	assert(objsize);
 	objsize = npot(objsize);
-	buf = malloc(SSG_SIZE*objsize + sizeof(pool) + extradata);
+	buf = malloc(sizeof(pool) + SSG_SIZE*objsize + extradata);
 	assert(buf);
-	pl = (pool*)(buf + SSG_SIZE*objsize);
+	pl = (pool*)(buf);
 	pl->objsize = objsize;
 	pl->l2s = __builtin_ctz(objsize);
 	pl->slots = ssg_empty();
-	pl->source = buf;
 	pl->successor = 0;
 	if (edata)
-		*edata = buf + SSG_SIZE*objsize + sizeof(pool);
+		*edata = buf + sizeof(pool) + SSG_SIZE*objsize;
 	return pl;
 }
 
@@ -197,7 +201,7 @@ void pool_destroy(pool* pl)
 	while (next) {
 		pl = next;
 		next = next->successor;
-		free(pl->source);
+		free(pl);
 	}
 }
 
@@ -212,7 +216,7 @@ void* pool_alloc(pool* pl)
 	} else {
 		int pos = ssg_find(pl->slots);
 		// fast multiply
-		unsigned char* loc = pl->source + (pos << pl->l2s);
+		unsigned char* loc = pool_source(pl) + (pos << pl->l2s);
 		pl->slots = ssg_mark(pl->slots, pos);
 		return loc;
 	}
@@ -223,10 +227,10 @@ void pool_free(pool* pl, void* ptr)
 	unsigned char* p = (unsigned char*)ptr;
 	assert(pl);
 	if (!ptr) return;
-	if (p >= pl->source && p < (unsigned char*)pl) {
+	if (p >= pool_source(pl) && p < (pool_source(pl) + (SSG_SIZE << pl->l2s))) {
 		// in range - calculate slot
 		// fast divide
-		int slot = (unsigned)(p - pl->source) >> pl->l2s;
+		int slot = (unsigned)(p - pool_source(pl)) >> pl->l2s;
 		assert(ssg_test(pl->slots, slot)); // check we had it marked
 		pl->slots = ssg_unmark(pl->slots, slot);
 	} else {
