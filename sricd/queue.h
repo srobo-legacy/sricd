@@ -19,8 +19,6 @@ struct _queue {
 	pool* pool;
 };
 
-void queue_init(void);
-
 queue* queue_create(unsigned objsize);
 void queue_destroy(queue* q);
 

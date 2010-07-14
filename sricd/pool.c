@@ -170,13 +170,13 @@ struct _pool {
 	pool* successor;
 };
 
-pool* pool_create(unsigned objsize)
+pool* pool_create_extra(unsigned objsize, unsigned extradata, void** edata)
 {
 	pool* pl;
 	unsigned char* buf;
 	assert(objsize);
 	objsize = npot(objsize);
-	buf = malloc(SSG_SIZE*objsize + sizeof(pool));
+	buf = malloc(SSG_SIZE*objsize + sizeof(pool) + extradata);
 	assert(buf);
 	pl = (pool*)(buf + SSG_SIZE*objsize);
 	pl->objsize = objsize;
@@ -184,6 +184,8 @@ pool* pool_create(unsigned objsize)
 	pl->slots = ssg_empty();
 	pl->source = buf;
 	pl->successor = 0;
+	if (edata)
+		*edata = buf + SSG_SIZE*objsize + sizeof(pool);
 	return pl;
 }
 
