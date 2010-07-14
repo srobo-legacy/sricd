@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <sys/time.h>
+#include <assert.h>
 #include "log.h"
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
@@ -27,9 +29,13 @@ static void print_version_and_exit()
 
 int main(int argc, char** argv)
 {
-	int arg;
+	int arg, rv;
 	int fg = 0;
+	unsigned long long time1, time2, startup_time;
+	struct timeval tv1, tv2;
 	const char* socket_path = DEFAULT_SOCKET_PATH;
+	rv = gettimeofday(&tv1, 0);
+	assert(rv == 0);
 	while ((arg = getopt(argc, argv, "hvVfds:")) != -1) {
 		switch (arg) {
 		case 'h':
@@ -58,6 +64,12 @@ int main(int argc, char** argv)
 		wlog("calling daemon(0, 0)");
 		daemon(0, 0);
 	}
+	rv = gettimeofday(&tv2, 0);
+	assert(rv == 0);
+	time1 = tv1.tv_sec*1000000 + tv1.tv_usec;
+	time2 = tv2.tv_sec*1000000 + tv2.tv_usec;
+	startup_time = time2 - time1;
+	wlog("startup took %lluµs", startup_time);
 	wlog("entering main loop");
 	while (1)
 		input_update();

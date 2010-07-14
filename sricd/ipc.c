@@ -1,5 +1,6 @@
 #include "ipc.h"
 #include "input.h"
+#include "client.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -13,6 +14,8 @@ static const char* sock_path;
 
 static void ipc_new(int, void*);
 static void ipc_death(int, void*);
+static void ipc_client_incoming(int, void*);
+static void ipc_client_death(int, void*);
 
 static void ipc_boot(void)
 {
@@ -37,6 +40,7 @@ static void ipc_boot(void)
 
 static void ipc_new(int sock, void* x)
 {
+	client* c;
 	struct sockaddr_un addr;
 	socklen_t len = sizeof(addr);
 	int new;
@@ -45,7 +49,27 @@ static void ipc_new(int sock, void* x)
 	wlog("accepted new connection");
 	input_listen(sock, ipc_new, ipc_death, NULL, NULL);
 	// do stuff with new here
-	close(new); // not this!
+	c = client_create(new);
+	input_listen(new, ipc_client_incoming, ipc_client_death, NULL, c);
+	wlog("generating some FIFOs");
+	client_open_fifos(c);
+}
+
+static void ipc_client_incoming(int fd, void* client_object)
+{
+	client* c = (client*)client_object;
+	assert(c);
+	// do R/W stuff here
+	input_listen(fd, ipc_client_incoming, ipc_client_death, NULL, client_object);
+}
+
+static void ipc_client_death(int fd, void* client_object)
+{
+	client* c = (client*)client_object;
+	assert(c);
+	close(fd);
+	client_destroy(c);
+	wlog("IPC client died");
 }
 
 static void ipc_death(int sock, void* x)

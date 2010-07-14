@@ -8,13 +8,16 @@ depend:
 		$(CC) $(CFLAGS) -MM $$file -o - >> $@ ; \
 	done ;
 
-sricd: client.o init.o input.o output-queue.o pool.o queue.o sricd.o ipc.o log.o
+sricd: client.o init.o input.o output-queue.o pool.o queue.o sricd.o ipc.o log.o sched.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 log.o: log.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 client.o: client.c
+	$(CC) -c $(CFLAGS) -o $@ $<
+
+sched.o: sched.c
 	$(CC) -c $(CFLAGS) -o $@ $<
 
 ipc.o: ipc.c

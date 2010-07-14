@@ -2,6 +2,7 @@
 #define _INCLUDED_CLIENT
 
 #include "queue.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -31,13 +32,17 @@ struct _client {
 	queue* note_q;
 	queue* rx_q;
 	int fd;
+	int rxfd, notefd;
+	bool free_rx, free_note;
 };
 
 client* client_create(int fd);
+void client_destroy(client* c);
 void client_push_rx(client* c, const client_rx* rx);
-void client_push_note(client* c, const client_note* rx);
+void client_push_note(client* c, const client_note* note);
 const client_rx* client_pop_rx(client* c);
 const client_note* client_pop_note(client* c);
+void client_open_fifos(client* c);
 
 #ifdef __cplusplus
 }
