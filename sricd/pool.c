@@ -164,9 +164,8 @@ static inline ssg_t ssg_empty()
 }
 
 struct _pool {
-	unsigned objsize, l2s; // l2s = log2(objsize)
 	ssg_t slots;
-	unsigned char* source;
+	unsigned l2s; // l2s = log2(objsize)
 	pool* successor;
 };
 
@@ -184,7 +183,6 @@ pool* pool_create_extra(unsigned objsize, unsigned extradata, void** edata)
 	buf = malloc(sizeof(pool) + SSG_SIZE*objsize + extradata);
 	assert(buf);
 	pl = (pool*)(buf);
-	pl->objsize = objsize;
 	pl->l2s = __builtin_ctz(objsize);
 	pl->slots = ssg_empty();
 	pl->successor = 0;
@@ -210,7 +208,7 @@ void* pool_alloc(pool* pl)
 	assert(pl);
 	if (ssg_full(pl->slots)) {
 		if (!pl->successor) {
-			pl->successor = pool_create(pl->objsize);
+			pl->successor = pool_create(1 << pl->l2s);
 		}
 		return pool_alloc(pl->successor);
 	} else {
