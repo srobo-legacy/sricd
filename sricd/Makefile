@@ -8,7 +8,7 @@ depend:
 		$(CC) $(CFLAGS) -MM $$file -o - >> $@ ; \
 	done ;
 
-sricd: client.o init.o input.o output-queue.o pool.o queue.o sricd.o ipc.o log.o sched.o hashtable.c
+sricd: client.o init.o input.o output-queue.o pool.o queue.o sricd.o ipc.o log.o sched.o hashtable.o device.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 clean:
