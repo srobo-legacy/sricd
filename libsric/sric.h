@@ -6,7 +6,6 @@
 #ifndef _INCLUDED_LIBSRIC
 #define _INCLUDED_LIBSRIC
 
-#include <stdbool.h>
 #include <inttypes.h>
 
 #ifdef __cplusplus
@@ -106,7 +105,7 @@ void sric_clear_error(sric_context ctx);
  * @param frame A pointer to the frame to send.
  * @return Whether this was successful.
  */
-bool sric_tx(sric_context ctx, const sric_frame* frame);
+int sric_tx(sric_context ctx, const sric_frame* frame);
 /**
  * Poll for an RX frame.
  *
@@ -118,7 +117,7 @@ bool sric_tx(sric_context ctx, const sric_frame* frame);
  * @param timeout The timeout length, in ms. Pass -1 for indefinite.
  * @return Whether a frame was found.
  */
-bool sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
+int sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
 /**
  * Send a TX frame, and wait for the corresponding RX.
  *
@@ -138,9 +137,10 @@ bool sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
  * @param inframe A pointer to space to store the RX frame.
  * @return Whether the TXRX was successful.
  */
-inline static bool sric_txrx(sric_context ctx, const sric_frame* outframe,
+inline static int sric_txrx(sric_context ctx, const sric_frame* outframe,
                              sric_frame* inframe) {
-	return sric_tx(ctx, outframe) && sric_poll_rx(ctx, inframe, -1);
+	if (sric_tx(ctx, outframe)) return 1;
+	return sric_poll_rx(ctx, inframe, -1);
 }
 
 /**
@@ -157,7 +157,7 @@ inline static bool sric_txrx(sric_context ctx, const sric_frame* outframe,
  * @param flags The note flags.
  * @return Whether the call was successful.
  */
-bool sric_note_set_flags(sric_context ctx, int device, uint64_t flags);
+int sric_note_set_flags(sric_context ctx, int device, uint64_t flags);
 /**
  * Return the notification flags for a given device.
  *
@@ -180,7 +180,7 @@ uint64_t sric_note_get_flags(sric_context ctx, int device);
  * @param note The notification number.
  * @return Whether the call was successful.
  */
-inline static bool sric_note_register(sric_context ctx, int device, int note)
+inline static int sric_note_register(sric_context ctx, int device, int note)
 	{ return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
 	                             | ((uint64_t)1 << note)); }
 /**
@@ -194,7 +194,7 @@ inline static bool sric_note_register(sric_context ctx, int device, int note)
  * @param note The notification number.
  * @return Whether the call was successful.
  */
-inline static bool sric_note_unregister(sric_context ctx, int device, int note)
+inline static int sric_note_unregister(sric_context ctx, int device, int note)
 	{ return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
 	                             & ~((uint64_t)1 << note)); }
 /**
@@ -207,7 +207,7 @@ inline static bool sric_note_unregister(sric_context ctx, int device, int note)
  * @param device The device address.
  * @return Whether the call was successful.
  */
-inline static bool sric_note_unregister_device(sric_context ctx, int device)
+inline static int sric_note_unregister_device(sric_context ctx, int device)
 	{ return sric_note_set_flags(ctx, device, 0); }
 /**
  * Unregister for all notifications for all devices.
@@ -217,7 +217,7 @@ inline static bool sric_note_unregister_device(sric_context ctx, int device)
  * @param ctx The libsric context.
  * @return Whether the call was successful.
  */
-bool sric_note_unregister_all(sric_context ctx);
+int sric_note_unregister_all(sric_context ctx);
 
 /**
  * Poll for a notification frame.
@@ -230,7 +230,7 @@ bool sric_note_unregister_all(sric_context ctx);
  * @param timeout The timeout length, in ms. Pass -1 for indefinite.
  * @return Whether a frame was found.
  */
-bool sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
+int sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
 /**
  * Block indefinitely for a note.
  *
@@ -241,7 +241,7 @@ bool sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
  * @param frame A pointer to the frame in which to store the result.
  * @return Whether a frame was found.
  */
-inline static bool sric_note(sric_context ctx, sric_frame* frame)
+inline static int sric_note(sric_context ctx, sric_frame* frame)
 	{ return sric_poll_note(ctx, frame, -1); }
 
 /**

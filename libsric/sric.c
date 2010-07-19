@@ -67,44 +67,44 @@ void sric_clear_error(sric_context ctx)
 		ctx->error = SRIC_ERROR_NONE;
 }
 
-static bool check_address(sric_context ctx, int address, bool allow_broadcast)
+static int check_address(sric_context ctx, int address, int allow_broadcast)
 {
 	if (address < 0) {
 		ctx->error = SRIC_ERROR_NOSUCHADDRESS;
-		return false;
+		return 0;
 	} else if (address == 0 && !allow_broadcast) {
 		ctx->error = SRIC_ERROR_BROADCAST;
-		return false;
+		return 0;
 	} else if (address == 1) {
 		ctx->error = SRIC_ERROR_LOOP;
-		return false;
+		return 0;
 	} else if (address >= SRIC_HIGH_ADDRESS) {
 		ctx->error = SRIC_ERROR_NOSUCHADDRESS;
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
-static bool check_frame(sric_context ctx, const sric_frame* frame)
+static int check_frame(sric_context ctx, const sric_frame* frame)
 {
 	assert(ctx);
 	assert(frame);
-	if (!check_address(ctx, frame->address, true)) {
-		return false;
+	if (!check_address(ctx, frame->address, 1)) {
+		return 0;
 	} else if (frame->note != -1) {
 		ctx->error = SRIC_ERROR_NOSENDNOTE;
-		return false;
+		return 0;
 	} else if (frame->payload_length < 0) {
 		ctx->error = SRIC_ERROR_BADPAYLOAD;
-		return false;
+		return 0;
 	} else if (frame->payload_length > SRIC_MAX_PAYLOAD_SIZE) {
 		ctx->error = SRIC_ERROR_BADPAYLOAD;
-		return false;
+		return 0;
 	}
-	return true;
+	return 1;
 }
 
-static bool send_command(sric_context ctx, const unsigned char* data, int length)
+static int send_command(sric_context ctx, const unsigned char* data, int length)
 {
 	unsigned char result;
 	ssize_t rv;
@@ -114,23 +114,23 @@ static bool send_command(sric_context ctx, const unsigned char* data, int length
 	rv = write(ctx->fd, data, length);
 	if (rv != length) {
 		ctx->error = SRIC_ERROR_SRICD;
-		return false;
+		return 1;
 	}
 	rv = read(ctx->fd, &result, 1);
 	if (rv != 1) {
 		ctx->error = SRIC_ERROR_SRICD;
-		return false;
+		return 1;
 	} else if (result == SRIC_E_BADADDR) {
 		ctx->error = SRIC_ERROR_BADPAYLOAD;
-		return false;
+		return 1;
 	} else if (result != 0) {
 		ctx->error = SRIC_ERROR_SRICD;
-		return false;
+		return 1;
 	}
-	return true;
+	return 0;
 }
 
-static bool read_data(sric_context ctx, void* ptr, int length)
+static int read_data(sric_context ctx, void* ptr, int length)
 {
 	ssize_t rv;
 	assert(ptr);
@@ -139,18 +139,18 @@ static bool read_data(sric_context ctx, void* ptr, int length)
 	rv = read(ctx->fd, ptr, length);
 	if (rv != length) {
 		ctx->error = SRIC_ERROR_SRICD;
-		return false;
+		return 1;
 	}
-	return true;
+	return 0;
 }
 
-bool sric_tx(sric_context ctx, const sric_frame* frame)
+int sric_tx(sric_context ctx, const sric_frame* frame)
 {
 	unsigned char command[SRIC_MAX_PAYLOAD_SIZE + 5];
 	assert(frame);
-	if (!ctx) return false;
+	if (!ctx) return 1;
 	sric_clear_error(ctx);
-	if (!check_frame(ctx, frame)) return false;
+	if (!check_frame(ctx, frame)) return 1;
 	// send some stuff
 	command[0] = SRICD_TX;
 	command[1] = (frame->address & 0xFF);
@@ -161,12 +161,12 @@ bool sric_tx(sric_context ctx, const sric_frame* frame)
 	return send_command(ctx, command, 5 + frame->payload_length);
 }
 
-static bool sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned char type)
+static int sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned char type)
 {
 	short sdata;
 	unsigned char command[5];
 	assert(frame);
-	if (!ctx) return false;
+	if (!ctx) return 1;
 	sric_clear_error(ctx);
 	command[0] = type;
 	command[1] = ((timeout >>  0) & 0xFF);
@@ -174,31 +174,31 @@ static bool sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned
 	command[3] = ((timeout >> 16) & 0xFF);
 	command[4] = ((timeout >> 24) & 0xFF);
 	if (!send_command(ctx, command, sizeof(command)))
-		return false;
+		return 1;
 	// read the response
 	if (!read_data(ctx, &sdata, 2))
-		return false;
+		return 1;
 	frame->address = ntohs(sdata);
 	if (!read_data(ctx, &sdata, 2))
-		return false;
+		return 1;
 	frame->note = ntohs(sdata);
 	if (!read_data(ctx, &sdata, 2))
-		return false;
+		return 1;
 	frame->payload_length = ntohs(sdata);
 	return read_data(ctx, frame->payload, frame->payload_length);
 }
 
-bool sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout)
+int sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout)
 {
 	return sric_poll(ctx, frame, timeout, SRICD_POLL_RX);
 }
 
-bool sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
+int sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
 {
 	unsigned char command[11];
-	if (!ctx) return false;
+	if (!ctx) return 1;
 	sric_clear_error(ctx);
-	if (!check_address(ctx, device, false)) return false;
+	if (!check_address(ctx, device, 0)) return 1;
 	if (ctx->noteflags[device] != flags) {
 		// do stuff
 		ctx->noteflags[device] = flags;
@@ -217,7 +217,7 @@ bool sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
 		return send_command(ctx, command, sizeof(command));
 	} else {
 		// trivial: flags have not changed
-		return true;
+		return 0;
 	}
 }
 
@@ -225,20 +225,20 @@ uint64_t sric_note_get_flags(sric_context ctx, int device)
 {
 	if (!ctx) return 0;
 	sric_clear_error(ctx);
-	if (!check_address(ctx, device, false)) return 0;
+	if (!check_address(ctx, device, 0)) return 0;
 	return ctx->noteflags[device];
 }
 
-bool sric_note_unregister_all(sric_context ctx)
+int sric_note_unregister_all(sric_context ctx)
 {
 	int i;
-	if (!ctx) return false;
+	if (!ctx) return 1;
 	memset(ctx->noteflags, 0, sizeof(ctx->noteflags));
 	sric_clear_error(ctx);
 	return send_command(ctx, &SRICD_NOTE_CLEAR, 1);
 }
 
-bool sric_poll_note(sric_context ctx, sric_frame* frame, int timeout)
+int sric_poll_note(sric_context ctx, sric_frame* frame, int timeout)
 {
 	return sric_poll(ctx, frame, timeout, SRICD_POLL_NOTE);
 }
