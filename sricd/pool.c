@@ -182,7 +182,9 @@ pool* pool_create_extra(unsigned objsize, unsigned extradata, void** edata)
 void pool_destroy(pool* pl)
 {
 	pool* next;
-	assert(pl);
+	if (!pl) {
+		return;
+	}
 	next = pl;
 	while (next) {
 		pl = next;
