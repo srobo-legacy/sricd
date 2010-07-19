@@ -4,7 +4,7 @@ include depend
 
 CFLAGS += -I../poolalloc
 
-depend:
+depend: *.c
 	rm -f depend
 	for file in *.c; do \
 		$(CC) $(CFLAGS) -MM $$file -o - >> $@ ; \
