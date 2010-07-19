@@ -15,6 +15,8 @@ typedef struct _client client;
 typedef struct _client_rx client_rx;
 typedef struct _client_note client_note;
 
+typedef void (*client_ping_callback)(client* c);
+
 struct _client_rx {
 	int address;
 	int payload_length;
@@ -32,6 +34,8 @@ struct _client {
 	queue* note_q;
 	queue* rx_q;
 	int fd;
+	int rx_timer, note_timer;
+	client_ping_callback rx_ping, note_ping;
 };
 
 client* client_create(int fd);

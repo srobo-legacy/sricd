@@ -17,6 +17,10 @@ client* client_create(int fd)
 	c->note_q = queue_create(sizeof(client_note));
 	c->rx_q   = queue_create(sizeof(client_rx));
 	c->fd = fd;
+	c->rx_timer   = -1;
+	c->note_timer = -1;
+	c->rx_ping    = NULL;
+	c->note_ping  = NULL;
 	return c;
 }
 
@@ -34,6 +38,10 @@ void client_push_rx(client* c, const client_rx* rx)
 	assert(rx);
 	ptr = queue_push(c->rx_q);
 	memcpy(ptr, rx, sizeof(*rx));
+	if (c->rx_ping)
+	{
+		c->rx_ping(c);
+	}
 }
 
 void client_push_note(client* c, const client_note* note)
@@ -43,6 +51,10 @@ void client_push_note(client* c, const client_note* note)
 	assert(note);
 	ptr = queue_push(c->note_q);
 	memcpy(ptr, note, sizeof(*note));
+	if (c->note_ping)
+	{
+		c->note_ping(c);
+	}
 }
 
 const client_rx* client_pop_rx(client* c)
