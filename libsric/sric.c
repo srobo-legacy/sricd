@@ -123,6 +123,9 @@ static int send_command(sric_context ctx, const unsigned char* data, int length)
 	} else if (result == SRIC_E_BADADDR) {
 		ctx->error = SRIC_ERROR_BADPAYLOAD;
 		return 1;
+	} else if (result == SRIC_E_TIMEOUT) {
+		ctx->error = SRIC_ERROR_TIMEOUT;
+		return 1;
 	} else if (result != 0) {
 		ctx->error = SRIC_ERROR_SRICD;
 		return 1;
