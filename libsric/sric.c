@@ -231,7 +231,6 @@ uint64_t sric_note_get_flags(sric_context ctx, int device)
 
 int sric_note_unregister_all(sric_context ctx)
 {
-	int i;
 	if (!ctx) return 1;
 	memset(ctx->noteflags, 0, sizeof(ctx->noteflags));
 	sric_clear_error(ctx);
