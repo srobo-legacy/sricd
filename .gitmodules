@@ -1,0 +1,3 @@
+[submodule "poolalloc"]
+	path = poolalloc
+	url = git://github.com/prophile/poolalloc.git

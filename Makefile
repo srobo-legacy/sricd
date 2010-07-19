@@ -1,4 +1,4 @@
-all: libsric/libsric.a sricd/sricd
+all: libsric/libsric.a sricd/sricd poolalloc/pool.o
 
 install: all
 	install -d $(prefix)/bin
@@ -11,9 +11,13 @@ install: all
 libsric/libsric.a:
 	cd libsric ; make
 
-sricd/sricd:
+sricd/sricd: poolalloc/pool.o
 	cd sricd ; make
+
+poolalloc/pool.o:
+	cd poolalloc ; make
 
 clean:
 	cd libsric ; make clean
 	cd sricd ; make clean
+	cd poolalloc ; make clean
