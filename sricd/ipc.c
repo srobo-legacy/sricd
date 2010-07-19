@@ -29,8 +29,7 @@ static void ipc_boot(void)
 	assert(s);
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, sock_path);
-	len = sizeof(addr.sun_len) + sizeof(addr.sun_family) + strlen(sock_path);
-	addr.sun_len = len;
+	len = sizeof(addr);
 	rv = unlink(sock_path);
 	assert(rv == 0 || errno == ENOENT);
 	rv = bind(s, (struct sockaddr*)&addr, len);

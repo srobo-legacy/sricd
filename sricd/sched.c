@@ -3,6 +3,7 @@
 #include <sys/types.h>
 #include <sys/time.h>
 #include <assert.h>
+#include <stdlib.h>
 
 static pool* sched_pool;
 static int current_id = 1;
