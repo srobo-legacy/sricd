@@ -13,5 +13,7 @@ depend: *.c
 sricd: client.o init.o input.o output-queue.o queue.o sricd.o ipc.o log.o sched.o hashtable.o device.o ../poolalloc/pool.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
+.PHONY: clean
+
 clean:
 	rm -f *.o sricd depend

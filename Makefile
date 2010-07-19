@@ -17,6 +17,8 @@ sricd/sricd: poolalloc/pool.o
 poolalloc/pool.o:
 	cd poolalloc ; make
 
+.PHONY: clean
+
 clean:
 	cd libsric ; make clean
 	cd sricd ; make clean

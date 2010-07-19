@@ -12,5 +12,7 @@ libsric.a: sric.o
 	rm -f $@
 	ar -cqs $@ $^
 
+.PHONY: clean
+
 clean:
 	rm -f *.o libsric.a depend
