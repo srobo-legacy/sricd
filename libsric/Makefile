@@ -15,8 +15,5 @@ libsric.a: sric.o
 	rm -f $@
 	ar -cqs $@ $^
 
-sric.o: sric.c
-	$(CC) -c $(CFLAGS) -o $@ $<
-
 clean:
 	rm -f *.o libsric.a depend
