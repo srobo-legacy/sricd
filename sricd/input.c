@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include "log.h"
 #include <unistd.h>
+#include <string.h>
 
 static pool* listener_pool;
 
