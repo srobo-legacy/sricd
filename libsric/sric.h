@@ -20,7 +20,7 @@ extern "C"
 /**
  * The high address under SRIC - all addresses are < SRIC_HIGH_ADDRESS
  */
-#define SRIC_HIGH_ADDRESS 256
+#define SRIC_HIGH_ADDRESS 128
 
 /**
  * libsric error codes.
