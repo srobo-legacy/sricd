@@ -12,6 +12,7 @@
 #include "output-queue.h"
 #include "sched.h"
 #include <stdbool.h>
+#include <arpa/inet.h>
 
 static const char* sock_path;
 
