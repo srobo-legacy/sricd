@@ -25,7 +25,11 @@ hashtable* hashtable_create(int objsize,
                             hashtable_cmp compare_function)
 {
 	int i;
-	hashtable* ht = malloc(sizeof(hashtable) + sizeof(hash_entry*)*slots);
+	pool* p;
+	hashtable* ht;
+	p = pool_create_extra(sizeof(hash_entry) + objsize,
+	                      sizeof(hashtable) + sizeof(hash_entry*)*slots,
+	                      (void**)&ht);
 	ht->hash_function = hash_function;
 	ht->cmp_function = compare_function;
 	ht->pool = pool_create(sizeof(hash_entry) + objsize);
@@ -41,7 +45,6 @@ void hashtable_destroy(hashtable* table)
 {
 	assert(table);
 	pool_destroy(table->pool);
-	free(table);
 }
 
 void hashtable_insert(hashtable* table, const void* value)
