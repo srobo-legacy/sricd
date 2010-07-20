@@ -19,6 +19,14 @@ struct _hashtable {
 	hash_entry* entries[];
 };
 
+static int hash_index(hashtable* table, const void* value)
+{
+	int hash, index;
+	hash = table->hash_function(value);
+	index = hash % index;
+	return index;
+}
+
 hashtable* hashtable_create(int objsize,
                             int slots,
                             hashtable_hash hash_function,
@@ -50,11 +58,10 @@ void hashtable_destroy(hashtable* table)
 void hashtable_insert(hashtable* table, const void* value)
 {
 	hash_entry** entry;
-	int hash, index;
+	int index;
 	assert(table);
 	assert(value);
-	hash = table->hash_function(value);
-	index = hash % table->tablesize;
+	index = hash_index(table, value);
 	entry = &(table->entries[index]);
 	while (*entry) {
 		if (!table->cmp_function((*entry)->value, value)) {
@@ -71,11 +78,10 @@ void hashtable_insert(hashtable* table, const void* value)
 const void* hashtable_find(hashtable* table, const void* key)
 {
 	hash_entry* entry;
-	int hash, index;
+	int index;
 	assert(table);
 	assert(key);
-	hash = table->hash_function(key);
-	index = hash % table->tablesize;
+	index = hash_index(table, key);
 	entry = table->entries[index];
 	while (entry && table->cmp_function(entry->value, key)) {
 		entry = entry->chain;
@@ -90,11 +96,10 @@ void hashtable_delete(hashtable* table, const void* key)
 {
 	hash_entry* entry;
 	hash_entry* prev = NULL;
-	int hash, index;
+	int index;
 	assert(table);
 	assert(key);
-	hash = table->hash_function(key);
-	index = hash % table->tablesize;
+	index = hash_index(table, key);
 	entry = table->entries[index];
 	while (entry && table->cmp_function(entry->value, key)) {
 		prev = entry;
