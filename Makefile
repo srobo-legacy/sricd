@@ -11,17 +11,17 @@ install: all
 	install -m 0644 libsric/libsric.a $(prefix)/lib/libsric.a
 
 libsric/libsric.a:
-	cd libsric ; make
+	$(MAKE) -C libsric
 
 sricd/sricd: poolalloc/pool.o
-	cd sricd ; make
+	$(MAKE) -C sricd
 
 poolalloc/pool.o:
-	cd poolalloc ; make
+	$(MAKE) -C poolalloc
 
 .PHONY: clean
 
 clean:
-	cd libsric ; make clean
-	cd sricd ; make clean
-	cd poolalloc ; make clean
+	$(MAKE) -C libsric clean
+	$(MAKE) -C sricd clean
+	$(MAKE) -C poolalloc clean
