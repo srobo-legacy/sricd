@@ -166,7 +166,7 @@ int sric_tx(sric_context ctx, const sric_frame* frame)
 
 static int sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned char type)
 {
-	short sdata;
+	uint16_t sdata;
 	unsigned char command[5];
 	assert(frame);
 	if (!ctx) return 1;
