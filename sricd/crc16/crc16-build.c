@@ -7,6 +7,7 @@ int main()
 {
 	int n, k;
 	uint16_t c;
+	puts("/* AUTOMATICALLY GENERATED, DO NOT EDIT */");
 	puts("#include \"crc16.h\"\n");
 	printf("static const uint16_t crc_table[256] = {");
 	for (n = 0; n < 256; ++n) {
