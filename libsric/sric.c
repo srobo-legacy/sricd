@@ -176,16 +176,16 @@ static int sric_poll(sric_context ctx, sric_frame* frame, int timeout, unsigned 
 	command[2] = ((timeout >>  8) & 0xFF);
 	command[3] = ((timeout >> 16) & 0xFF);
 	command[4] = ((timeout >> 24) & 0xFF);
-	if (!send_command(ctx, command, sizeof(command)))
+	if (send_command(ctx, command, sizeof(command)))
 		return 1;
 	// read the response
-	if (!read_data(ctx, &sdata, 2))
+	if (read_data(ctx, &sdata, 2))
 		return 1;
 	frame->address = ntohs(sdata);
-	if (!read_data(ctx, &sdata, 2))
+	if (read_data(ctx, &sdata, 2))
 		return 1;
 	frame->note = ntohs(sdata);
-	if (!read_data(ctx, &sdata, 2))
+	if (read_data(ctx, &sdata, 2))
 		return 1;
 	frame->payload_length = ntohs(sdata);
 	return read_data(ctx, frame->payload, frame->payload_length);
@@ -254,23 +254,23 @@ static void sric_refresh_devices(sric_context ctx)
 		free(ctx->devices);
 		ctx->devices = 0;
 	}
-	if (!send_command(ctx, &SRICD_LIST_DEVICES, 1)) {
+	if (send_command(ctx, &SRICD_LIST_DEVICES, 1)) {
 		return;
 	}
-	if (!read_data(ctx, &device_count, 2)) {
+	if (read_data(ctx, &device_count, 2)) {
 		return;
 	}
 	device_count = ntohs(device_count);
 	ctx->devices = malloc(sizeof(sric_device) * (device_count + 1));
 	for (i = 0; i < device_count; ++i) {
-		if (!read_data(ctx, &data, 2)) {
+		if (read_data(ctx, &data, 2)) {
 			free(ctx->devices);
 			ctx->devices = 0;
 			return;
 		}
 		data = ntohs(data);
 		ctx->devices[i].address = data;
-		if (!read_data(ctx, &data, 2)) {
+		if (read_data(ctx, &data, 2)) {
 			free(ctx->devices);
 			ctx->devices = 0;
 			return;
