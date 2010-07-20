@@ -1,21 +1,22 @@
 #ifndef _INCLUDED_DEVICE
 #define _INCLUDED_DEVICE
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-typedef struct _device
-{
-	int address;
-	int type;
-} device;
+#define DEVICE_HIGH_ADDRESS 128
 
-void device_init(void);
-void device_add(const device* dev);
+bool device_exists(int address);
+char device_type(int device);
+void device_add(int address, char type);
 void device_del(int address);
 void device_reset(void);
+static inline void device_init(void)
+	{ device_reset(); }
 
 #ifdef __cplusplus
 }

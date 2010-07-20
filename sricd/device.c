@@ -2,45 +2,37 @@
 #include <stdlib.h>
 #include "hashtable.h"
 
-static hashtable* device_table = NULL;
+#define NO_DEVICE -1
+#define MASTER_DEVICE 0
+#define BROADCAST_DEVICE -2
 
-static int device_hash(const void* ptr)
+char device_types[DEVICE_HIGH_ADDRESS];
+
+bool device_exists(int address)
 {
-	const device* dev = (const device*)ptr;
-	return dev->address;
+	return device_types[address] == NO_DEVICE;
 }
 
-static int device_cmp(const void* ptrA, const void* ptrB)
+char device_type(int address)
 {
-	const device* devA = (const device*)ptrA;
-	const device* devB = (const device*)ptrB;
-	if (devA->address < devB->address) return -1;
-	else if (devA->address > devB->address) return 1;
-	else return 0;
+	return device_types[address];
 }
 
-void device_init(void)
+void device_add(int address, char type)
 {
-	device_reset();
-}
-
-void device_add(const device* dev)
-{
-	hashtable_insert(device_table, dev);
+	device_types[address] = type;
 }
 
 void device_del(int address)
 {
-	device key;
-	key.address = address;
-	hashtable_delete(device_table, &key);
+	device_types[address] = NO_DEVICE;
 }
 
 void device_reset(void)
 {
-	if (device_table)
-		hashtable_destroy(device_table);
-	device_table = hashtable_create(sizeof(device), 64,
-	                                device_hash,
-	                                device_cmp);
+	int i;
+	device_types[0] = BROADCAST_DEVICE;
+	device_types[1] = MASTER_DEVICE;
+	for (i = 2; i < DEVICE_HIGH_ADDRESS; ++i)
+		device_types[i] = NO_DEVICE;
 }
