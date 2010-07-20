@@ -1,3 +1,5 @@
+include ../makeflags
+
 all: sricd
 
 include depend

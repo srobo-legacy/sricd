@@ -1,0 +1,4 @@
+# Variable defs for all Makefiles in build
+
+CFLAGS := -Wall -g
+LDFLAGS :=

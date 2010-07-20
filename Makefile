@@ -1,3 +1,5 @@
+include makeflags
+
 all: libsric/libsric.a sricd/sricd poolalloc/pool.o
 
 install: all

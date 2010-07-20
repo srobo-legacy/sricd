@@ -1,3 +1,5 @@
+include ../makeflags
+
 all: libsric.a
 
 include depend
