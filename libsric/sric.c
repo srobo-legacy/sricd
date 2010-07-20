@@ -43,7 +43,7 @@ sric_context sric_init(void)
 		close(fd);
 		return 0;
 	}
-	ctx = malloc(sizeof(sric_context));
+	ctx = malloc(sizeof(struct _sric_context));
 	assert(ctx);
 	memset(ctx, 0, sizeof(*ctx));
 	ctx->fd = fd;
