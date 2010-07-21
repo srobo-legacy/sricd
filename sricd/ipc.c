@@ -172,7 +172,10 @@ static void ipc_client_incoming(int fd, void* client_object)
 	client* c = (client*)client_object;
 	assert(c);
 	// do R/W stuff here
-	read(fd, &cmd, 1);
+	if( read(fd, &cmd, 1) == 0 ) {
+		// EOF:
+		return;
+	}
 	switch (cmd) {
 		case SRICD_TX:
 			handle_tx(fd, c);
