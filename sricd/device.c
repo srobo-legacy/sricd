@@ -10,14 +10,14 @@
 typedef struct _device_note_target device_note_target;
 
 struct _device_note_target {
-	client* c;
+	client*             c;
 	device_note_target* next;
-	uint64_t flags;
+	uint64_t            flags;
 };
 
-static char device_types[DEVICE_HIGH_ADDRESS];
+static char                device_types[DEVICE_HIGH_ADDRESS];
 static device_note_target* targets[DEVICE_HIGH_ADDRESS];
-static pool* note_target_pool = NULL;
+static pool*               note_target_pool = NULL;
 
 bool device_exists(int address)
 {
@@ -44,22 +44,23 @@ void device_reset(void)
 	int i;
 	device_types[0] = BROADCAST_DEVICE;
 	device_types[1] = MASTER_DEVICE;
-	targets[0] = NULL;
-	targets[1] = NULL;
+	targets[0]      = NULL;
+	targets[1]      = NULL;
 	for (i = 2; i < DEVICE_HIGH_ADDRESS; ++i) {
-		targets[i] = NULL;
+		targets[i]      = NULL;
 		device_types[i] = NO_DEVICE;
 	}
 	pool_destroy(note_target_pool);
-	note_target_pool = pool_create(sizeof(device_note_target));
+	note_target_pool = pool_create(sizeof (device_note_target));
 }
 
 static void device_drop_client_notes(int address, client* c)
 {
 	device_note_target** ptr;
-	device_note_target* cur;
-	if (!targets[address])
+	device_note_target*  cur;
+	if (!targets[address]) {
 		return;
+	}
 	ptr = &(targets[address]);
 	cur = targets[address];
 	while (cur) {
@@ -76,9 +77,9 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 {
 	device_note_target* cur;
 	if (!targets[address]) {
-		targets[address] = pool_alloc(note_target_pool);
-		targets[address]->c = c;
-		targets[address]->next = NULL;
+		targets[address]        = pool_alloc(note_target_pool);
+		targets[address]->c     = c;
+		targets[address]->next  = NULL;
 		targets[address]->flags = notes;
 	} else {
 		cur = targets[address];
@@ -89,22 +90,22 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 			} else if (cur->next) {
 				cur = cur->next;
 			} else {
-				cur->next = pool_alloc(note_target_pool);
-				cur = cur->next;
-				cur->c = c;
-				cur->next = NULL;
+				cur->next  = pool_alloc(note_target_pool);
+				cur        = cur->next;
+				cur->c     = c;
+				cur->next  = NULL;
 				cur->flags = notes;
 			}
-		} while(1);
+		} while (1);
 	}
 }
 
 void device_set_client_notes(int address, client* c, uint64_t notes)
 {
 	uint64_t* client_flag_pointer;
-	int bit = address;
+	int       bit = address;
 	if (bit > 64) {
-		bit -= 64;
+		bit                -= 64;
 		client_flag_pointer = &(c->device_note_data[1]);
 	} else {
 		client_flag_pointer = &(c->device_note_data[0]);
@@ -129,11 +130,13 @@ void device_clear_client_notes(client* c)
 
 void device_dispatch_note(const client_note* note)
 {
-	device_note_target* cur = targets[note->address];
-	uint64_t flag = ((uint64_t)1 << note->note);
+	device_note_target* cur  = targets[note->address];
+	uint64_t            flag = ((uint64_t)1 << note->note);
 	while (cur) {
-		if (cur->flags & flag)
+		if (cur->flags & flag) {
 			client_push_note(cur->c, note);
+		}
 		cur = cur->next;
 	}
 }
+

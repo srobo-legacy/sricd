@@ -7,14 +7,14 @@
 #define NPRIOS 4
 
 static queue* tx_queues[NPRIOS];
-static int count = 0;
+static int    count = 0;
 
 void txq_init(void)
 {
 	int i;
 	wlog("starting %d tx priority levels", NPRIOS);
 	for (i = 0; i < NPRIOS; ++i) {
-		tx_queues[i] = queue_create(sizeof(tx));
+		tx_queues[i] = queue_create(sizeof (tx));
 	}
 }
 
@@ -22,9 +22,9 @@ void txq_push(const tx* tx, int prio)
 {
 	void* e;
 	prio = (NPRIOS - 1) - prio;
-	e = queue_push(tx_queues[prio]);
+	e    = queue_push(tx_queues[prio]);
 	// TODO: shorten this based on payload size
-	memcpy(e, tx, sizeof(*tx));
+	memcpy(e, tx, sizeof (*tx));
 	++count;
 }
 
@@ -44,3 +44,4 @@ bool txq_empty(void)
 {
 	return count == 0;
 }
+

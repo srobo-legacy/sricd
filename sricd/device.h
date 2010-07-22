@@ -17,8 +17,12 @@ char device_type(int device);
 void device_add(int address, char type);
 void device_del(int address);
 void device_reset(void);
+
 static inline void device_init(void)
-	{ device_reset(); }
+{
+	device_reset();
+}
+
 void device_set_client_notes(int address, client* c, uint64_t notes);
 void device_clear_client_notes(client* c);
 void device_dispatch_note(const client_note* note);

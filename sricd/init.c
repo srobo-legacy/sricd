@@ -22,3 +22,4 @@ void init(const char* socket_path)
 	ipc_init(socket_path);
 	wlog("startup complete");
 }
+

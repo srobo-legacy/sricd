@@ -6,7 +6,9 @@ bool log_enable = false;
 
 void wlogv(const char* fmt, va_list va)
 {
-	if (!log_enable) return;
+	if (!log_enable) {
+		return;
+	}
 	vfprintf(stderr, fmt, va);
 	fputc('\n', stderr);
 }
@@ -18,3 +20,4 @@ void wlog(const char* fmt, ...)
 	wlogv(fmt, va);
 	va_end(va);
 }
+

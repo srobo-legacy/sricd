@@ -19,25 +19,25 @@ typedef struct _client_note client_note;
 typedef void (*client_ping_callback)(client* c);
 
 struct _client_rx {
-	int address;
-	int payload_length;
+	int  address;
+	int  payload_length;
 	char payload[PAYLOAD_MAX];
 };
 
 struct _client_note {
-	int address;
-	int note;
-	int payload_length;
+	int  address;
+	int  note;
+	int  payload_length;
 	char payload[PAYLOAD_MAX];
 };
 
 struct _client {
-	queue* note_q;
-	queue* rx_q;
-	int fd;
-	int rx_timer, note_timer;
+	queue*               note_q;
+	queue*               rx_q;
+	int                  fd;
+	int                  rx_timer, note_timer;
 	client_ping_callback rx_ping, note_ping;
-	uint64_t device_note_data[2];
+	uint64_t             device_note_data[2];
 };
 
 client* client_create(int fd);

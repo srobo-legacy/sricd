@@ -8,13 +8,13 @@ extern "C"
 
 typedef union _tagged_pointer {
 	unsigned long longVal;
-	void* ptrVal;
+	void*         ptrVal;
 } tp_t;
 
 static inline tp_t tp_init(void* ptr, int flags)
 {
 	tp_t val;
-	val.ptrVal = ptr;
+	val.ptrVal   = ptr;
 	val.longVal |= (unsigned long)(flags & 0x3);
 	return val;
 }

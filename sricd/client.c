@@ -12,15 +12,15 @@
 
 client* client_create(int fd)
 {
-	client* c = malloc(sizeof(client));
+	client* c = malloc(sizeof (client));
 	assert(c);
-	c->note_q = queue_create(sizeof(client_note));
-	c->rx_q   = queue_create(sizeof(client_rx));
-	c->fd = fd;
-	c->rx_timer   = -1;
-	c->note_timer = -1;
-	c->rx_ping    = NULL;
-	c->note_ping  = NULL;
+	c->note_q              = queue_create(sizeof (client_note));
+	c->rx_q                = queue_create(sizeof (client_rx));
+	c->fd                  = fd;
+	c->rx_timer            = -1;
+	c->note_timer          = -1;
+	c->rx_ping             = NULL;
+	c->note_ping           = NULL;
 	c->device_note_data[0] = 0;
 	c->device_note_data[1] = 0;
 	return c;
@@ -39,9 +39,8 @@ void client_push_rx(client* c, const client_rx* rx)
 	assert(c);
 	assert(rx);
 	ptr = queue_push(c->rx_q);
-	memcpy(ptr, rx, sizeof(*rx));
-	if (c->rx_ping)
-	{
+	memcpy(ptr, rx, sizeof (*rx));
+	if (c->rx_ping) {
 		c->rx_ping(c);
 	}
 }
@@ -52,9 +51,8 @@ void client_push_note(client* c, const client_note* note)
 	assert(c);
 	assert(note);
 	ptr = queue_push(c->note_q);
-	memcpy(ptr, note, sizeof(*note));
-	if (c->note_ping)
-	{
+	memcpy(ptr, note, sizeof (*note));
+	if (c->note_ping) {
 		c->note_ping(c);
 	}
 }
@@ -62,17 +60,20 @@ void client_push_note(client* c, const client_note* note)
 const client_rx* client_pop_rx(client* c)
 {
 	assert(c);
-	if (queue_empty(c->rx_q))
+	if (queue_empty(c->rx_q)) {
 		return NULL;
-	else
+	} else {
 		return queue_pop(c->rx_q);
+	}
 }
 
 const client_note* client_pop_note(client* c)
 {
 	assert(c);
-	if (queue_empty(c->note_q))
+	if (queue_empty(c->note_q)) {
 		return NULL;
-	else
+	} else {
 		return queue_pop(c->note_q);
+	}
 }
+

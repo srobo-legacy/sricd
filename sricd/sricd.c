@@ -31,30 +31,12 @@ static void print_version_and_exit()
 
 static void background()
 {
-	/*int fd, rc;
-	pid_t f = fork();
-	if (f <= 0) {
-		_exit(0);
-	} else {
-		f = setsid();
-		perror("death");
-		assert(f >= 0);
-		rc = chdir("/");
-		assert(rc == 0);
-		fd = open("/dev/null", O_RDWR);
-		assert(fd > 2);
-		rc = dup2(fd, 0);
-		rc |= dup2(fd, 1);
-		rc |= dup2(fd, 2);
-		assert(rc == 0);
-		close(fd);
-	}*/
 	daemon(0, 0);
 }
 
-static char** restart_argv;
+static char**      restart_argv;
 static const char* restart_file;
-extern char **environ;
+extern char**      environ;
 
 void restart()
 {
@@ -65,14 +47,14 @@ void restart()
 
 int main(int argc, char** argv)
 {
-	int arg, rv, to;
-	int fg = 0;
+	int                arg, rv, to;
+	int                fg          = 0;
 	unsigned long long time1, time2, startup_time;
-	struct timeval tv1, tv2;
-	const char* socket_path = DEFAULT_SOCKET_PATH;
+	struct timeval     tv1, tv2;
+	const char*        socket_path = DEFAULT_SOCKET_PATH;
 	restart_argv = argv + 1;
 	restart_file = argv[0];
-	rv = gettimeofday(&tv1, 0);
+	rv           = gettimeofday(&tv1, 0);
 	assert(rv == 0);
 	while ((arg = getopt(argc, argv, "hvVfds:")) != -1) {
 		switch (arg) {
@@ -80,18 +62,23 @@ int main(int argc, char** argv)
 		case '?':
 			print_help_and_exit(argv[0]);
 			break;
+
 		case 'V':
 			print_version_and_exit();
 			break;
+
 		case 'f':
 			fg = 1;
 			break;
+
 		case 'd':
 			fg = 0;
 			break;
+
 		case 'v':
 			log_enable = true;
 			break;
+
 		case 's':
 			socket_path = optarg;
 			break;
@@ -102,10 +89,10 @@ int main(int argc, char** argv)
 		wlog("backgrounding");
 		background();
 	}
-	rv = gettimeofday(&tv2, 0);
+	rv           = gettimeofday(&tv2, 0);
 	assert(rv == 0);
-	time1 = tv1.tv_sec*1000000 + tv1.tv_usec;
-	time2 = tv2.tv_sec*1000000 + tv2.tv_usec;
+	time1        = tv1.tv_sec * 1000000 + tv1.tv_usec;
+	time2        = tv2.tv_sec * 1000000 + tv2.tv_usec;
 	startup_time = time2 - time1;
 	wlog("startup took %lluµs", startup_time);
 	wlog("entering main loop");
@@ -116,3 +103,4 @@ int main(int argc, char** argv)
 	}
 	return 0;
 }
+

@@ -11,10 +11,10 @@ extern "C"
 #endif
 
 typedef struct _tx {
-	int address;
+	int   address;
 	void* tag; // if tag == NULL, this is a response
-	int payload_length;
-	char payload[PAYLOAD_MAX];
+	int   payload_length;
+	char  payload[PAYLOAD_MAX];
 } tx;
 
 // prio varies from 0 to 3 inclusive, 3 is highest

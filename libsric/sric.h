@@ -45,9 +45,9 @@ typedef struct _sric_context* sric_context;
  * A single frame.
  */
 typedef struct _sric_frame {
-	int address;                     /**< Remote address.               */
-	int note;                        /**< Note ID, or -1 for non-notes. */
-	int payload_length;              /**< Length of the payload field.  */
+	int           address;                        /**< Remote address.               */
+	int           note;                           /**< Note ID, or -1 for non-notes. */
+	int           payload_length;                 /**< Length of the payload field.  */
 	unsigned char payload[SRIC_MAX_PAYLOAD_SIZE]; /**< Frame payload. */
 } sric_frame;
 
@@ -67,6 +67,7 @@ typedef struct _sric_device {
  * @return The new libsric context.
  */
 sric_context sric_init(void);
+
 /**
  * Tear down a libsric context.
  *
@@ -81,6 +82,7 @@ void sric_quit(sric_context ctx);
  * @return The last error, or SRIC_ERROR_NONE if there was no error.
  */
 sric_error sric_get_error(sric_context ctx);
+
 /**
  * Clears the error in a libsric context.
  *
@@ -106,6 +108,7 @@ void sric_clear_error(sric_context ctx);
  * @return Whether this was successful.
  */
 int sric_tx(sric_context ctx, const sric_frame* frame);
+
 /**
  * Poll for an RX frame.
  *
@@ -118,6 +121,7 @@ int sric_tx(sric_context ctx, const sric_frame* frame);
  * @return Whether a frame was found.
  */
 int sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
+
 /**
  * Send a TX frame, and wait for the corresponding RX.
  *
@@ -138,8 +142,11 @@ int sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
  * @return Whether the TXRX was successful.
  */
 inline static int sric_txrx(sric_context ctx, const sric_frame* outframe,
-                             sric_frame* inframe) {
-	if (sric_tx(ctx, outframe)) return 1;
+                            sric_frame* inframe)
+{
+	if (sric_tx(ctx, outframe)) {
+		return 1;
+	}
 	return sric_poll_rx(ctx, inframe, -1);
 }
 
@@ -158,6 +165,7 @@ inline static int sric_txrx(sric_context ctx, const sric_frame* outframe,
  * @return Whether the call was successful.
  */
 int sric_note_set_flags(sric_context ctx, int device, uint64_t flags);
+
 /**
  * Return the notification flags for a given device.
  *
@@ -181,8 +189,11 @@ uint64_t sric_note_get_flags(sric_context ctx, int device);
  * @return Whether the call was successful.
  */
 inline static int sric_note_register(sric_context ctx, int device, int note)
-	{ return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
-	                             | ((uint64_t)1 << note)); }
+{
+	return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
+	                           | ((uint64_t)1 << note));
+}
+
 /**
  * Unregister for a given notification on a device.
  *
@@ -195,8 +206,11 @@ inline static int sric_note_register(sric_context ctx, int device, int note)
  * @return Whether the call was successful.
  */
 inline static int sric_note_unregister(sric_context ctx, int device, int note)
-	{ return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
-	                             & ~((uint64_t)1 << note)); }
+{
+	return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
+	                           & ~((uint64_t)1 << note));
+}
+
 /**
  * Unregister for all notifications on a device.
  *
@@ -208,7 +222,10 @@ inline static int sric_note_unregister(sric_context ctx, int device, int note)
  * @return Whether the call was successful.
  */
 inline static int sric_note_unregister_device(sric_context ctx, int device)
-	{ return sric_note_set_flags(ctx, device, 0); }
+{
+	return sric_note_set_flags(ctx, device, 0);
+}
+
 /**
  * Unregister for all notifications for all devices.
  *
@@ -231,6 +248,7 @@ int sric_note_unregister_all(sric_context ctx);
  * @return Whether a frame was found.
  */
 int sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
+
 /**
  * Block indefinitely for a note.
  *
@@ -242,7 +260,9 @@ int sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
  * @return Whether a frame was found.
  */
 inline static int sric_note(sric_context ctx, sric_frame* frame)
-	{ return sric_poll_note(ctx, frame, -1); }
+{
+	return sric_poll_note(ctx, frame, -1);
+}
 
 /**
  * Enumerate over known devices.
@@ -255,7 +275,7 @@ inline static int sric_note(sric_context ctx, sric_frame* frame)
  * @param device The previously enumerated device, or NULL.
  * @return The next device, or NULL if all devices have been enumerated.
  */
-const sric_device* sric_enumerate_devices(sric_context ctx,
+const sric_device* sric_enumerate_devices(sric_context       ctx,
                                           const sric_device* device);
 
 #ifdef __cplusplus

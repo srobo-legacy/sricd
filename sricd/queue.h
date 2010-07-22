@@ -23,7 +23,10 @@ queue* queue_create(unsigned objsize);
 void queue_destroy(queue* q);
 
 inline static bool queue_empty(queue* q)
-	{ return q->head == 0; }
+{
+	return q->head == 0;
+}
+
 void* queue_push(queue* q);
 void* queue_pop(queue* q);
 

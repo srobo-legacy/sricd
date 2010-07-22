@@ -5,7 +5,7 @@
 
 int main()
 {
-	int n, k;
+	int      n, k;
 	uint16_t c;
 	puts("/* AUTOMATICALLY GENERATED, DO NOT EDIT */");
 	puts("#include \"crc16.h\"\n");
@@ -33,3 +33,4 @@ int main()
 	puts("}");
 	return 0;
 }
+

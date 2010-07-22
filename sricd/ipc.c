@@ -23,19 +23,19 @@ static void ipc_client_death(int, void*);
 
 static void ipc_boot(void)
 {
-	int s, rv;
+	int                s, rv;
 	struct sockaddr_un addr;
-	socklen_t len;
-	s = socket(PF_UNIX, SOCK_STREAM, 0);
+	socklen_t          len;
+	s               = socket(PF_UNIX, SOCK_STREAM, 0);
 	assert(s);
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, sock_path);
-	len = sizeof(addr);
-	rv = unlink(sock_path);
+	len             = sizeof (addr);
+	rv              = unlink(sock_path);
 	assert(rv == 0 || errno == ENOENT);
-	rv = bind(s, (struct sockaddr*)&addr, len);
+	rv              = bind(s, (struct sockaddr*)&addr, len);
 	assert(rv == 0);
-	rv = listen(s, 5);
+	rv              = listen(s, 5);
 	assert(rv == 0);
 	wlog("created IPC socket as fd %d", s);
 	input_listen(s, ipc_new, ipc_death, NULL, NULL);
@@ -43,17 +43,17 @@ static void ipc_boot(void)
 
 static void ipc_new(int sock, void* x)
 {
-	client* c;
+	client*            c;
 	struct sockaddr_un addr;
-	socklen_t len = sizeof(addr);
-	int new;
+	socklen_t          len = sizeof (addr);
+	int                new;
 	(void)x;
 	new = accept(sock, (struct sockaddr*)&addr, &len);
 	wlog("accepted new connection");
-	input_listen(sock, ipc_new, ipc_death, NULL, NULL);
+	input_listen(sock, ipc_new,             ipc_death,        NULL, NULL);
 	// do stuff with new here
 	c = client_create(new);
-	input_listen(new, ipc_client_incoming, ipc_client_death, NULL, c);
+	input_listen(new,  ipc_client_incoming, ipc_client_death, NULL, c);
 }
 
 #define SRICD_TX           0
@@ -88,16 +88,14 @@ static bool write_result(int fd, client* c, unsigned char result)
 static void handle_tx(int fd, client* c)
 {
 	unsigned char buf[4];
-	tx frame;
-	if (!read_data(fd, buf, 4))
-	{
+	tx            frame;
+	if (!read_data(fd, buf, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;
 	}
-	frame.address = (int)buf[0] | ((int)buf[1] << 8);
+	frame.address        = (int)buf[0] | ((int)buf[1] << 8);
 	frame.payload_length = (int)buf[2] | ((int)buf[3] << 8);
-	if (!read_data(fd, frame.payload, frame.payload_length))
-	{
+	if (!read_data(fd, frame.payload, frame.payload_length)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;
 	}
@@ -117,22 +115,23 @@ static void send_rx(int fd, client* c, const client_rx* rx)
 	response_header[5] = (rx->payload_length >> 0) & 0xFF;
 	response_header[6] = (rx->payload_length >> 8) & 0xFF;
 	write_data(fd, c, response_header, 7);
-	write_data(fd, c, rx->payload, rx->payload_length);
+	write_data(fd, c, rx->payload,     rx->payload_length);
 }
 
 static void rx_timeout(int timer, void* ptr)
 {
-	//client* c = (client*)ptr;
+	// client* c = (client*)ptr;
 	// TODO: stuff here
 }
 
 static void rx_ping(client* c)
 {
 	const client_rx* rx;
-	if (c->rx_timer != -1)
+	if (c->rx_timer != -1) {
 		sched_cancel(c->rx_timer);
+	}
 	c->rx_ping = NULL;
-	rx = client_pop_rx(c);
+	rx         = client_pop_rx(c);
 	assert(rx);
 	send_rx(c->fd, c, rx);
 }
@@ -140,28 +139,23 @@ static void rx_ping(client* c)
 static void handle_poll_rx(int fd, client* c)
 {
 	const client_rx* rx;
-	int32_t timeout;
-	if (!read_data(fd, &timeout, 4))
-	{
+	int32_t          timeout;
+	if (!read_data(fd, &timeout, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;
 	}
 	timeout = ntohl(timeout);
-	if ((rx = client_pop_rx(c)))
-	{
+	if ((rx = client_pop_rx(c))) {
 		// RX was immediately available, return it
 		send_rx(fd, c, rx);
-	}
-	else if (timeout == 0)
-	{
+	} else if (timeout == 0) {
 		// immediately return
 		write_result(fd, c, SRIC_E_TIMEOUT);
-	}
-	else
-	{
+	} else {
 		// schedule for timeout
-		if (timeout != -1)
+		if (timeout != -1) {
 			c->rx_timer = sched_event(timeout, rx_timeout, (void*)c);
+		}
 		c->rx_ping = rx_ping;
 	}
 }
@@ -169,26 +163,32 @@ static void handle_poll_rx(int fd, client* c)
 static void ipc_client_incoming(int fd, void* client_object)
 {
 	unsigned char cmd;
-	client* c = (client*)client_object;
+	client*       c = (client*)client_object;
 	assert(c);
 	// do R/W stuff here
-	if( read(fd, &cmd, 1) == 0 ) {
+	if (read(fd, &cmd, 1) == 0) {
 		// EOF:
 		return;
 	}
 	switch (cmd) {
-		case SRICD_TX:
-			handle_tx(fd, c);
-			break;
-		case SRICD_POLL_RX:
-			handle_poll_rx(fd, c);
-			break;
-		default:
-			cmd = SRIC_E_BADREQUEST;
-			write(fd, &cmd, 1);
-			break;
+	case SRICD_TX:
+		handle_tx(fd, c);
+		break;
+
+	case SRICD_POLL_RX:
+		handle_poll_rx(fd, c);
+		break;
+
+	default:
+		cmd = SRIC_E_BADREQUEST;
+		write(fd, &cmd, 1);
+		break;
 	}
-	input_listen(fd, ipc_client_incoming, ipc_client_death, NULL, client_object);
+	input_listen(fd,
+	             ipc_client_incoming,
+	             ipc_client_death,
+	             NULL,
+	             client_object);
 }
 
 static void ipc_client_death(int fd, void* client_object)
@@ -212,3 +212,4 @@ void ipc_init(const char* socket_path)
 	sock_path = socket_path;
 	ipc_boot();
 }
+
