@@ -2,17 +2,13 @@
  * @file sric.h
  * @brief libsric interface.
  */
-
 #ifndef _INCLUDED_LIBSRIC
 #define _INCLUDED_LIBSRIC
-
 #include <inttypes.h>
-
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
 /**
  * Maximum frame payload size.
  */
@@ -21,7 +17,6 @@ extern "C"
  * The high address under SRIC - all addresses are < SRIC_HIGH_ADDRESS
  */
 #define SRIC_HIGH_ADDRESS 128
-
 /**
  * libsric error codes.
  */
@@ -35,22 +30,19 @@ typedef enum _sric_error {
 	SRIC_ERROR_TIMEOUT,        /**< request timed out                         */
 	SRIC_ERROR_BROADCAST       /**< cannot listen on broadcast addr           */
 } sric_error;
-
 /**
  * A libsric context.
  */
 typedef struct _sric_context* sric_context;
-
 /**
  * A single frame.
  */
 typedef struct _sric_frame {
-	int address;                     /**< Remote address.               */
-	int note;                        /**< Note ID, or -1 for non-notes. */
-	int payload_length;              /**< Length of the payload field.  */
+	int           address;                        /**< Remote address.               */
+	int           note;                           /**< Note ID, or -1 for non-notes. */
+	int           payload_length;                 /**< Length of the payload field.  */
 	unsigned char payload[SRIC_MAX_PAYLOAD_SIZE]; /**< Frame payload. */
 } sric_frame;
-
 /**
  * Remote device.
  */
@@ -58,7 +50,6 @@ typedef struct _sric_device {
 	int address; /**< Device address. */
 	int type;    /**< Device type. */
 } sric_device;
-
 /**
  * Create a libsric context.
  *
@@ -73,7 +64,6 @@ sric_context sric_init(void);
  * @param ctx The context to tear down.
  */
 void sric_quit(sric_context ctx);
-
 /**
  * Get the last error on a libsric context.
  *
@@ -89,7 +79,6 @@ sric_error sric_get_error(sric_context ctx);
  * @param ctx The context to check.
  */
 void sric_clear_error(sric_context ctx);
-
 /**
  * Send a TX frame.
  *
@@ -138,11 +127,13 @@ int sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
  * @return Whether the TXRX was successful.
  */
 inline static int sric_txrx(sric_context ctx, const sric_frame* outframe,
-                             sric_frame* inframe) {
-	if (sric_tx(ctx, outframe)) return 1;
+                            sric_frame* inframe)
+{
+	if (sric_tx(ctx, outframe)) {
+		return 1;
+	}
 	return sric_poll_rx(ctx, inframe, -1);
 }
-
 /**
  * Set the notification flags for a given device.
  *
@@ -168,7 +159,6 @@ int sric_note_set_flags(sric_context ctx, int device, uint64_t flags);
  * @return The note flags on that device.
  */
 uint64_t sric_note_get_flags(sric_context ctx, int device);
-
 /**
  * Register for a given notification on a device.
  *
@@ -181,8 +171,10 @@ uint64_t sric_note_get_flags(sric_context ctx, int device);
  * @return Whether the call was successful.
  */
 inline static int sric_note_register(sric_context ctx, int device, int note)
-	{ return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
-	                             | ((uint64_t)1 << note)); }
+{
+	return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
+	                           | ((uint64_t)1 << note));
+}
 /**
  * Unregister for a given notification on a device.
  *
@@ -195,8 +187,10 @@ inline static int sric_note_register(sric_context ctx, int device, int note)
  * @return Whether the call was successful.
  */
 inline static int sric_note_unregister(sric_context ctx, int device, int note)
-	{ return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
-	                             & ~((uint64_t)1 << note)); }
+{
+	return sric_note_set_flags(ctx, device, sric_note_get_flags(ctx, device)
+	                           & ~((uint64_t)1 << note));
+}
 /**
  * Unregister for all notifications on a device.
  *
@@ -208,7 +202,9 @@ inline static int sric_note_unregister(sric_context ctx, int device, int note)
  * @return Whether the call was successful.
  */
 inline static int sric_note_unregister_device(sric_context ctx, int device)
-	{ return sric_note_set_flags(ctx, device, 0); }
+{
+	return sric_note_set_flags(ctx, device, 0);
+}
 /**
  * Unregister for all notifications for all devices.
  *
@@ -218,7 +214,6 @@ inline static int sric_note_unregister_device(sric_context ctx, int device)
  * @return Whether the call was successful.
  */
 int sric_note_unregister_all(sric_context ctx);
-
 /**
  * Poll for a notification frame.
  *
@@ -242,8 +237,9 @@ int sric_poll_note(sric_context ctx, sric_frame* frame, int timeout);
  * @return Whether a frame was found.
  */
 inline static int sric_note(sric_context ctx, sric_frame* frame)
-	{ return sric_poll_note(ctx, frame, -1); }
-
+{
+	return sric_poll_note(ctx, frame, -1);
+}
 /**
  * Enumerate over known devices.
  *
@@ -255,11 +251,9 @@ inline static int sric_note(sric_context ctx, sric_frame* frame)
  * @param device The previously enumerated device, or NULL.
  * @return The next device, or NULL if all devices have been enumerated.
  */
-const sric_device* sric_enumerate_devices(sric_context ctx,
+const sric_device* sric_enumerate_devices(sric_context       ctx,
                                           const sric_device* device);
-
 #ifdef __cplusplus
 }
 #endif
-
 #endif

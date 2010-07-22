@@ -1,33 +1,32 @@
 #include "queue.h"
 #include <assert.h>
-
 queue* queue_create(unsigned objsize)
 {
-	pool* p;
+	pool*  p;
 	queue* q;
 	assert(objsize);
-	p = pool_create_extra(sizeof(void*) + objsize, sizeof(queue), (void**)&q);
+	p
+	        = pool_create_extra(sizeof (void*) + objsize, sizeof (queue),
+	                        (void**)&q);
 	q->head = NULL;
 	q->tail = NULL;
 	q->last = NULL;
 	q->pool = p;
 	return q;
 }
-
 void queue_destroy(queue* q)
 {
 	assert(q);
 	pool_destroy(q->pool);
 }
-
 void* queue_push(queue* q)
 {
 	unsigned char* buf;
 	unsigned char* data;
 	assert(q);
-	buf = pool_alloc(q->pool);
+	buf          = pool_alloc(q->pool);
 	*(void**)buf = NULL;
-	data = buf + sizeof(void*);
+	data         = buf + sizeof (void*);
 	if (q->tail) {
 		*(void**)q->tail = buf;
 	} else {
@@ -35,13 +34,14 @@ void* queue_push(queue* q)
 	}
 	return data;
 }
-
 void* queue_pop(queue* q)
 {
 	assert(q);
 	pool_free(q->pool, q->last);
 	q->last = q->head;
 	q->head = *(void**)q->head;
-	if (!q->head) q->tail = NULL;
+	if (!q->head) {
+		q->tail = NULL;
+	}
 	return q->last;
 }

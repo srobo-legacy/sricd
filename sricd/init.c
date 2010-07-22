@@ -6,7 +6,6 @@
 #include "sched.h"
 #include "log.h"
 #include <assert.h>
-
 void init(const char* socket_path)
 {
 	assert(socket_path);
