@@ -12,7 +12,7 @@ depend: *.c
 		$(CC) $(CFLAGS) -MM $$file -o - >> $@ ; \
 	done ;
 
-sricd: client.o init.o input.o output-queue.o queue.o sricd.o ipc.o log.o sched.o hashtable.o device.o ../poolalloc/pool.o crc16/crc16.o
+sricd: client.o init.o input.o output-queue.o queue.o sricd.o ipc.o log.o sched.o device.o ../poolalloc/pool.o crc16/crc16.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 crc16/crc16.o:
