@@ -122,7 +122,8 @@ static void send_rx(int fd, client* c, const client_rx* rx)
 
 static void rx_timeout(int timer, void* ptr)
 {
-	client* c = (client*)ptr;
+	//client* c = (client*)ptr;
+	// TODO: stuff here
 }
 
 static void rx_ping(client* c)
