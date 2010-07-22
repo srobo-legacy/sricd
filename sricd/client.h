@@ -2,6 +2,7 @@
 #define _INCLUDED_CLIENT
 
 #include "queue.h"
+#include <stdint.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -36,6 +37,7 @@ struct _client {
 	int fd;
 	int rx_timer, note_timer;
 	client_ping_callback rx_ping, note_ping;
+	uint64_t device_note_data[2];
 };
 
 client* client_create(int fd);

@@ -21,6 +21,8 @@ client* client_create(int fd)
 	c->note_timer = -1;
 	c->rx_ping    = NULL;
 	c->note_ping  = NULL;
+	c->device_note_data[0] = 0;
+	c->device_note_data[1] = 0;
 	return c;
 }
 

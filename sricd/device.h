@@ -1,7 +1,9 @@
 #ifndef _INCLUDED_DEVICE
 #define _INCLUDED_DEVICE
 
+#include <stdint.h>
 #include <stdbool.h>
+#include "client.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -17,6 +19,9 @@ void device_del(int address);
 void device_reset(void);
 static inline void device_init(void)
 	{ device_reset(); }
+void device_set_client_notes(int address, client* c, uint64_t notes);
+void device_clear_client_notes(client* c);
+void device_dispatch_note(const client_note* note);
 
 #ifdef __cplusplus
 }
