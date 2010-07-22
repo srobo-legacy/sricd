@@ -52,6 +52,17 @@ static void background()
 	daemon(0, 0);
 }
 
+static char** restart_argv;
+static const char* restart_file;
+extern char **environ;
+
+void restart()
+{
+	wlog("restarting sricd");
+	execve(restart_file, restart_argv, environ);
+	exit(1);
+}
+
 int main(int argc, char** argv)
 {
 	int arg, rv, to;
@@ -59,6 +70,8 @@ int main(int argc, char** argv)
 	unsigned long long time1, time2, startup_time;
 	struct timeval tv1, tv2;
 	const char* socket_path = DEFAULT_SOCKET_PATH;
+	restart_argv = argv + 1;
+	restart_file = argv[0];
 	rv = gettimeofday(&tv1, 0);
 	assert(rv == 0);
 	while ((arg = getopt(argc, argv, "hvVfds:")) != -1) {
