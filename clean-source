@@ -1,0 +1,2 @@
+#!/bin/bash
+find . -name '*.c' -or -name '*.h' | xargs uncrustify -c uncrustify.cfg --replace --no-backup
