@@ -140,7 +140,6 @@ static void handle_poll_rx(int fd, client* c)
 {
 	const client_rx* rx;
 	int32_t timeout;
-	int timer;
 	if (!read_data(fd, &timeout, 4))
 	{
 		write_result(fd, c, SRIC_E_BADREQUEST);
