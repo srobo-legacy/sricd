@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <termios.h>
+#include <unistd.h>
 
 static int fd = -1;
 
