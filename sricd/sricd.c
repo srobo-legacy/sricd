@@ -13,16 +13,18 @@
 #include <errno.h>
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
+const char* DEFAULT_SERIAL_DEV = "/dev/sric-a";
 
 static void print_help_and_exit(const char* pname)
 {
-	printf("Usage: %s [-h] [-v] [-V] [-f] [-d] [-s socket]\n", pname);
+	printf("Usage: %s [-h] [-v] [-V] [-f] [-d] [-s socket] [-u device]\n", pname);
 	printf("\t-V\tprint version\n");
 	printf("\t-d\trun as daemon (default)\n");
 	printf("\t-f\tkeep in foreground\n");
 	printf("\t-h\tprint this help\n");
 	printf("\t-s\tspecify the location of the socket\n");
 	printf("\t-v\tenable verbose mode\n");
+	printf("\t-u\tspecify the serial port device path\n");
 	exit(0);
 }
 
@@ -40,6 +42,7 @@ static void background()
 static const char* restart_file;
 
 static const char* socket_path;
+static const char* sdev_path;
 
 void restart()
 {
@@ -56,10 +59,11 @@ int main(int argc, char** argv)
 	unsigned long long time1, time2, startup_time;
 	struct timeval     tv1, tv2;
 	socket_path = DEFAULT_SOCKET_PATH;
+	sdev_path = DEFAULT_SERIAL_DEV;
 	restart_file = argv[0];
 	rv           = gettimeofday(&tv1, 0);
 	assert(rv == 0);
-	while ((arg = getopt(argc, argv, "hvVfds:")) != -1) {
+	while ((arg = getopt(argc, argv, "hvVfds:u:")) != -1) {
 		switch (arg) {
 		case 'h':
 		case '?':
@@ -85,10 +89,14 @@ int main(int argc, char** argv)
 		case 's':
 			socket_path = optarg;
 			break;
+
+		case 'u':
+			sdev_path = optarg;
+			break;
 		}
 	}
 	signal(SIGUSR1, restart);
-	init(socket_path);
+	init(socket_path, sdev_path);
 	if (!fg) {
 		wlog("backgrounding");
 		background();
