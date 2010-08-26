@@ -151,7 +151,7 @@ void input_update(int timeout)
 		}
 		return;
 	}
-	for (i = 0; i < rv; ++i) {
+	for (i = 0; i < listener_count; ++i) {
 		if (descriptors[i].revents & POLLIN) {
 			invoke_and_drop(descriptors[i].fd);
 		} else if (descriptors[i].revents & POLLOUT) {
