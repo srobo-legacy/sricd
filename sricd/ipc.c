@@ -134,6 +134,7 @@ static void rx_ping(client* c)
 	rx         = client_pop_rx(c);
 	assert(rx);
 	send_rx(c->fd, c, rx);
+	g_free(rx);
 }
 
 static void handle_poll_rx(int fd, client* c)
@@ -148,6 +149,7 @@ static void handle_poll_rx(int fd, client* c)
 	if ((rx = client_pop_rx(c))) {
 		// RX was immediately available, return it
 		send_rx(fd, c, rx);
+		g_free(rx);
 	} else if (timeout == 0) {
 		// immediately return
 		write_result(fd, c, SRIC_E_TIMEOUT);
