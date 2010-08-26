@@ -6,7 +6,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include "queue.h"
 #include "log.h"
 #include "input.h"
 
@@ -14,8 +13,8 @@ client* client_create(int fd)
 {
 	client* c = malloc(sizeof (client));
 	assert(c);
-	c->note_q              = queue_create(sizeof (client_note));
-	c->rx_q                = queue_create(sizeof (client_rx));
+	c->note_q              = g_queue_new();
+	c->rx_q                = g_queue_new();
 	c->fd                  = fd;
 	c->rx_timer            = -1;
 	c->note_timer          = -1;
@@ -28,8 +27,8 @@ client* client_create(int fd)
 
 void client_destroy(client* c)
 {
-	queue_destroy(c->note_q);
-	queue_destroy(c->rx_q);
+	g_queue_free(c->note_q);
+	g_queue_free(c->rx_q);
 	free(c);
 }
 
@@ -38,8 +37,10 @@ void client_push_rx(client* c, const client_rx* rx)
 	void* ptr;
 	assert(c);
 	assert(rx);
-	ptr = queue_push(c->rx_q);
-	memcpy(ptr, rx, sizeof (*rx));
+
+	ptr = g_memdup(rx, sizeof(*rx));
+	g_queue_push_head(c->rx_q, ptr);
+
 	if (c->rx_ping) {
 		c->rx_ping(c);
 	}
@@ -50,8 +51,10 @@ void client_push_note(client* c, const client_note* note)
 	void* ptr;
 	assert(c);
 	assert(note);
-	ptr = queue_push(c->note_q);
-	memcpy(ptr, note, sizeof (*note));
+
+	ptr = g_memdup(note, sizeof(*note));
+	g_queue_push_head(c->note_q, ptr);
+
 	if (c->note_ping) {
 		c->note_ping(c);
 	}
@@ -60,20 +63,12 @@ void client_push_note(client* c, const client_note* note)
 const client_rx* client_pop_rx(client* c)
 {
 	assert(c);
-	if (queue_empty(c->rx_q)) {
-		return NULL;
-	} else {
-		return queue_pop(c->rx_q);
-	}
+	return g_queue_pop_tail(c->rx_q);
 }
 
 const client_note* client_pop_note(client* c)
 {
 	assert(c);
-	if (queue_empty(c->note_q)) {
-		return NULL;
-	} else {
-		return queue_pop(c->note_q);
-	}
+	return g_queue_pop_tail(c->note_q);
 }
 

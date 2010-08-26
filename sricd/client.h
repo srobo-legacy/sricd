@@ -1,9 +1,9 @@
 #ifndef _INCLUDED_CLIENT
 #define _INCLUDED_CLIENT
 
-#include "queue.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include <glib.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -32,8 +32,8 @@ struct _client_note {
 };
 
 struct _client {
-	queue*               note_q;
-	queue*               rx_q;
+	GQueue* note_q;
+	GQueue* rx_q;
 	int                  fd;
 	int                  rx_timer, note_timer;
 	client_ping_callback rx_ping, note_ping;
