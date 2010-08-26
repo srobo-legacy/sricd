@@ -25,8 +25,15 @@ client* client_create(int fd)
 	return c;
 }
 
+static void free_qitem( gpointer data, gpointer user_data )
+{
+	g_free(data);
+}
+
 void client_destroy(client* c)
 {
+	g_queue_foreach(c->note_q, free_qitem, NULL);
+	g_queue_foreach(c->rx_q, free_qitem, NULL);
 	g_queue_free(c->note_q);
 	g_queue_free(c->rx_q);
 	free(c);
