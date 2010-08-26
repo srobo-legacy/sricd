@@ -131,17 +131,19 @@ static void send_rx(int fd, client* c, const client_rx* rx)
 	write_data(fd, c, rx->payload,     rx->payload_length);
 }
 
-static void rx_timeout(int timer, void* ptr)
+static gboolean rx_timeout( gpointer _client )
 {
-	// client* c = (client*)ptr;
+	// client* c = (client*)_client;
 	// TODO: stuff here
+	return FALSE;
 }
 
 static void rx_ping(client* c)
 {
 	client_rx* rx;
-	if (c->rx_timer != -1) {
-		sched_cancel(c->rx_timer);
+	if (c->rx_timer != 0) {
+		g_source_remove(c->rx_timer);
+		c->rx_timer = 0;
 	}
 	c->rx_ping = NULL;
 	rx         = client_pop_rx(c);
@@ -170,7 +172,7 @@ static void handle_poll_rx(int fd, client* c)
 	} else {
 		// schedule for timeout
 		if (timeout != -1) {
-			c->rx_timer = sched_event(timeout, rx_timeout, (void*)c);
+			c->rx_timer = g_timeout_add( timeout, rx_timeout, c );
 		}
 		c->rx_ping = rx_ping;
 	}

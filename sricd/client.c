@@ -15,8 +15,8 @@ client* client_create(int fd)
 	c->note_q              = g_queue_new();
 	c->rx_q                = g_queue_new();
 	c->fd                  = fd;
-	c->rx_timer            = -1;
-	c->note_timer          = -1;
+	c->rx_timer            = 0;
+	c->note_timer          = 0;
 	c->rx_ping             = NULL;
 	c->note_ping           = NULL;
 	c->device_note_data[0] = 0;

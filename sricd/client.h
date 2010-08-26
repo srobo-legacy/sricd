@@ -36,7 +36,7 @@ struct _client {
 	GQueue* rx_q;
 	GIOChannel *gio;
 	int                  fd;
-	int                  rx_timer, note_timer;
+	guint rx_timer, note_timer;
 	client_ping_callback rx_ping, note_ping;
 	uint64_t             device_note_data[2];
 };

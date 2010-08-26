@@ -54,7 +54,7 @@ void restart()
 
 int main(int argc, char** argv)
 {
-	int                arg, rv, to;
+	int                arg, rv;
 	int                fg          = 0;
 	unsigned long long time1, time2, startup_time;
 	struct timeval     tv1, tv2;
@@ -114,10 +114,6 @@ int main(int argc, char** argv)
 	ml = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(ml);
 
-	while (1) {
-		sched_tick();
-		to = sched_next_event();
-	}
 	return 0;
 }
 

@@ -10,8 +10,6 @@
 void init(const char* socket_path, const char* sdev_path)
 {
 	assert(socket_path);
-	wlog("starting up sched");
-	sched_init();
 	wlog("starting up tx queue");
 	txq_init();
 	wlog("starting up device list");
