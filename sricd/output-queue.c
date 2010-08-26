@@ -1,5 +1,4 @@
 #include "output-queue.h"
-#include "pool.h"
 #include <stdlib.h>
 #include <string.h>
 #include <glib.h>
