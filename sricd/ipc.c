@@ -100,7 +100,7 @@ static void handle_tx(int fd, client* c)
 		return;
 	}
 	frame.tag = c;
-	txq_push(&frame, 1);
+	txq_push(&frame);
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
 

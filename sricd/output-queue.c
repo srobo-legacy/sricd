@@ -2,46 +2,29 @@
 #include "pool.h"
 #include <stdlib.h>
 #include <string.h>
+#include <glib.h>
 #include "log.h"
 
-#define NPRIOS 4
-
-static queue* tx_queues[NPRIOS];
-static int    count = 0;
+static GQueue* tx_queue;
 
 void txq_init(void)
 {
-	int i;
-	wlog("starting %d tx priority levels", NPRIOS);
-	for (i = 0; i < NPRIOS; ++i) {
-		tx_queues[i] = queue_create(sizeof (tx));
-	}
+	tx_queue = g_queue_new();
 }
 
-void txq_push(const tx* tx, int prio)
+void txq_push(const tx* tx)
 {
-	void* e;
-	prio = (NPRIOS - 1) - prio;
-	e    = queue_push(tx_queues[prio]);
-	// TODO: shorten this based on payload size
-	memcpy(e, tx, sizeof (*tx));
-	++count;
+	void* e = g_memdup(tx, sizeof(*tx));
+	g_queue_push_head(tx_queue, e);
 }
 
 const tx* txq_next(void)
 {
-	int i;
-	for (i = 0; i < NPRIOS; ++i) {
-		if (!queue_empty(tx_queues[i])) {
-			--count;
-			return queue_pop(tx_queues[i]);
-		}
-	}
-	return NULL;
+	return g_queue_pop_tail(tx_queue);
 }
 
 bool txq_empty(void)
 {
-	return count == 0;
+	return g_queue_is_empty(tx_queue);
 }
 
