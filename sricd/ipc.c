@@ -126,7 +126,7 @@ static void rx_timeout(int timer, void* ptr)
 
 static void rx_ping(client* c)
 {
-	const client_rx* rx;
+	client_rx* rx;
 	if (c->rx_timer != -1) {
 		sched_cancel(c->rx_timer);
 	}
@@ -134,12 +134,13 @@ static void rx_ping(client* c)
 	rx         = client_pop_rx(c);
 	assert(rx);
 	send_rx(c->fd, c, rx);
+
 	g_free(rx);
 }
 
 static void handle_poll_rx(int fd, client* c)
 {
-	const client_rx* rx;
+	client_rx* rx;
 	int32_t          timeout;
 	if (!read_data(fd, &timeout, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);

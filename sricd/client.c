@@ -67,13 +67,13 @@ void client_push_note(client* c, const client_note* note)
 	}
 }
 
-const client_rx* client_pop_rx(client* c)
+client_rx* client_pop_rx(client* c)
 {
 	assert(c);
 	return g_queue_pop_tail(c->rx_q);
 }
 
-const client_note* client_pop_note(client* c)
+client_note* client_pop_note(client* c)
 {
 	assert(c);
 	return g_queue_pop_tail(c->note_q);
