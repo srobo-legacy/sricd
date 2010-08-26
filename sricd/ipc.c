@@ -1,5 +1,4 @@
 #include "ipc.h"
-#include "input.h"
 #include "client.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,13 +12,16 @@
 #include "sched.h"
 #include <stdbool.h>
 #include <arpa/inet.h>
+#include <glib.h>
 
 static const char* sock_path;
 
-static void ipc_new(int, void*);
-static void ipc_death(int, void*);
-static void ipc_client_incoming(int, void*);
-static void ipc_client_death(int, void*);
+static GIOChannel* ipc_gio = NULL;
+
+static gboolean ipc_new( GIOChannel *src, GIOCondition cond, gpointer data );
+static gboolean ipc_death( GIOChannel *gio, GIOCondition cond, gpointer data );
+static gboolean ipc_client_incoming( GIOChannel *gio, GIOCondition cond, gpointer _client );
+static gboolean ipc_client_death( GIOChannel *gio, GIOCondition cond, gpointer _client );
 
 static void ipc_boot(void)
 {
@@ -38,22 +40,33 @@ static void ipc_boot(void)
 	rv              = listen(s, 5);
 	assert(rv == 0);
 	wlog("created IPC socket as fd %d", s);
-	input_listen(s, ipc_new, ipc_death, NULL, NULL);
+
+	ipc_gio = g_io_channel_unix_new(s);
+	g_io_channel_set_close_on_unref(ipc_gio, TRUE);
+
+	g_io_add_watch(ipc_gio, G_IO_IN, ipc_new, NULL);
+	g_io_add_watch(ipc_gio, G_IO_HUP, ipc_death, NULL);
 }
 
-static void ipc_new(int sock, void* x)
+static gboolean ipc_new( GIOChannel *src, GIOCondition cond, gpointer data )
 {
 	client*            c;
 	struct sockaddr_un addr;
 	socklen_t          len = sizeof (addr);
 	int                new;
-	(void)x;
+	int sock;
+	assert( src == ipc_gio );
+	assert( cond == G_IO_IN );
+	sock = g_io_channel_unix_get_fd(ipc_gio);
+
 	new = accept(sock, (struct sockaddr*)&addr, &len);
 	wlog("accepted new connection");
-	input_listen(sock, ipc_new,             ipc_death,        NULL, NULL);
-	// do stuff with new here
+
 	c = client_create(new);
-	input_listen(new,  ipc_client_incoming, ipc_client_death, NULL, c);
+	g_io_add_watch( c->gio, G_IO_IN, ipc_client_incoming, c );
+	g_io_add_watch( c->gio, G_IO_HUP, ipc_client_death, c );
+
+	return TRUE;
 }
 
 #define SRICD_TX           0
@@ -163,15 +176,17 @@ static void handle_poll_rx(int fd, client* c)
 	}
 }
 
-static void ipc_client_incoming(int fd, void* client_object)
+static gboolean ipc_client_incoming( GIOChannel *gio, GIOCondition cond, gpointer _client )
 {
 	unsigned char cmd;
-	client*       c = (client*)client_object;
+	client* c= (client*)_client;
+	int fd = g_io_channel_unix_get_fd(gio);
 	assert(c);
+
 	// do R/W stuff here
 	if (read(fd, &cmd, 1) == 0) {
 		// EOF:
-		return;
+		return FALSE;
 	}
 	switch (cmd) {
 	case SRICD_TX:
@@ -187,27 +202,27 @@ static void ipc_client_incoming(int fd, void* client_object)
 		write(fd, &cmd, 1);
 		break;
 	}
-	input_listen(fd,
-	             ipc_client_incoming,
-	             ipc_client_death,
-	             NULL,
-	             client_object);
+
+	return TRUE;
 }
 
-static void ipc_client_death(int fd, void* client_object)
+static gboolean ipc_client_death( GIOChannel *gio, GIOCondition cond, gpointer _client )
 {
-	client* c = (client*)client_object;
+	client* c = (client*)_client;
 	assert(c);
-	close(fd);
 	client_destroy(c);
 	wlog("IPC client died");
+	return FALSE;
 }
 
-static void ipc_death(int sock, void* x)
+static gboolean ipc_death( GIOChannel *gio, GIOCondition cond, gpointer data )
 {
+	g_io_channel_unref(gio);
+
 	wlog("IPC socket died, restarting");
-	close(sock);
 	ipc_boot();
+
+	return FALSE;
 }
 
 void ipc_init(const char* socket_path)

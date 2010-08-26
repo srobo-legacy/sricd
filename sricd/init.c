@@ -1,5 +1,4 @@
 #include "init.h"
-#include "input.h"
 #include "output-queue.h"
 #include "ipc.h"
 #include "device.h"

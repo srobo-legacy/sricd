@@ -1,5 +1,4 @@
 #include "init.h"
-#include "input.h"
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -118,7 +117,6 @@ int main(int argc, char** argv)
 	while (1) {
 		sched_tick();
 		to = sched_next_event();
-		input_update(to);
 	}
 	return 0;
 }
