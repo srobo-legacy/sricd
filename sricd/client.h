@@ -44,6 +44,8 @@ client* client_create(int fd);
 void client_destroy(client* c);
 void client_push_rx(client* c, const client_rx* rx);
 void client_push_note(client* c, const client_note* note);
+
+/* Caller must free return values of the pop functions */
 const client_rx* client_pop_rx(client* c);
 const client_note* client_pop_note(client* c);
 
