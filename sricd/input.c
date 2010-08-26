@@ -96,11 +96,6 @@ static void error_and_drop(int fd)
 	}
 }
 
-void input_init(void)
-{
-	listener_pool = pool_create(sizeof (input_listener));
-}
-
 void input_listen(int fd, input_event callback,
                   input_event err_callback,
                   input_event out_callback, void* ud)

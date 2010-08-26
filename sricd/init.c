@@ -15,8 +15,6 @@ void init(const char* socket_path, const char* sdev_path)
 	sched_init();
 	wlog("starting up tx queue");
 	txq_init();
-	wlog("starting up input listener");
-	input_init();
 	wlog("starting up device list");
 	device_init();
 	wlog("starting up IPC socket %s", socket_path);
