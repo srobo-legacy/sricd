@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <string.h>
 #include <errno.h>
+#include <glib.h>
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
 const char* DEFAULT_SERIAL_DEV = "/dev/sric-a";
@@ -58,6 +59,8 @@ int main(int argc, char** argv)
 	int                fg          = 0;
 	unsigned long long time1, time2, startup_time;
 	struct timeval     tv1, tv2;
+	GMainLoop *ml = NULL;
+
 	socket_path = DEFAULT_SOCKET_PATH;
 	sdev_path = DEFAULT_SERIAL_DEV;
 	restart_file = argv[0];
@@ -108,6 +111,10 @@ int main(int argc, char** argv)
 	startup_time = time2 - time1;
 	wlog("startup took %lluµs", startup_time);
 	wlog("entering main loop");
+
+	ml = g_main_loop_new(NULL, FALSE);
+	g_main_loop_run(ml);
+
 	while (1) {
 		sched_tick();
 		to = sched_next_event();

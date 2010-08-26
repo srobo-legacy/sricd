@@ -6,6 +6,9 @@ include depend
 
 CFLAGS += -I../poolalloc
 
+CFLAGS += `pkg-config --cflags glib-2.0`
+LDFLAGS += `pkg-config --libs glib-2.0`
+
 depend: *.c
 	rm -f depend
 	for file in *.c; do \
