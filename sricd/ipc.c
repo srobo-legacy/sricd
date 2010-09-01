@@ -117,16 +117,13 @@ static void handle_tx(int fd, client* c)
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
 
-static void send_rx(int fd, client* c, const client_rx* rx)
+static void send_rx(int fd, client* c, const frame* rx)
 {
-	char response_header[7];
+	uint8_t response_header[4];
 	response_header[0] = SRIC_E_SUCCESS;
-	response_header[1] = (rx->address >> 0) & 0xFF;
-	response_header[2] = (rx->address >> 8) & 0xFF;
-	response_header[3] = 0xFF;
-	response_header[4] = 0xFF;
-	response_header[5] = (rx->payload_length >> 0) & 0xFF;
-	response_header[6] = (rx->payload_length >> 8) & 0xFF;
+	response_header[1] = rx->source_address;
+	response_header[2] = 0xFF;
+	response_header[3] = rx->payload_length;
 	write_data(fd, c, response_header, 7);
 	write_data(fd, c, rx->payload,     rx->payload_length);
 }
@@ -140,7 +137,7 @@ static gboolean rx_timeout( gpointer _client )
 
 static void rx_ping(client* c)
 {
-	client_rx* rx;
+	frame* rx;
 	if (c->rx_timer != 0) {
 		g_source_remove(c->rx_timer);
 		c->rx_timer = 0;
@@ -155,7 +152,7 @@ static void rx_ping(client* c)
 
 static void handle_poll_rx(int fd, client* c)
 {
-	client_rx* rx;
+	frame* rx;
 	int32_t          timeout;
 	if (!read_data(fd, &timeout, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);

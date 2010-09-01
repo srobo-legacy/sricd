@@ -42,7 +42,7 @@ void client_destroy(client* c)
 	free(c);
 }
 
-void client_push_rx(client* c, const client_rx* rx)
+void client_push_rx(client* c, const frame* rx)
 {
 	void* ptr;
 	assert(c);
@@ -56,7 +56,7 @@ void client_push_rx(client* c, const client_rx* rx)
 	}
 }
 
-void client_push_note(client* c, const client_note* note)
+void client_push_note(client* c, const frame* note)
 {
 	void* ptr;
 	assert(c);
@@ -70,13 +70,13 @@ void client_push_note(client* c, const client_note* note)
 	}
 }
 
-client_rx* client_pop_rx(client* c)
+frame* client_pop_rx(client* c)
 {
 	assert(c);
 	return g_queue_pop_tail(c->rx_q);
 }
 
-client_note* client_pop_note(client* c)
+frame* client_pop_note(client* c)
 {
 	assert(c);
 	return g_queue_pop_tail(c->note_q);

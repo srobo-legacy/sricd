@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "frame.h"
 #include "client.h"
 
 #ifdef __cplusplus
@@ -25,7 +26,7 @@ static inline void device_init(void)
 
 void device_set_client_notes(int address, client* c, uint64_t notes);
 void device_clear_client_notes(client* c);
-void device_dispatch_note(const client_note* note);
+void device_dispatch_note(const frame* note);
 
 #ifdef __cplusplus
 }

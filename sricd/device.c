@@ -128,9 +128,9 @@ void device_clear_client_notes(client* c)
 	}
 }
 
-void device_dispatch_note(const client_note* note)
+void device_dispatch_note(const frame* note)
 {
-	device_note_target* cur  = targets[note->address];
+	device_note_target* cur  = targets[note->source_address];
 	uint64_t            flag = ((uint64_t)1 << note->note);
 	while (cur) {
 		if (cur->flags & flag) {

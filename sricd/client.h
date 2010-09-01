@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <glib.h>
+#include "frame.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -12,24 +13,10 @@ extern "C"
 
 #define PAYLOAD_MAX 64
 
+// A client is a process, connected over a socket, talking to sric devices.
 typedef struct _client client;
-typedef struct _client_rx client_rx;
-typedef struct _client_note client_note;
 
 typedef void (*client_ping_callback)(client* c);
-
-struct _client_rx {
-	int  address;
-	int  payload_length;
-	char payload[PAYLOAD_MAX];
-};
-
-struct _client_note {
-	int  address;
-	int  note;
-	int  payload_length;
-	char payload[PAYLOAD_MAX];
-};
 
 struct _client {
 	GQueue* note_q;
@@ -43,12 +30,12 @@ struct _client {
 
 client* client_create(int fd);
 void client_destroy(client* c);
-void client_push_rx(client* c, const client_rx* rx);
-void client_push_note(client* c, const client_note* note);
+void client_push_rx(client* c, const frame* rx);
+void client_push_note(client* c, const frame* note);
 
 /* Caller must free return values of the pop functions */
-client_rx* client_pop_rx(client* c);
-client_note* client_pop_note(client* c);
+frame* client_pop_rx(client* c);
+frame* client_pop_note(client* c);
 
 #ifdef __cplusplus
 }
