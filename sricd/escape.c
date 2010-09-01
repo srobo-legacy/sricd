@@ -29,3 +29,35 @@ bool escape_frame(uint8_t* data, unsigned length, unsigned maxlength)
 	}
 	return true;
 }
+
+bool unescape_frame(uint8_t* data, unsigned length, unsigned* outlength)
+{
+	uint8_t* source = data;
+	uint8_t* dest = data;
+	uint8_t* end = data + length;
+	uint8_t current;
+	while (source != end) {
+		current = *source++;
+		if (current == 0x7D) {
+			if (source == end) {
+				return false;
+			} else {
+				current = *source++;
+				switch (current) {
+					case 0x5E:
+						*dest++ = 0x7E;
+						break;
+					case 0x5D:
+						*dest++ = 0x7D;
+						break;
+					default:
+						return false;
+				}
+			}
+		} else {
+			*dest++ = current;
+		}
+	}
+	*outlength = dest - data;
+	return true;
+}
