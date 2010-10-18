@@ -4,10 +4,10 @@
 
 #define REQUIRE_SPACE(bytes) { if (dest_index + (bytes) >= maxlength) { \
 memcpy(data, src, length);\
-return false;\
+return -1;\
 } }
 
-bool escape_frame(uint8_t* data, unsigned length, unsigned maxlength)
+int16_t escape_frame(uint8_t* data, unsigned length, unsigned maxlength)
 {
 	unsigned source_index, dest_index;
 	uint8_t* src = alloca(length);
@@ -27,5 +27,5 @@ bool escape_frame(uint8_t* data, unsigned length, unsigned maxlength)
 			dst[dest_index++] = src[source_index];
 		}
 	}
-	return true;
+	return dest_index;
 }

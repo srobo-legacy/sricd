@@ -9,7 +9,7 @@ extern "C"
 {
 #endif
 
-bool escape_frame(uint8_t* data, unsigned length, unsigned maxlength);
+int16_t escape_frame(uint8_t* data, unsigned length, unsigned maxlength);
 
 #ifdef __cplusplus
 }
