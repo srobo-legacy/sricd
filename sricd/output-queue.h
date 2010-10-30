@@ -22,9 +22,19 @@ typedef struct _tx {
 	char  payload[PAYLOAD_MAX];
 } tx;
 
+/* Initialise the transmit queue */
 void txq_init(void);
+
+/* Push a frame onto the transmit queue.
+   Frame is copied into freshly allocated memory. */
 void txq_push(const tx* tx);
+
+/* Pop the next frame off the transmit queue.
+   The caller must free the result when they are done with it.
+   Returns NULL if the queue is empty. */
 const tx* txq_next(void);
+
+/* Returns true if the queue is empty. */
 bool txq_empty(void);
 
 #ifdef __cplusplus
