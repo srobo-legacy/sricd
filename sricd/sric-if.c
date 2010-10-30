@@ -5,6 +5,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+/* Serial port file descriptor */
 static int fd = -1;
 
 /* Open and configure the serial port */
