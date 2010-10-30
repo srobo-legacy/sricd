@@ -31,13 +31,24 @@ struct _client_note {
 	char payload[PAYLOAD_MAX];
 };
 
+/* A client to sricd: */
 struct _client {
+	/* Note frames received from the bus waiting to be sent to the client */
 	GQueue* note_q;
+	/* Frames received from the bus waiting to be sent to the client */
 	GQueue* rx_q;
+
+	/* The socket fd and mainloop munging foo */
 	GIOChannel *gio;
-	int                  fd;
+	int         fd;
+
+	/* Source IDs for the rx and note poll timeouts */
 	guint rx_timer, note_timer;
+	/* Callbacks for frame and note rx queue modification notification */
+	/* (When NULL, client is not blocked polling on these) */
 	client_ping_callback rx_ping, note_ping;
+
+	/* Device note mask */
 	uint64_t             device_note_data[2];
 };
 
