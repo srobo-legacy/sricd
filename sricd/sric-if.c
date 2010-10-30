@@ -1,12 +1,16 @@
+/* Copyright 2010 - Robert Spanton */
 #include "sric-if.h"
 #include "log.h"
 #include <fcntl.h>
+#include <glib.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <termios.h>
 #include <unistd.h>
 
 /* Serial port file descriptor */
 static int fd = -1;
+static GIOChannel *if_gio = NULL;
 
 /* Open and configure the serial port */
 static void serial_conf( void )
@@ -68,6 +72,15 @@ static void serial_conf( void )
 	}
 }
 
+static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
+{
+	uint8_t b;
+	/* TODO: Actually read data... */
+	read( fd, &b, 1 );
+
+	return TRUE;
+}
+
 void sric_if_init(const char* fname)
 {
 	fd = open( fname, O_RDWR );
@@ -77,5 +90,7 @@ void sric_if_init(const char* fname)
 	}
 
 	serial_conf();
+	if_gio = g_io_channel_unix_new(fd);
 
+	g_io_add_watch( if_gio, G_IO_IN, rx, NULL );
 }
