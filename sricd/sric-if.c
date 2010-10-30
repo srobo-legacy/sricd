@@ -1,13 +1,33 @@
 /* Copyright 2010 - Robert Spanton */
+#include "crc16/crc16.h"
+#include "client.h"
+#include "escape.h"
 #include "sric-if.h"
 #include "log.h"
 #include "output-queue.h"
+#include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <termios.h>
 #include <unistd.h>
+
+/* Offsets of fields in the tx buffer */
+enum {
+        SRIC_DEST = 1,
+        SRIC_SRC = 2,
+        SRIC_LEN = 3,
+        SRIC_DATA = 4
+        /* CRC is last two bytes */
+};
+
+/* The number of bytes in a SRIC header, including framing byte */
+#define SRIC_HEADER_SIZE 4
+
+/* The number of bytes in the header and footer of a SRIC frame */
+#define SRIC_OVERHEAD (SRIC_HEADER_SIZE + 2)
 
 /* Serial port file descriptor */
 static int fd = -1;
@@ -15,6 +35,15 @@ static GIOChannel *if_gio = NULL;
 
 /* The write glib source ID (0 = invalid/not-registered) */
 static guint write_srcid = 0;
+
+/* Frame we're currently working on */
+static const tx *tx_frame = NULL;
+/* Output buffer that we're currently transmitting -- allow enough space for escaping */
+static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
+/* Number of bytes currently in txbuf */
+static uint8_t txlen = 0;
+/* Offset of next byte in txbuf to go out  */
+static uint8_t txpos = 0;
 
 /* Open and configure the serial port */
 static void serial_conf( void )
@@ -99,15 +128,69 @@ void sric_if_init(const char* fname)
 	g_io_add_watch( if_gio, G_IO_IN, rx, NULL );
 }
 
+/* Set up the next frame for transmission
+   Returns true if there's a frame to transmit */
+static gboolean next_tx( void )
+{
+	uint16_t crc;
+	uint8_t len;
+	int16_t esclen;
+	tx_frame = txq_next();
+
+	if( tx_frame == NULL )
+		/* Queue's empty */
+		return FALSE;
+
+	/*** Build up the frame in the output buffer ***/
+
+	/* Alias payload length for convenience */
+	len = tx_frame->payload_length;
+
+	txbuf[0] = 0x7e;
+	txbuf[SRIC_DEST] = tx_frame->address;
+	txbuf[SRIC_SRC] = 1;
+	txbuf[SRIC_LEN] = len;
+	memcpy( txbuf + SRIC_DATA, tx_frame->payload, len );
+
+	crc = crc16( txbuf, SRIC_HEADER_SIZE + len );
+	txbuf[SRIC_DATA + len] = crc;
+	txbuf[SRIC_DATA + len + 1] = crc >> 8;
+
+	/* Don't escape the initial framing byte */
+	esclen = escape_frame( txbuf + 1, SRIC_OVERHEAD - 1 + len, sizeof(txbuf) - 1);
+	g_assert( esclen > 0 );
+
+	/* Remember the framing byte: */
+	txlen = esclen + 1;
+	txpos = 0;
+
+	return TRUE;
+}
+
 static gboolean if_tx( GIOChannel *src, GIOCondition cond, gpointer data )
 {
-	/* TODO: Write data to interface... */
+	int w;
 
-	if( txq_empty() ) {
-		write_srcid = 0;
-		return FALSE;
-	} else
-		return TRUE;
+	if( tx_frame == NULL && !next_tx() )
+		/* Nothing to transmit at this time */
+		goto empty;
+
+	w = write( fd, txbuf + txpos, txlen - txpos );
+	if( w == -1 ) {
+		wlog( "Error writing to serial port: %s", strerror(errno) );
+		exit( 1 );
+	}
+
+	txpos += w;
+	if( txpos == txlen && !next_tx() )
+		/* Queue has been emptied */
+		goto empty;
+
+	return TRUE;
+
+empty:
+	write_srcid = 0;
+	return FALSE;
 }
 
 void sric_if_tx_ready( void )
