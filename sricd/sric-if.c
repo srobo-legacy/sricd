@@ -1,6 +1,7 @@
 /* Copyright 2010 - Robert Spanton */
 #include "sric-if.h"
 #include "log.h"
+#include "output-queue.h"
 #include <fcntl.h>
 #include <glib.h>
 #include <stdlib.h>
@@ -11,6 +12,9 @@
 /* Serial port file descriptor */
 static int fd = -1;
 static GIOChannel *if_gio = NULL;
+
+/* The write glib source ID (0 = invalid/not-registered) */
+static guint write_srcid = 0;
 
 /* Open and configure the serial port */
 static void serial_conf( void )
@@ -93,4 +97,21 @@ void sric_if_init(const char* fname)
 	if_gio = g_io_channel_unix_new(fd);
 
 	g_io_add_watch( if_gio, G_IO_IN, rx, NULL );
+}
+
+static gboolean if_tx( GIOChannel *src, GIOCondition cond, gpointer data )
+{
+	/* TODO: Write data to interface... */
+
+	if( txq_empty() ) {
+		write_srcid = 0;
+		return FALSE;
+	} else
+		return TRUE;
+}
+
+void sric_if_tx_ready( void )
+{
+	if( write_srcid == 0 )
+		write_srcid = g_io_add_watch( if_gio, G_IO_OUT, if_tx, NULL );
 }
