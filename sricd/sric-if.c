@@ -7,6 +7,7 @@
 
 static int fd = -1;
 
+/* Open and configure the serial port */
 static void serial_conf( void )
 {
 	struct termios t;
