@@ -9,9 +9,15 @@ extern "C"
 {
 #endif
 
+/* Entries in the tx queue: */
 typedef struct _tx {
+	/* The destination address */
 	int   address;
+
+	/* The client from which this frame originated. */
 	void* tag; // if tag == NULL, this is a response
+
+	/* The payload for this frame: */
 	int   payload_length;
 	char  payload[PAYLOAD_MAX];
 } tx;
