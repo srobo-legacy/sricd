@@ -116,7 +116,7 @@ static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
 
 void sric_if_init(const char* fname)
 {
-	fd = open( fname, O_RDWR );
+	fd = open( fname, O_RDWR | O_NONBLOCK );
 	if( fd == -1 ) {
 		wlog( "Failed to open serial device \"%s\"", fname );
 		exit(1);
