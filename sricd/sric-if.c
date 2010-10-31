@@ -31,6 +31,9 @@ enum {
 #define SRIC_OVERHEAD (SRIC_HEADER_SIZE + 2)
 
 #define is_framing_byte(x) ( ((x)==0x7E) || ((x)==0x8E) )
+#define frame_for_me(buf) ( ( (buf)[SRIC_DEST] & ~0x80 ) == 1 )
+#define frame_is_ack(buf) ( (buf)[SRIC_DEST] & 0x80 )
+#define frame_set_ack(buf) do { (buf)[SRIC_DEST] |= 0x80; } while(0)
 
 /* Serial port file descriptor */
 static int fd = -1;
@@ -199,14 +202,20 @@ static gboolean advance_rx( void )
 	return used ? TRUE : FALSE;
 }
 
+/* Process the valid frame found in unesc_rx */
+static void proc_rx_frame( void )
+{
+
+}
+
 /* Data ready on serial port callback */
 static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
 {
 	read_incoming();
 
 	while( advance_rx() ) {
-		uint8_t i;
 		uint8_t len;
+		uint16_t crc, recv_crc;
 
 		if( unesc_pos < SRIC_OVERHEAD )
 			continue;
@@ -215,10 +224,12 @@ static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
 		if( unesc_pos < (SRIC_OVERHEAD + len) )
 			continue;
 
-		printf( "Frame:" );
-		for( i=0; i<unesc_pos; i++ )
-			printf( "%2.2x ", unesc_rx[i] );
-		printf( "\n" );
+		crc = crc16( unesc_rx, SRIC_HEADER_SIZE + len );
+		recv_crc = unesc_rx[SRIC_DATA + len] | ( unesc_rx[SRIC_DATA + len + 1] << 8 );
+		if( crc != recv_crc )
+			continue;
+
+		proc_rx_frame();
 	}
 
 	return TRUE;
