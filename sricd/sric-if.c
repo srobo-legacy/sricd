@@ -146,7 +146,7 @@ static gboolean next_tx( void )
 	/* Alias payload length for convenience */
 	len = tx_frame->payload_length;
 
-	txbuf[0] = 0x7e;
+	txbuf[0] = tx_frame->type;
 	txbuf[SRIC_DEST] = tx_frame->address;
 	txbuf[SRIC_SRC] = 1;
 	txbuf[SRIC_LEN] = len;

@@ -106,6 +106,7 @@ static void handle_tx(int fd, client* c)
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;
 	}
+	frame.type = FRAME_SRIC;
 	frame.address        = (int)buf[0] | ((int)buf[1] << 8);
 	frame.payload_length = (int)buf[2] | ((int)buf[3] << 8);
 	if (!read_data(fd, frame.payload, frame.payload_length)) {

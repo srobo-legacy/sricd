@@ -9,8 +9,18 @@ extern "C"
 {
 #endif
 
+typedef enum {
+	/* Frames destined for the bus */
+	FRAME_SRIC = 0x7e,
+	/* Frames that configure the SRIC interface */
+	FRAME_GW_CONF = 0x8e,
+} frame_type_t;
+
 /* Entries in the tx queue: */
 typedef struct _tx {
+	/* The type of frame */
+	frame_type_t type;
+
 	/* The destination address */
 	int   address;
 
