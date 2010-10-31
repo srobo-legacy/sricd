@@ -8,6 +8,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -29,6 +30,8 @@ enum {
 /* The number of bytes in the header and footer of a SRIC frame */
 #define SRIC_OVERHEAD (SRIC_HEADER_SIZE + 2)
 
+#define is_framing_byte(x) ( ((x)==0x7E) || ((x)==0x8E) )
+
 /* Serial port file descriptor */
 static int fd = -1;
 static GIOChannel *if_gio = NULL;
@@ -36,7 +39,7 @@ static GIOChannel *if_gio = NULL;
 /* The write glib source ID (0 = invalid/not-registered) */
 static guint write_srcid = 0;
 
-/* Frame we're currently working on */
+/* Frame we're currently working on transmitting */
 static const frame_t *tx_frame = NULL;
 /* Output buffer that we're currently transmitting -- allow enough space for escaping */
 static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
@@ -44,6 +47,14 @@ static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
 static uint8_t txlen = 0;
 /* Offset of next byte in txbuf to go out  */
 static uint8_t txpos = 0;
+
+/* Receive buffer for data straight from the serial port */
+static uint8_t rxbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
+static uint8_t rxpos = 0;
+
+/* Receive buffer for a single unescaped frame */
+static uint8_t unesc_rx[ SRIC_OVERHEAD + PAYLOAD_MAX ];
+static uint8_t unesc_pos = 0;
 
 /* Open and configure the serial port */
 static void serial_conf( void )
@@ -105,11 +116,110 @@ static void serial_conf( void )
 	}
 }
 
+/* Shift the bytes in rxbuf left by n bytes.
+   (Losing n bytes from the beginning of the buffer) */
+static void rxbuf_shift( uint8_t n )
+{
+	g_assert( n <= rxpos );
+
+	memmove( rxbuf, rxbuf + n, rxpos - n );
+	rxpos -= n;
+}
+
+/* Find the start of a frame in rxbuf, and shift it to be aligned with the
+   beginning of the buffer -- throwing away all junk that came before it.
+
+   Returns TRUE if it found the start of a frame. */
+static gboolean rxbuf_shift_frame_start( void )
+{
+	uint8_t i;
+	for( i=0; i<rxpos; i++ )
+		if( is_framing_byte( rxbuf[i] ) )
+			break;
+
+	if( i == rxpos ) {
+		/* No frame start in input buffer - throw it all away */
+		rxpos = 0;
+		return FALSE;
+	}
+
+	rxbuf_shift(i);
+	return TRUE;
+}
+
+/* Read available stuff from serial port into rxbuf */
+static void read_incoming( void )
+{
+	int r;
+	int size = sizeof(rxbuf) - rxpos;
+
+	r = read( fd, rxbuf + rxpos, size );
+
+	if( r == -1 ) {
+		wlog( "Error reading from serial port: %s", strerror(errno) );
+		exit(1);
+	} else if( r == 0 && size != 0 ) {
+		wlog( "EOF on serial port.  Aborting." );
+		exit(1);
+	}
+	rxpos += r;
+}
+
+/* Assemble as much of a frame as possible from rxbuf into unesc_rx.
+   Assumes that if there was a valid frame in unesc_rx, it has already been processed.
+   Returns TRUE if this results in something work considering in unesc_rx. */
+static gboolean advance_rx( void )
+{
+	uint8_t used;
+
+	if( is_framing_byte(rxbuf[0]) || unesc_pos == sizeof(unesc_rx) )
+		/* Move onto the next frame immediately */
+		unesc_pos = 0;
+
+	if( unesc_pos == 0 ) {
+		/* Not even a smidgen of frame in unesc_rx yet */
+		if( !rxbuf_shift_frame_start() )
+			/* No frame to process */
+			return FALSE;
+
+		/* Copy framing byte across */
+		unesc_rx[0] = rxbuf[0];
+		unesc_pos = 1;
+
+		/* Lose the escape byte */
+		rxbuf_shift(1);
+	}
+
+	/* Unescape bytes from rxbuf into unesc_rx */
+	rxbuf_shift( unescape( rxbuf, rxpos,
+			       unesc_rx + unesc_pos, sizeof(unesc_rx) - unesc_pos,
+			       &used ) );
+	unesc_pos += used;
+
+	return used ? TRUE : FALSE;
+}
+
+/* Data ready on serial port callback */
 static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
 {
-	uint8_t b;
-	/* TODO: Actually read data... */
-	read( fd, &b, 1 );
+	read_incoming();
+
+	while( advance_rx() ) {
+		uint8_t i;
+		uint8_t len;
+
+		if( unesc_pos < SRIC_OVERHEAD )
+			continue;
+
+		len = unesc_rx[SRIC_LEN];
+		if( unesc_pos < (SRIC_OVERHEAD + len) )
+			continue;
+
+		printf( "Frame:" );
+		for( i=0; i<unesc_pos; i++ )
+			printf( "%2.2x ", unesc_rx[i] );
+		printf( "\n" );
+	}
 
 	return TRUE;
 }
