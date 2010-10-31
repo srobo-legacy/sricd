@@ -25,11 +25,12 @@ void txq_push(const frame_t* tx, uint8_t pri)
 	sric_if_tx_ready();
 }
 
-const frame_t* txq_next(void)
+const frame_t* txq_next(uint8_t max_pri)
 {
 	uint8_t i;
+	g_assert( max_pri < 2 );
 
-	for( i=0; i<2; i++ ) {
+	for( i=0; i<=max_pri; i++ ) {
 		const frame_t *r = g_queue_pop_tail(tx_queue[i]);
 		if( r != NULL )
 			return r;

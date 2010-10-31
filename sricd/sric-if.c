@@ -135,7 +135,7 @@ static gboolean next_tx( void )
 	uint16_t crc;
 	uint8_t len;
 	int16_t esclen;
-	tx_frame = txq_next();
+	tx_frame = txq_next(1);
 
 	if( tx_frame == NULL )
 		/* Queue's empty */

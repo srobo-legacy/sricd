@@ -41,9 +41,10 @@ void txq_init(void);
 void txq_push(const frame_t* tx, uint8_t pri);
 
 /* Pop the next frame off the transmit queue.
+   max_pri is the maximum priority that this may look at.
    The caller must free the result when they are done with it.
    Returns NULL if the queue is empty. */
-const frame_t* txq_next(void);
+const frame_t* txq_next(uint8_t max_pri);
 
 /* Returns true if the queue is empty. */
 bool txq_empty(void);
