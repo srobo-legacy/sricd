@@ -12,7 +12,7 @@ void txq_init(void)
 	tx_queue = g_queue_new();
 }
 
-void txq_push(const tx* tx)
+void txq_push(const frame_t* tx)
 {
 	void* e = g_memdup(tx, sizeof(*tx));
 	g_queue_push_head(tx_queue, e);
@@ -20,7 +20,7 @@ void txq_push(const tx* tx)
 	sric_if_tx_ready();
 }
 
-const tx* txq_next(void)
+const frame_t* txq_next(void)
 {
 	return g_queue_pop_tail(tx_queue);
 }

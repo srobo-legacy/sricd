@@ -101,7 +101,7 @@ static bool write_result(int fd, client* c, unsigned char result)
 static void handle_tx(int fd, client* c)
 {
 	unsigned char buf[4];
-	tx            frame;
+	frame_t       frame;
 	if (!read_data(fd, buf, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;

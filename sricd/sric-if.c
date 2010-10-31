@@ -37,7 +37,7 @@ static GIOChannel *if_gio = NULL;
 static guint write_srcid = 0;
 
 /* Frame we're currently working on */
-static const tx *tx_frame = NULL;
+static const frame_t *tx_frame = NULL;
 /* Output buffer that we're currently transmitting -- allow enough space for escaping */
 static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
 /* Number of bytes currently in txbuf */
