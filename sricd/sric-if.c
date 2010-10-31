@@ -206,6 +206,22 @@ static gboolean advance_rx( void )
 static void proc_rx_frame( void )
 {
 
+	if( !frame_for_me( unesc_rx ) )
+		/* Ignore frames not for us */
+		return;
+
+	if( !frame_is_ack( unesc_rx ) ) {
+		frame_t resp;
+
+		/* Queue up an ACK for it */
+		resp.type = FRAME_SRIC;
+		resp.address = unesc_rx[SRIC_SRC];
+		resp.tag = NULL;
+		resp.payload_length = 0;
+
+		txq_push(&resp, 0);
+		return;
+	}
 }
 
 /* Data ready on serial port callback */
