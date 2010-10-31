@@ -36,8 +36,9 @@ typedef struct _tx {
 void txq_init(void);
 
 /* Push a frame onto the transmit queue.
-   Frame is copied into freshly allocated memory. */
-void txq_push(const frame_t* tx);
+   Frame is copied into freshly allocated memory.
+   pri is the priority of the frame -- for normal frames, this should be 1. */
+void txq_push(const frame_t* tx, uint8_t pri);
 
 /* Pop the next frame off the transmit queue.
    The caller must free the result when they are done with it.
