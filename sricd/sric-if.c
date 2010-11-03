@@ -17,11 +17,11 @@
 
 /* Offsets of fields in the tx buffer */
 enum {
-        SRIC_DEST = 1,
-        SRIC_SRC = 2,
-        SRIC_LEN = 3,
-        SRIC_DATA = 4
-        /* CRC is last two bytes */
+	SRIC_DEST = 1,
+	SRIC_SRC  = 2,
+	SRIC_LEN  = 3,
+	SRIC_DATA = 4
+	            /* CRC is last two bytes */
 };
 
 /* The number of bytes in a SRIC header, including framing byte */
@@ -30,37 +30,38 @@ enum {
 /* The number of bytes in the header and footer of a SRIC frame */
 #define SRIC_OVERHEAD (SRIC_HEADER_SIZE + 2)
 
-#define is_framing_byte(x) ( ((x)==0x7E) || ((x)==0x8E) )
-#define frame_for_me(buf) ( ( (buf)[SRIC_DEST] & ~0x80 ) == 1 )
-#define frame_is_ack(buf) ( (buf)[SRIC_DEST] & 0x80 )
-#define frame_set_ack(buf) do { (buf)[SRIC_DEST] |= 0x80; } while(0)
+#define is_framing_byte(x) (((x) == 0x7E) || ((x) == 0x8E))
+#define frame_for_me(buf) (((buf)[SRIC_DEST] & ~0x80) == 1)
+#define frame_is_ack(buf) ((buf)[SRIC_DEST] & 0x80)
+#define frame_set_ack(buf) do {(buf)[SRIC_DEST] |= 0x80; } \
+    while (0)
 
 /* Serial port file descriptor */
-static int fd = -1;
-static GIOChannel *if_gio = NULL;
+static int            fd          = -1;
+static GIOChannel*    if_gio      = NULL;
 
 /* The write glib source ID (0 = invalid/not-registered) */
-static guint write_srcid = 0;
+static guint          write_srcid = 0;
 
 /* Frame we're currently working on transmitting */
-static const frame_t *tx_frame = NULL;
+static const frame_t* tx_frame    = NULL;
 /* Output buffer that we're currently transmitting -- allow enough space for escaping */
-static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
+static uint8_t        txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
 /* Number of bytes currently in txbuf */
-static uint8_t txlen = 0;
+static uint8_t        txlen = 0;
 /* Offset of next byte in txbuf to go out  */
-static uint8_t txpos = 0;
+static uint8_t        txpos = 0;
 
 /* Receive buffer for data straight from the serial port */
-static uint8_t rxbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
-static uint8_t rxpos = 0;
+static uint8_t        rxbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
+static uint8_t        rxpos = 0;
 
 /* Receive buffer for a single unescaped frame */
-static uint8_t unesc_rx[ SRIC_OVERHEAD + PAYLOAD_MAX ];
-static uint8_t unesc_pos = 0;
+static uint8_t        unesc_rx[ SRIC_OVERHEAD + PAYLOAD_MAX ];
+static uint8_t        unesc_pos = 0;
 
 /* Open and configure the serial port */
-static void serial_conf( void )
+static void serial_conf(void)
 {
 	struct termios t;
 
@@ -120,11 +121,11 @@ static void serial_conf( void )
 
 /* Shift the bytes in rxbuf left by n bytes.
    (Losing n bytes from the beginning of the buffer) */
-static void rxbuf_shift( uint8_t n )
+static void rxbuf_shift(uint8_t n)
 {
-	g_assert( n <= rxpos );
+	g_assert(n <= rxpos);
 
-	memmove( rxbuf, rxbuf + n, rxpos - n );
+	memmove(rxbuf, rxbuf + n, rxpos - n);
 	rxpos -= n;
 }
 
@@ -132,14 +133,16 @@ static void rxbuf_shift( uint8_t n )
    beginning of the buffer -- throwing away all junk that came before it.
 
    Returns TRUE if it found the start of a frame. */
-static gboolean rxbuf_shift_frame_start( void )
+static gboolean rxbuf_shift_frame_start(void)
 {
 	uint8_t i;
-	for( i=0; i<rxpos; i++ )
-		if( is_framing_byte( rxbuf[i] ) )
+	for (i = 0; i < rxpos; i++) {
+		if (is_framing_byte(rxbuf[i])) {
 			break;
+		}
+	}
 
-	if( i == rxpos ) {
+	if (i == rxpos) {
 		/* No frame start in input buffer - throw it all away */
 		rxpos = 0;
 		return FALSE;
@@ -150,18 +153,18 @@ static gboolean rxbuf_shift_frame_start( void )
 }
 
 /* Read available stuff from serial port into rxbuf */
-static void read_incoming( void )
+static void read_incoming(void)
 {
 	int r;
-	int size = sizeof(rxbuf) - rxpos;
+	int size = sizeof (rxbuf) - rxpos;
 
-	r = read( fd, rxbuf + rxpos, size );
+	r = read(fd, rxbuf + rxpos, size);
 
-	if( r == -1 ) {
-		wlog( "Error reading from serial port: %s", strerror(errno) );
+	if (r == -1) {
+		wlog("Error reading from serial port: %s", strerror(errno));
 		exit(1);
-	} else if( r == 0 && size != 0 ) {
-		wlog( "EOF on serial port.  Aborting." );
+	} else if (r == 0 && size != 0) {
+		wlog("EOF on serial port.  Aborting.");
 		exit(1);
 	}
 	rxpos += r;
@@ -170,52 +173,55 @@ static void read_incoming( void )
 /* Assemble as much of a frame as possible from rxbuf into unesc_rx.
    Assumes that if there was a valid frame in unesc_rx, it has already been processed.
    Returns TRUE if this results in something work considering in unesc_rx. */
-static gboolean advance_rx( void )
+static gboolean advance_rx(void)
 {
 	uint8_t used;
 
-	if( is_framing_byte(rxbuf[0]) || unesc_pos == sizeof(unesc_rx) )
+	if (is_framing_byte(rxbuf[0]) || unesc_pos == sizeof (unesc_rx)) {
 		/* Move onto the next frame immediately */
 		unesc_pos = 0;
+	}
 
-	if( unesc_pos == 0 ) {
+	if (unesc_pos == 0) {
 		/* Not even a smidgen of frame in unesc_rx yet */
-		if( !rxbuf_shift_frame_start() )
+		if (!rxbuf_shift_frame_start()) {
 			/* No frame to process */
 			return FALSE;
+		}
 
 		/* Copy framing byte across */
 		unesc_rx[0] = rxbuf[0];
-		unesc_pos = 1;
+		unesc_pos   = 1;
 
 		/* Lose the escape byte */
 		rxbuf_shift(1);
 	}
 
 	/* Unescape bytes from rxbuf into unesc_rx */
-	rxbuf_shift( unescape( rxbuf, rxpos,
-			       unesc_rx + unesc_pos, sizeof(unesc_rx) - unesc_pos,
-			       &used ) );
+	rxbuf_shift(unescape(rxbuf, rxpos,
+	                     unesc_rx + unesc_pos, sizeof (unesc_rx) - unesc_pos,
+	                     &used));
 	unesc_pos += used;
 
 	return used ? TRUE : FALSE;
 }
 
 /* Process the valid frame found in unesc_rx */
-static void proc_rx_frame( void )
+static void proc_rx_frame(void)
 {
 
-	if( !frame_for_me( unesc_rx ) )
+	if (!frame_for_me(unesc_rx)) {
 		/* Ignore frames not for us */
 		return;
+	}
 
-	if( !frame_is_ack( unesc_rx ) ) {
+	if (!frame_is_ack(unesc_rx)) {
 		frame_t resp;
 
 		/* Queue up an ACK for it */
-		resp.type = FRAME_SRIC;
-		resp.address = unesc_rx[SRIC_SRC];
-		resp.tag = NULL;
+		resp.type           = FRAME_SRIC;
+		resp.address        = unesc_rx[SRIC_SRC];
+		resp.tag            = NULL;
 		resp.payload_length = 0;
 
 		txq_push(&resp, 0);
@@ -224,25 +230,29 @@ static void proc_rx_frame( void )
 }
 
 /* Data ready on serial port callback */
-static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
+static gboolean rx(GIOChannel* src, GIOCondition cond, gpointer data)
 {
 	read_incoming();
 
-	while( advance_rx() ) {
-		uint8_t len;
+	while (advance_rx()) {
+		uint8_t  len;
 		uint16_t crc, recv_crc;
 
-		if( unesc_pos < SRIC_OVERHEAD )
+		if (unesc_pos < SRIC_OVERHEAD) {
 			continue;
+		}
 
 		len = unesc_rx[SRIC_LEN];
-		if( unesc_pos < (SRIC_OVERHEAD + len) )
+		if (unesc_pos < (SRIC_OVERHEAD + len)) {
 			continue;
+		}
 
-		crc = crc16( unesc_rx, SRIC_HEADER_SIZE + len );
-		recv_crc = unesc_rx[SRIC_DATA + len] | ( unesc_rx[SRIC_DATA + len + 1] << 8 );
-		if( crc != recv_crc )
+		crc = crc16(unesc_rx, SRIC_HEADER_SIZE + len);
+		recv_crc
+		    = unesc_rx[SRIC_DATA + len] | (unesc_rx[SRIC_DATA + len + 1] << 8);
+		if (crc != recv_crc) {
 			continue;
+		}
 
 		proc_rx_frame();
 	}
@@ -252,52 +262,56 @@ static gboolean rx( GIOChannel *src, GIOCondition cond, gpointer data )
 
 void sric_if_init(const char* fname)
 {
-	fd = open( fname, O_RDWR | O_NONBLOCK );
-	if( fd == -1 ) {
-		wlog( "Failed to open serial device \"%s\"", fname );
+	fd = open(fname, O_RDWR | O_NONBLOCK);
+	if (fd == -1) {
+		wlog("Failed to open serial device \"%s\"", fname);
 		exit(1);
 	}
 
 	serial_conf();
 	if_gio = g_io_channel_unix_new(fd);
 
-	g_io_add_watch( if_gio, G_IO_IN, rx, NULL );
+	g_io_add_watch(if_gio, G_IO_IN, rx, NULL);
 }
 
 /* Set up the next frame for transmission
    Returns true if there's a frame to transmit */
-static gboolean next_tx( void )
+static gboolean next_tx(void)
 {
 	uint16_t crc;
-	uint8_t len;
-	int16_t esclen;
-	if( tx_frame != NULL )
-		free( (frame_t*)tx_frame );
+	uint8_t  len;
+	int16_t  esclen;
+	if (tx_frame != NULL) {
+		free((frame_t*)tx_frame);
+	}
 
 	tx_frame = txq_next(1);
 
-	if( tx_frame == NULL )
+	if (tx_frame == NULL) {
 		/* Queue's empty */
 		return FALSE;
+	}
 
 	/*** Build up the frame in the output buffer ***/
 
 	/* Alias payload length for convenience */
-	len = tx_frame->payload_length;
+	len                        = tx_frame->payload_length;
 
-	txbuf[0] = tx_frame->type;
-	txbuf[SRIC_DEST] = tx_frame->address;
-	txbuf[SRIC_SRC] = 1;
-	txbuf[SRIC_LEN] = len;
-	memcpy( txbuf + SRIC_DATA, tx_frame->payload, len );
+	txbuf[0]                   = tx_frame->type;
+	txbuf[SRIC_DEST]           = tx_frame->address;
+	txbuf[SRIC_SRC]            = 1;
+	txbuf[SRIC_LEN]            = len;
+	memcpy(txbuf + SRIC_DATA, tx_frame->payload, len);
 
-	crc = crc16( txbuf, SRIC_HEADER_SIZE + len );
-	txbuf[SRIC_DATA + len] = crc;
+	crc                        = crc16(txbuf, SRIC_HEADER_SIZE + len);
+	txbuf[SRIC_DATA + len]     = crc;
 	txbuf[SRIC_DATA + len + 1] = crc >> 8;
 
 	/* Don't escape the initial framing byte */
-	esclen = escape_frame( txbuf + 1, SRIC_OVERHEAD - 1 + len, sizeof(txbuf) - 1);
-	g_assert( esclen > 0 );
+	esclen                     = escape_frame(txbuf + 1,
+	                                          SRIC_OVERHEAD - 1 + len,
+	                                          sizeof (txbuf) - 1);
+	g_assert(esclen > 0);
 
 	/* Remember the framing byte: */
 	txlen = esclen + 1;
@@ -306,24 +320,26 @@ static gboolean next_tx( void )
 	return TRUE;
 }
 
-static gboolean if_tx( GIOChannel *src, GIOCondition cond, gpointer data )
+static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 {
 	int w;
 
-	if( tx_frame == NULL && !next_tx() )
+	if (tx_frame == NULL && !next_tx()) {
 		/* Nothing to transmit at this time */
 		goto empty;
+	}
 
-	w = write( fd, txbuf + txpos, txlen - txpos );
-	if( w == -1 ) {
-		wlog( "Error writing to serial port: %s", strerror(errno) );
-		exit( 1 );
+	w = write(fd, txbuf + txpos, txlen - txpos);
+	if (w == -1) {
+		wlog("Error writing to serial port: %s", strerror(errno));
+		exit(1);
 	}
 
 	txpos += w;
-	if( txpos == txlen && !next_tx() )
+	if (txpos == txlen && !next_tx()) {
 		/* Queue has been emptied */
 		goto empty;
+	}
 
 	return TRUE;
 
@@ -332,9 +348,10 @@ empty:
 	return FALSE;
 }
 
-void sric_if_tx_ready( void )
+void sric_if_tx_ready(void)
 {
-	if( write_srcid == 0 )
-		write_srcid = g_io_add_watch( if_gio, G_IO_OUT, if_tx, NULL );
+	if (write_srcid == 0) {
+		write_srcid = g_io_add_watch(if_gio, G_IO_OUT, if_tx, NULL);
+	}
 }
 

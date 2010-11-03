@@ -5,6 +5,6 @@
 void sric_if_init(const char* fname);
 
 /* Indicate that there are frames available in the transmit queue */
-void sric_if_tx_ready( void );
+void sric_if_tx_ready(void);
 
-#endif	/* _INCLUDED_SRIC_IF */
+#endif  /* _INCLUDED_SRIC_IF */
