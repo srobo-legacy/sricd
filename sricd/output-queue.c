@@ -13,7 +13,7 @@ void txq_init(void)
 
 void txq_push(const tx* tx)
 {
-	void* e = g_memdup(tx, sizeof(*tx));
+	void* e = g_memdup(tx, sizeof (*tx));
 	g_queue_push_head(tx_queue, e);
 }
 

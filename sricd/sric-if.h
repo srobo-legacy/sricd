@@ -4,4 +4,4 @@
 /* Initialise the interface */
 void sric_if_init(const char* fname);
 
-#endif	/* _INCLUDED_SRIC_IF */
+#endif  /* _INCLUDED_SRIC_IF */

@@ -19,11 +19,11 @@ typedef struct _client client;
 typedef void (*client_ping_callback)(client* c);
 
 struct _client {
-	GQueue* note_q;
-	GQueue* rx_q;
-	GIOChannel *gio;
+	GQueue*              note_q;
+	GQueue*              rx_q;
+	GIOChannel*          gio;
 	int                  fd;
-	guint rx_timer, note_timer;
+	guint                rx_timer, note_timer;
 	client_ping_callback rx_ping, note_ping;
 	uint64_t             device_note_data[2];
 };

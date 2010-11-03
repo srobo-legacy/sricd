@@ -13,11 +13,12 @@
 #include <glib.h>
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
-const char* DEFAULT_SERIAL_DEV = "/dev/sric-a";
+const char* DEFAULT_SERIAL_DEV  = "/dev/sric-a";
 
 static void print_help_and_exit(const char* pname)
 {
-	printf("Usage: %s [-h] [-v] [-V] [-f] [-d] [-s socket] [-u device]\n", pname);
+	printf("Usage: %s [-h] [-v] [-V] [-f] [-d] [-s socket] [-u device]\n",
+	       pname);
 	printf("\t-V\tprint version\n");
 	printf("\t-d\trun as daemon (default)\n");
 	printf("\t-f\tkeep in foreground\n");
@@ -47,7 +48,13 @@ static const char* sdev_path;
 void restart()
 {
 	wlog("restarting sricd at path: %s", restart_file);
-	execl(restart_file, restart_file, "-f", "-s", socket_path, log_enable ? "-v" : NULL, NULL);
+	execl(restart_file,
+	      restart_file,
+	      "-f",
+	      "-s",
+	      socket_path,
+	      log_enable ? "-v" : NULL,
+	      NULL);
 	wlog("restart failed: %s", strerror(errno));
 	exit(1);
 }
@@ -55,13 +62,13 @@ void restart()
 int main(int argc, char** argv)
 {
 	int                arg, rv;
-	int                fg          = 0;
+	int                fg = 0;
 	unsigned long long time1, time2, startup_time;
 	struct timeval     tv1, tv2;
-	GMainLoop *ml = NULL;
+	GMainLoop*         ml = NULL;
 
-	socket_path = DEFAULT_SOCKET_PATH;
-	sdev_path = DEFAULT_SERIAL_DEV;
+	socket_path  = DEFAULT_SOCKET_PATH;
+	sdev_path    = DEFAULT_SERIAL_DEV;
 	restart_file = argv[0];
 	rv           = gettimeofday(&tv1, 0);
 	assert(rv == 0);

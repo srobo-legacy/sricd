@@ -18,10 +18,14 @@ static const char* sock_path;
 
 static GIOChannel* ipc_gio = NULL;
 
-static gboolean ipc_new( GIOChannel *src, GIOCondition cond, gpointer data );
-static gboolean ipc_death( GIOChannel *gio, GIOCondition cond, gpointer data );
-static gboolean ipc_client_incoming( GIOChannel *gio, GIOCondition cond, gpointer _client );
-static gboolean ipc_client_death( GIOChannel *gio, GIOCondition cond, gpointer _client );
+static gboolean ipc_new(GIOChannel* src, GIOCondition cond, gpointer data);
+static gboolean ipc_death(GIOChannel* gio, GIOCondition cond, gpointer data);
+static gboolean ipc_client_incoming(GIOChannel*  gio,
+                                    GIOCondition cond,
+                                    gpointer     _client);
+static gboolean ipc_client_death(GIOChannel*  gio,
+                                 GIOCondition cond,
+                                 gpointer     _client);
 
 static void ipc_boot(void)
 {
@@ -48,23 +52,23 @@ static void ipc_boot(void)
 	g_io_add_watch(ipc_gio, G_IO_HUP, ipc_death, NULL);
 }
 
-static gboolean ipc_new( GIOChannel *src, GIOCondition cond, gpointer data )
+static gboolean ipc_new(GIOChannel* src, GIOCondition cond, gpointer data)
 {
 	client*            c;
 	struct sockaddr_un addr;
 	socklen_t          len = sizeof (addr);
 	int                new;
-	int sock;
-	assert( src == ipc_gio );
-	assert( cond == G_IO_IN );
+	int                sock;
+	assert(src == ipc_gio);
+	assert(cond == G_IO_IN);
 	sock = g_io_channel_unix_get_fd(ipc_gio);
 
-	new = accept(sock, (struct sockaddr*)&addr, &len);
+	new  = accept(sock, (struct sockaddr*)&addr, &len);
 	wlog("accepted new connection");
 
-	c = client_create(new);
-	g_io_add_watch( c->gio, G_IO_IN, ipc_client_incoming, c );
-	g_io_add_watch( c->gio, G_IO_HUP, ipc_client_death, c );
+	c    = client_create(new);
+	g_io_add_watch(c->gio, G_IO_IN, ipc_client_incoming, c);
+	g_io_add_watch(c->gio, G_IO_HUP, ipc_client_death, c);
 
 	return TRUE;
 }
@@ -128,7 +132,7 @@ static void send_rx(int fd, client* c, const frame* rx)
 	write_data(fd, c, rx->payload,     rx->payload_length);
 }
 
-static gboolean rx_timeout( gpointer _client )
+static gboolean rx_timeout(gpointer _client)
 {
 	// client* c = (client*)_client;
 	// TODO: stuff here
@@ -152,8 +156,8 @@ static void rx_ping(client* c)
 
 static void handle_poll_rx(int fd, client* c)
 {
-	frame* rx;
-	int32_t          timeout;
+	frame*  rx;
+	int32_t timeout;
 	if (!read_data(fd, &timeout, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;
@@ -169,17 +173,19 @@ static void handle_poll_rx(int fd, client* c)
 	} else {
 		// schedule for timeout
 		if (timeout != -1) {
-			c->rx_timer = g_timeout_add( timeout, rx_timeout, c );
+			c->rx_timer = g_timeout_add(timeout, rx_timeout, c);
 		}
 		c->rx_ping = rx_ping;
 	}
 }
 
-static gboolean ipc_client_incoming( GIOChannel *gio, GIOCondition cond, gpointer _client )
+static gboolean ipc_client_incoming(GIOChannel*  gio,
+                                    GIOCondition cond,
+                                    gpointer     _client)
 {
 	unsigned char cmd;
-	client* c= (client*)_client;
-	int fd = g_io_channel_unix_get_fd(gio);
+	client*       c  = (client*)_client;
+	int           fd = g_io_channel_unix_get_fd(gio);
 	assert(c);
 
 	// do R/W stuff here
@@ -205,7 +211,9 @@ static gboolean ipc_client_incoming( GIOChannel *gio, GIOCondition cond, gpointe
 	return TRUE;
 }
 
-static gboolean ipc_client_death( GIOChannel *gio, GIOCondition cond, gpointer _client )
+static gboolean ipc_client_death(GIOChannel*  gio,
+                                 GIOCondition cond,
+                                 gpointer     _client)
 {
 	client* c = (client*)_client;
 	assert(c);
@@ -214,7 +222,7 @@ static gboolean ipc_client_death( GIOChannel *gio, GIOCondition cond, gpointer _
 	return FALSE;
 }
 
-static gboolean ipc_death( GIOChannel *gio, GIOCondition cond, gpointer data )
+static gboolean ipc_death(GIOChannel* gio, GIOCondition cond, gpointer data)
 {
 	g_io_channel_unref(gio);
 

@@ -22,12 +22,12 @@ client* client_create(int fd)
 	c->device_note_data[0] = 0;
 	c->device_note_data[1] = 0;
 
-	c->gio = g_io_channel_unix_new(fd);
+	c->gio                 = g_io_channel_unix_new(fd);
 	g_io_channel_set_close_on_unref(c->gio, TRUE);
 	return c;
 }
 
-static void free_qitem( gpointer data, gpointer user_data )
+static void free_qitem(gpointer data, gpointer user_data)
 {
 	g_free(data);
 }
@@ -48,7 +48,7 @@ void client_push_rx(client* c, const frame* rx)
 	assert(c);
 	assert(rx);
 
-	ptr = g_memdup(rx, sizeof(*rx));
+	ptr = g_memdup(rx, sizeof (*rx));
 	g_queue_push_head(c->rx_q, ptr);
 
 	if (c->rx_ping) {
@@ -62,7 +62,7 @@ void client_push_note(client* c, const frame* note)
 	assert(c);
 	assert(note);
 
-	ptr = g_memdup(note, sizeof(*note));
+	ptr = g_memdup(note, sizeof (*note));
 	g_queue_push_head(c->note_q, ptr);
 
 	if (c->note_ping) {

@@ -7,17 +7,17 @@
 
 static int fd = -1;
 
-static void serial_conf( void )
+static void serial_conf(void)
 {
 	struct termios t;
 
-	if( !isatty(fd) ) {
-		wlog( "Device is not a tty.  Fail." );
+	if (!isatty(fd)) {
+		wlog("Device is not a tty.  Fail.");
 		exit(1);
 	}
-	
-	if( tcgetattr(fd, &t) < 0 ) {
-		wlog( "Failed to retrieve term info" );
+
+	if (tcgetattr(fd, &t) < 0) {
+		wlog("Failed to retrieve term info");
 		exit(1);
 	}
 
@@ -32,7 +32,7 @@ static void serial_conf( void )
 	t.c_iflag &= ~(ISTRIP | IGNBRK | IGNCR | ICRNL);
 
 	/* No flow control please */
-	t.c_iflag &= ~( IXOFF | IXON );
+	t.c_iflag &= ~(IXOFF | IXON);
 	t.c_cflag &= ~CRTSCTS;
 
 	/* Disable character mangling */
@@ -51,29 +51,28 @@ static void serial_conf( void )
 	/* non-canonical, no looping, no erase printing or use,
 	   no special character munging */
 	t.c_lflag &= ~(ICANON | ECHO | ECHO | ECHOPRT | ECHOK
-			| ECHOKE | ISIG | IEXTEN | TOSTOP );
+	               | ECHOKE | ISIG | IEXTEN | TOSTOP);
 	t.c_lflag |= ECHONL;
 
-	if( cfsetspeed( &t, 115200 ) < 0 ) {
-		wlog( "Failed to set serial baud rate" );
+	if (cfsetspeed(&t, 115200) < 0) {
+		wlog("Failed to set serial baud rate");
 		exit(1);
 	}
 
-	if( tcsetattr( fd, TCSANOW, &t ) < 0 )
-	{
-		wlog( "Failed to configure terminal" );
+	if (tcsetattr(fd, TCSANOW, &t) < 0) {
+		wlog("Failed to configure terminal");
 		exit(1);
 	}
 }
 
 void sric_if_init(const char* fname)
 {
-	fd = open( fname, O_RDWR );
-	if( fd == -1 ) {
-		wlog( "Failed to open serial device \"%s\"", fname );
+	fd = open(fname, O_RDWR);
+	if (fd == -1) {
+		wlog("Failed to open serial device \"%s\"", fname);
 		exit(1);
 	}
 
 	serial_conf();
-
 }
+
