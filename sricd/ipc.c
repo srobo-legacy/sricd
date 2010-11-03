@@ -105,11 +105,12 @@ static bool write_result(int fd, client* c, unsigned char result)
 static void handle_tx(int fd, client* c)
 {
 	unsigned char buf[4];
-	tx            frame;
+	frame_t       frame;
 	if (!read_data(fd, buf, 4)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 		return;
 	}
+	frame.type = FRAME_SRIC;
 	frame.address        = (int)buf[0] | ((int)buf[1] << 8);
 	frame.payload_length = (int)buf[2] | ((int)buf[3] << 8);
 	if (!read_data(fd, frame.payload, frame.payload_length)) {
@@ -117,7 +118,7 @@ static void handle_tx(int fd, client* c)
 		return;
 	}
 	frame.tag = c;
-	txq_push(&frame);
+	txq_push(&frame, 1);
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
 

@@ -24,7 +24,11 @@ struct _client {
 	GIOChannel*          gio;
 	int                  fd;
 	guint                rx_timer, note_timer;
+	/* Callbacks for frame and note rx queue modification notification */
+	/* (When NULL, client is not blocked polling on these) */
 	client_ping_callback rx_ping, note_ping;
+
+	/* Device note mask */
 	uint64_t             device_note_data[2];
 };
 

@@ -4,4 +4,7 @@
 /* Initialise the interface */
 void sric_if_init(const char* fname);
 
-#endif  /* _INCLUDED_SRIC_IF */
+/* Indicate that there are frames available in the transmit queue */
+void sric_if_tx_ready( void );
+
+#endif	/* _INCLUDED_SRIC_IF */
