@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-int
+void
 bus_command(uint8_t *buffer, int len)
 {
 
@@ -10,7 +10,7 @@ bus_command(uint8_t *buffer, int len)
         abort();
 }       
 
-int
+void
 gateway_command(uint8_t *buffer, int len)
 {
 

@@ -102,8 +102,11 @@ process_command(uint8_t *buffer, int len)
 
 	if (buffer[0] == 0x8E)
 		/* This is an actual command to the gateway... */
-		return gateway_command(buffer, len);
+		gateway_command(buffer, cmdlen);
 	else
 		/* Pump at all clients */
-		return bus_command(buffer, len);
+		bus_command(buffer, cmdlen);
+
+	/* Always return 0; we've always done /something/ with this data */
+	return 0;
 }
