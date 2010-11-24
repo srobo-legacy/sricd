@@ -9,7 +9,9 @@
 #include "../sricd/frame.h"
 
 void read_frames(int fd);
-int process_command(uint8_t *buffer, int len);
+int process_command(uint8_t sof, uint8_t *buffer, int len);
+int bus_command(uint8_t *buffer, int len);
+int gateway_command(uint8_t *buffer, int len);
 
 int
 main()
@@ -40,7 +42,7 @@ read_frames(int fd)
 
 	while (1) {
 		sof = 0;
-		while (sof != 0x7E) {
+		while (sof != 0x7E && sof != 0x8E) {
 			ret = read(fd, &sof, 1);
 			if (ret < 0) {
 				perror("Couldn't read from terminal");
@@ -60,7 +62,7 @@ read_frames(int fd)
 				src_len = unescape(tmp_buf, len, frame_buf,
 						sizeof(frame_buf),
 						&decode_len);
-				if (!process_command(frame_buf, decode_len)) {
+				if (!process_command(sof, frame_buf, decode_len)) {
 					memcpy(tmp_buf, &tmp_buf[src_len],
 							len - src_len);
 					len -= src_len;
@@ -73,8 +75,29 @@ read_frames(int fd)
 }
 
 int
-process_command(uint8_t *buffer, int len)
+process_command(uint8_t sof, uint8_t *buffer, int len)
 {
 
-	return;
+	if (sof == 0x8E)
+		/* This is an actual command to the gateway... */
+		return gateway_command(buffer, len);
+	else
+		/* Pump at all clients */
+		return bus_command(buffer, len);
+}
+
+int
+bus_command(uint8_t *buffer, int len)
+{
+
+	printf("Unimplemented: client commands\n");
+	abort();
+}
+
+int
+gateway_command(uint8_t *buffer, int len)
+{
+
+	printf("Unimplemented: gateway commands\n");
+	abort();
 }
