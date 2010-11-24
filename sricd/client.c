@@ -12,17 +12,17 @@ client* client_create(int fd)
 {
 	client* c = malloc(sizeof (client));
 	assert(c);
-	c->note_q              = g_queue_new();
-	c->rx_q                = g_queue_new();
-	c->fd                  = fd;
-	c->rx_timer            = 0;
-	c->note_timer          = 0;
-	c->rx_ping             = NULL;
-	c->note_ping           = NULL;
+	c->note_q = g_queue_new();
+	c->rx_q = g_queue_new();
+	c->fd = fd;
+	c->rx_timer = 0;
+	c->note_timer = 0;
+	c->rx_ping = NULL;
+	c->note_ping = NULL;
 	c->device_note_data[0] = 0;
 	c->device_note_data[1] = 0;
 
-	c->gio                 = g_io_channel_unix_new(fd);
+	c->gio = g_io_channel_unix_new(fd);
 	g_io_channel_set_close_on_unref(c->gio, TRUE);
 	return c;
 }

@@ -39,10 +39,10 @@ int16_t escape_frame(uint8_t* data, unsigned length, unsigned maxlength)
 }
 
 uint8_t unescape(const uint8_t* src,
-                 uint8_t        srclen,
-                 uint8_t*       dest,
-                 uint8_t        destlen,
-                 uint8_t*       dest_used)
+                 uint8_t srclen,
+                 uint8_t* dest,
+                 uint8_t destlen,
+                 uint8_t* dest_used)
 {
 	uint8_t spos = 0, dpos = 0;
 
@@ -77,9 +77,10 @@ uint8_t unescape(const uint8_t* src,
 bool unescape_frame(uint8_t* data, unsigned length, unsigned* outlength)
 {
 	uint8_t* source = data;
-	uint8_t* dest   = data;
-	uint8_t* end    = data + length;
-	uint8_t  current;
+	uint8_t* dest = data;
+	uint8_t* end = data + length;
+	uint8_t current;
+
 	while (source != end) {
 		current = *source++;
 		if (current == 0x7D) {
@@ -104,6 +105,7 @@ bool unescape_frame(uint8_t* data, unsigned length, unsigned* outlength)
 			*dest++ = current;
 		}
 	}
+
 	*outlength = dest - data;
 	return true;
 }

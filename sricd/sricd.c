@@ -61,16 +61,16 @@ void restart()
 
 int main(int argc, char** argv)
 {
-	int                arg, rv;
-	int                fg = 0;
+	int arg, rv;
+	int fg = 0;
 	unsigned long long time1, time2, startup_time;
-	struct timeval     tv1, tv2;
-	GMainLoop*         ml = NULL;
+	struct timeval tv1, tv2;
+	GMainLoop* ml = NULL;
 
-	socket_path  = DEFAULT_SOCKET_PATH;
-	sdev_path    = DEFAULT_SERIAL_DEV;
+	socket_path = DEFAULT_SOCKET_PATH;
+	sdev_path = DEFAULT_SERIAL_DEV;
 	restart_file = argv[0];
-	rv           = gettimeofday(&tv1, 0);
+	rv = gettimeofday(&tv1, 0);
 	assert(rv == 0);
 	while ((arg = getopt(argc, argv, "hvVfds:u:")) != -1) {
 		switch (arg) {
@@ -110,10 +110,10 @@ int main(int argc, char** argv)
 		wlog("backgrounding");
 		background();
 	}
-	rv           = gettimeofday(&tv2, 0);
+	rv = gettimeofday(&tv2, 0);
 	assert(rv == 0);
-	time1        = tv1.tv_sec * 1000000 + tv1.tv_usec;
-	time2        = tv2.tv_sec * 1000000 + tv2.tv_usec;
+	time1 = tv1.tv_sec * 1000000 + tv1.tv_usec;
+	time2 = tv2.tv_sec * 1000000 + tv2.tv_usec;
 	startup_time = time2 - time1;
 	wlog("startup took %lluµs", startup_time);
 	wlog("entering main loop");

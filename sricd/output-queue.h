@@ -22,14 +22,14 @@ typedef struct _tx {
 	frame_type_t type;
 
 	/* The destination address */
-	int          address;
+	int address;
 
 	/* The client from which this frame originated. */
-	void*        tag; // if tag == NULL, this is a response
+	void* tag; // if tag == NULL, this is a response
 
 	/* The payload for this frame: */
-	int          payload_length;
-	char         payload[PAYLOAD_MAX];
+	int payload_length;
+	char payload[PAYLOAD_MAX];
 } frame_t;
 
 /* Initialise the transmit queue */

@@ -18,8 +18,8 @@
 /* Offsets of fields in the tx buffer */
 enum {
 	SRIC_DEST = 1,
-	SRIC_SRC  = 2,
-	SRIC_LEN  = 3,
+	SRIC_SRC = 2,
+	SRIC_LEN = 3,
 	SRIC_DATA = 4
 	            /* CRC is last two bytes */
 };
@@ -37,28 +37,28 @@ enum {
     while (0)
 
 /* Serial port file descriptor */
-static int            fd          = -1;
-static GIOChannel*    if_gio      = NULL;
+static int fd = -1;
+static GIOChannel* if_gio = NULL;
 
 /* The write glib source ID (0 = invalid/not-registered) */
-static guint          write_srcid = 0;
+static guint write_srcid = 0;
 
 /* Frame we're currently working on transmitting */
-static const frame_t* tx_frame    = NULL;
+static const frame_t* tx_frame = NULL;
 /* Output buffer that we're currently transmitting -- allow enough space for escaping */
-static uint8_t        txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
+static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
 /* Number of bytes currently in txbuf */
-static uint8_t        txlen = 0;
+static uint8_t txlen = 0;
 /* Offset of next byte in txbuf to go out  */
-static uint8_t        txpos = 0;
+static uint8_t txpos = 0;
 
 /* Receive buffer for data straight from the serial port */
-static uint8_t        rxbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
-static uint8_t        rxpos = 0;
+static uint8_t rxbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
+static uint8_t rxpos = 0;
 
 /* Receive buffer for a single unescaped frame */
-static uint8_t        unesc_rx[ SRIC_OVERHEAD + PAYLOAD_MAX ];
-static uint8_t        unesc_pos = 0;
+static uint8_t unesc_rx[ SRIC_OVERHEAD + PAYLOAD_MAX ];
+static uint8_t unesc_pos = 0;
 
 /* Open and configure the serial port */
 static void serial_conf(void)
@@ -248,8 +248,8 @@ static gboolean rx(GIOChannel* src, GIOCondition cond, gpointer data)
 		}
 
 		crc = crc16(unesc_rx, SRIC_HEADER_SIZE + len);
-		recv_crc
-		    = unesc_rx[SRIC_DATA + len] | (unesc_rx[SRIC_DATA + len + 1] << 8);
+		recv_crc = unesc_rx[SRIC_DATA + len] |
+		           (unesc_rx[SRIC_DATA + len + 1] << 8);
 		if (crc != recv_crc) {
 			continue;
 		}
@@ -297,10 +297,10 @@ static gboolean next_tx(void)
 	/* Alias payload length for convenience */
 	len = tx_frame->payload_length;
 
-	txbuf[0]         = tx_frame->type;
+	txbuf[0] = tx_frame->type;
 	txbuf[SRIC_DEST] = tx_frame->address;
-	txbuf[SRIC_SRC]  = 1;
-	txbuf[SRIC_LEN]  = len;
+	txbuf[SRIC_SRC] = 1;
+	txbuf[SRIC_LEN] = len;
 	memcpy(txbuf + SRIC_DATA, tx_frame->payload, len);
 
 	crc                        = crc16(txbuf, SRIC_HEADER_SIZE + len);

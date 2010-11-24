@@ -42,10 +42,10 @@ void device_reset(void)
 	int i;
 	device_types[0] = BROADCAST_DEVICE;
 	device_types[1] = MASTER_DEVICE;
-	targets[0]      = NULL;
-	targets[1]      = NULL;
+	targets[0] = NULL;
+	targets[1] = NULL;
 	for (i = 2; i < DEVICE_HIGH_ADDRESS; ++i) {
-		targets[i]      = NULL;
+		targets[i] = NULL;
 		device_types[i] = NO_DEVICE;
 	}
 }
@@ -86,7 +86,7 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 			} else if (cur->next) {
 				cur = cur->next;
 			} else {
-				cur->next  = malloc(sizeof(device_note_target));
+				cur->next = malloc(sizeof(device_note_target));
 				cur = cur->next;
 				cur->c = c;
 				cur->next = NULL;
@@ -101,7 +101,7 @@ void device_set_client_notes(int address, client* c, uint64_t notes)
 	uint64_t* client_flag_pointer;
 	int       bit = address;
 	if (bit > 64) {
-		bit                -= 64;
+		bit -= 64;
 		client_flag_pointer = &(c->device_note_data[1]);
 	} else {
 		client_flag_pointer = &(c->device_note_data[0]);
@@ -127,7 +127,7 @@ void device_clear_client_notes(client* c)
 void device_dispatch_note(const frame* note)
 {
 	device_note_target* cur  = targets[note->source_address];
-	uint64_t            flag = ((uint64_t)1 << note->note);
+	uint64_t flag = ((uint64_t)1 << note->note);
 	while (cur) {
 		if (cur->flags & flag) {
 			client_push_note(cur->c, note);

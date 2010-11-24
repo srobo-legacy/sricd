@@ -22,10 +22,10 @@ int16_t escape_frame(uint8_t* data, unsigned length, unsigned maxlength);
    - dest_used: Upon return, will be filled with the number of bytes filled
                 in by this function in the dest buffer. */
 uint8_t unescape(const uint8_t* src,
-                 uint8_t        srclen,
-                 uint8_t*       dest,
-                 uint8_t        destlen,
-                 uint8_t*       dest_used);
+                 uint8_t srclen,
+                 uint8_t* dest,
+                 uint8_t destlen,
+                 uint8_t* dest_used);
 
 #ifdef __cplusplus
 }
