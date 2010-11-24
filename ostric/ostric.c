@@ -7,6 +7,7 @@
 
 #include "../sricd/escape.h"
 #include "../sricd/frame.h"
+#include "../sricd/crc16/crc16.h"
 
 #include "cmds.h"
 
@@ -82,10 +83,22 @@ read_frames(int fd)
 int
 process_command(uint8_t *buffer, int len)
 {
+	uint16_t crc, sentcrc, cmdlen;
 
 	/* Is there actually enough space for this? */
-	if ((buffer[3] & 0x3F) + 4 > len)
+	cmdlen = (buffer[3] & 0x3F) + 6;
+	if (cmdlen > len)
 		return 1;
+
+	crc = crc16(&buffer[1], cmdlen - 3);
+	sentcrc = buffer[cmdlen-1];
+	sentcrc |= buffer[cmdlen-2] << 8;
+	if (crc != sentcrc) {
+		fprintf(stderr, "Bad crc in received frame\n");
+		/* However, return 0 indicating that we've ingested that data.
+		 * After all, we're not going to do anything else with it */
+		return 0;
+	}
 
 	if (buffer[0] == 0x8E)
 		/* This is an actual command to the gateway... */
