@@ -24,7 +24,7 @@ main()
 		return 1;
 	}
 
-	printf("Creating pseudo-terminal with name \"%s\", impersonating a"
+	printf("Creating pseudo-terminal with name \"%s\", impersonating a "
 		"sric bus on that terminal\n", ptsname(fd));
 
 	read_frames(fd);
