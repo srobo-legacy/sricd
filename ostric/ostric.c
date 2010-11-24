@@ -8,10 +8,10 @@
 #include "../sricd/escape.h"
 #include "../sricd/frame.h"
 
+#include "cmds.h"
+
 void read_frames(int fd);
 int process_command(uint8_t sof, uint8_t *buffer, int len);
-int bus_command(uint8_t *buffer, int len);
-int gateway_command(uint8_t *buffer, int len);
 
 int
 main()
@@ -84,20 +84,4 @@ process_command(uint8_t sof, uint8_t *buffer, int len)
 	else
 		/* Pump at all clients */
 		return bus_command(buffer, len);
-}
-
-int
-bus_command(uint8_t *buffer, int len)
-{
-
-	printf("Unimplemented: client commands\n");
-	abort();
-}
-
-int
-gateway_command(uint8_t *buffer, int len)
-{
-
-	printf("Unimplemented: gateway commands\n");
-	abort();
 }
