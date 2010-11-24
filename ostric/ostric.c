@@ -11,7 +11,7 @@
 #include "cmds.h"
 
 void read_frames(int fd);
-int process_command(uint8_t sof, uint8_t *buffer, int len);
+int process_command(uint8_t *buffer, int len);
 
 int
 main()
@@ -44,12 +44,11 @@ read_frames(int fd)
 {
 	uint8_t tmp_buf[128], frame_buf[128];;
 	int ret, len, src_len;
-	uint8_t sof, decode_len;
+	uint8_t decode_len;
 
 	while (1) {
-		sof = 0;
-		while (sof != 0x7E && sof != 0x8E) {
-			ret = read(fd, &sof, 1);
+		while (tmp_buf[0] != 0x7E && tmp_buf[0] != 0x8E) {
+			ret = read(fd, &tmp_buf[0], 1);
 			if (ret < 0) {
 				perror("Couldn't read from terminal");
 				return;
@@ -57,7 +56,7 @@ read_frames(int fd)
 		}
 
 		/* Only reachable once we've read a start-of-frame */
-		len = 0;
+		len = 1;
 		while (1) {
 			ret = read(fd, &tmp_buf[len], sizeof(tmp_buf)- len);
 			if (ret < 0) {
@@ -68,7 +67,7 @@ read_frames(int fd)
 				src_len = unescape(tmp_buf, len, frame_buf,
 						sizeof(frame_buf),
 						&decode_len);
-				if (!process_command(sof, frame_buf, decode_len)) {
+				if (!process_command(frame_buf, decode_len)) {
 					memcpy(tmp_buf, &tmp_buf[src_len],
 							len - src_len);
 					len -= src_len;
@@ -81,14 +80,14 @@ read_frames(int fd)
 }
 
 int
-process_command(uint8_t sof, uint8_t *buffer, int len)
+process_command(uint8_t *buffer, int len)
 {
 
 	/* Is there actually enough space for this? */
-	if ((buffer[2] & 0x3F) + 3 > len)
+	if ((buffer[3] & 0x3F) + 4 > len)
 		return 1;
 
-	if (sof == 0x8E)
+	if (buffer[0] == 0x8E)
 		/* This is an actual command to the gateway... */
 		return gateway_command(buffer, len);
 	else
