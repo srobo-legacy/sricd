@@ -248,8 +248,8 @@ static gboolean rx(GIOChannel* src, GIOCondition cond, gpointer data)
 		}
 
 		crc = crc16(unesc_rx, SRIC_HEADER_SIZE + len);
-		recv_crc = unesc_rx[SRIC_DATA + len] |
-		           (unesc_rx[SRIC_DATA + len + 1] << 8);
+		recv_crc = unesc_rx[SRIC_DATA + len]
+		           | (unesc_rx[SRIC_DATA + len + 1] << 8);
 		if (crc != recv_crc) {
 			continue;
 		}

@@ -243,8 +243,9 @@ static uint64_t ntohll(uint64_t x)
 		uint8_t bytes[8];
 	} src, dst;
 	src.intVal = x;
-	for (i = 0; i < 8; ++i)
+	for (i = 0; i < 8; ++i) {
 		dst.bytes[7 - i] = src.bytes[i];
+	}
 	return dst.intVal;
 #endif
 }
@@ -280,16 +281,16 @@ static void handle_list_devices(int fd, client* c)
 {
 	int i;
 	uint16_t deviceCount = 0;
-	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i)
-		if (device_exists(i))
+	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i) {
+		if (device_exists(i)) {
 			deviceCount++;
+		}
+	}
 	deviceCount = htons(deviceCount);
 	write_result(fd, c, SRIC_E_BADADDR);
 	write_data(fd, c, &deviceCount, 2);
-	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i)
-	{
-		if (device_exists(i))
-		{
+	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i) {
+		if (device_exists(i)) {
 			short data = (short)i;
 			data = htons(data);
 			write_data(fd, c, &data, 2);
