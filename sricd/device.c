@@ -1,6 +1,5 @@
 #include "device.h"
 #include <stdlib.h>
-#include "pool.h"
 #include <assert.h>
 
 #define NO_DEVICE -1
@@ -10,14 +9,13 @@
 typedef struct _device_note_target device_note_target;
 
 struct _device_note_target {
-	client*             c;
+	client* c;
 	device_note_target* next;
-	uint64_t            flags;
+	uint64_t flags;
 };
 
-static char                device_types[DEVICE_HIGH_ADDRESS];
+static char device_types[DEVICE_HIGH_ADDRESS];
 static device_note_target* targets[DEVICE_HIGH_ADDRESS];
-static pool*               note_target_pool = NULL;
 
 bool device_exists(int address)
 {
@@ -50,8 +48,6 @@ void device_reset(void)
 		targets[i]      = NULL;
 		device_types[i] = NO_DEVICE;
 	}
-	pool_destroy(note_target_pool);
-	note_target_pool = pool_create(sizeof (device_note_target));
 }
 
 static void device_drop_client_notes(int address, client* c)
@@ -66,7 +62,7 @@ static void device_drop_client_notes(int address, client* c)
 	while (cur) {
 		if (cur->c == c) {
 			*ptr = cur->next;
-			pool_free(note_target_pool, ptr);
+			free(ptr);
 			return;
 		}
 		cur = cur->next;
@@ -77,9 +73,9 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 {
 	device_note_target* cur;
 	if (!targets[address]) {
-		targets[address]        = pool_alloc(note_target_pool);
-		targets[address]->c     = c;
-		targets[address]->next  = NULL;
+		targets[address] = malloc(sizeof(device_note_target));
+		targets[address]->c = c;
+		targets[address]->next = NULL;
 		targets[address]->flags = notes;
 	} else {
 		cur = targets[address];
@@ -90,10 +86,10 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 			} else if (cur->next) {
 				cur = cur->next;
 			} else {
-				cur->next  = pool_alloc(note_target_pool);
-				cur        = cur->next;
-				cur->c     = c;
-				cur->next  = NULL;
+				cur->next  = malloc(sizeof(device_note_target));
+				cur = cur->next;
+				cur->c = c;
+				cur->next = NULL;
 				cur->flags = notes;
 			}
 		} while (1);
