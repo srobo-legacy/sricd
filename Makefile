@@ -1,6 +1,6 @@
 include makeflags
 
-all: libsric/libsric.a sricd/sricd poolalloc/pool.o
+all: libsric/libsric.a sricd/sricd
 
 install: all
 	install -d $(prefix)/bin
@@ -13,15 +13,11 @@ install: all
 libsric/libsric.a:
 	$(MAKE) -C libsric
 
-sricd/sricd: poolalloc/pool.o
+sricd/sricd:
 	$(MAKE) -C sricd
-
-poolalloc/pool.o:
-	$(MAKE) -C poolalloc
 
 .PHONY: clean
 
 clean:
 	$(MAKE) -C libsric clean
 	$(MAKE) -C sricd clean
-	$(MAKE) -C poolalloc clean

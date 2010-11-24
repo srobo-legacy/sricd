@@ -4,8 +4,6 @@ all: sricd
 
 include depend
 
-CFLAGS += -I../poolalloc
-
 CFLAGS += `pkg-config --cflags glib-2.0`
 LDFLAGS += `pkg-config --libs glib-2.0`
 
@@ -15,7 +13,7 @@ depend: *.c
 		$(CC) $(CFLAGS) -MM $$file -o - >> $@ ; \
 	done ;
 
-sricd: client.o init.o output-queue.o sricd.o ipc.o log.o escape.o device.o sric-if.o ../poolalloc/pool.o crc16/crc16.o
+sricd: client.o init.o output-queue.o sricd.o ipc.o log.o escape.o device.o sric-if.o crc16/crc16.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 crc16/crc16.o:
