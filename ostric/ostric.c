@@ -2,19 +2,19 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "../sricd/escape.h"
 #include "../sricd/frame.h"
 
-int read_frame(uint8_t *buffer);
-void process_command(uint8_t *buffer, int len);
+void read_frames(int fd);
+int process_command(uint8_t *buffer, int len);
 
 int
 main()
 {
-	uint8_t frame_buffer[128];
-	int fd, len;
+	int fd;
 
 	fd = getpt();
 	if (fd < 0) {
@@ -25,26 +25,54 @@ main()
 	printf("Creating pseudo-terminal with name \"%s\", impersonating a"
 		"sric bus on that terminal\n", ptsname(fd));
 
-	while (1) {
-		/* The usual - receive frames, process, operate upon */
-		/* Start off by reading a start of frame, then a header with a
-		 * length, then do some things */
-		len = read_frame(frame_buffer);
-		process_command(frame_buffer, len);
-	}
+	read_frames(fd);
 
 	close(fd);
 	return 0;
 }
 
-int
-read_frame(uint8_t *buffer)
+void
+read_frames(int fd)
 {
+	uint8_t tmp_buf[128], frame_buf[128];;
+	int ret, len, src_len;
+	uint8_t sof, decode_len;
 
-	return 0;
+	while (1) {
+		sof = 0;
+		while (sof != 0x7E) {
+			ret = read(fd, &sof, 1);
+			if (ret < 0) {
+				perror("Couldn't read from terminal");
+				return;
+			}
+		}
+
+		/* Only reachable once we've read a start-of-frame */
+		len = 0;
+		while (1) {
+			ret = read(fd, &tmp_buf[len], sizeof(tmp_buf)- len);
+			if (ret < 0) {
+				perror("Couldn't read from terminal");
+				return;
+			} else {
+				len += ret;
+				src_len = unescape(tmp_buf, len, frame_buf,
+						sizeof(frame_buf),
+						&decode_len);
+				if (!process_command(frame_buf, decode_len)) {
+					memcpy(tmp_buf, &tmp_buf[src_len],
+							len - src_len);
+					len -= src_len;
+				}
+			}
+		}
+	}
+
+	return;
 }
 
-void
+int
 process_command(uint8_t *buffer, int len)
 {
 

@@ -2,8 +2,11 @@ include ../makeflags
 
 all: ostric
 
-ostric: ostric.o
+ostric: ostric.o escape.o
 	$(CC) $(LDFLAGS) -o $@ $^
+
+escape.o: ../sricd/escape.c
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 .PHONY: clean
 
