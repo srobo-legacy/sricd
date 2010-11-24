@@ -219,9 +219,9 @@ static void proc_rx_frame(void)
 		frame_t resp;
 
 		/* Queue up an ACK for it */
-		resp.type           = FRAME_SRIC;
-		resp.address        = unesc_rx[SRIC_SRC];
-		resp.tag            = NULL;
+		resp.type = FRAME_SRIC;
+		resp.address = unesc_rx[SRIC_SRC];
+		resp.tag  = NULL;
 		resp.payload_length = 0;
 
 		txq_push(&resp, 0);
@@ -295,12 +295,12 @@ static gboolean next_tx(void)
 	/*** Build up the frame in the output buffer ***/
 
 	/* Alias payload length for convenience */
-	len                        = tx_frame->payload_length;
+	len = tx_frame->payload_length;
 
-	txbuf[0]                   = tx_frame->type;
-	txbuf[SRIC_DEST]           = tx_frame->address;
-	txbuf[SRIC_SRC]            = 1;
-	txbuf[SRIC_LEN]            = len;
+	txbuf[0]         = tx_frame->type;
+	txbuf[SRIC_DEST] = tx_frame->address;
+	txbuf[SRIC_SRC]  = 1;
+	txbuf[SRIC_LEN]  = len;
 	memcpy(txbuf + SRIC_DATA, tx_frame->payload, len);
 
 	crc                        = crc16(txbuf, SRIC_HEADER_SIZE + len);
@@ -308,9 +308,9 @@ static gboolean next_tx(void)
 	txbuf[SRIC_DATA + len + 1] = crc >> 8;
 
 	/* Don't escape the initial framing byte */
-	esclen                     = escape_frame(txbuf + 1,
-	                                          SRIC_OVERHEAD - 1 + len,
-	                                          sizeof (txbuf) - 1);
+	esclen = escape_frame(txbuf + 1,
+	                      SRIC_OVERHEAD - 1 + len,
+	                      sizeof (txbuf) - 1);
 	g_assert(esclen > 0);
 
 	/* Remember the framing byte: */
