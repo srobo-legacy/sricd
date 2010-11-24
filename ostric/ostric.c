@@ -84,6 +84,10 @@ int
 process_command(uint8_t sof, uint8_t *buffer, int len)
 {
 
+	/* Is there actually enough space for this? */
+	if ((buffer[2] & 0x3F) + 3 > len)
+		return 1;
+
 	if (sof == 0x8E)
 		/* This is an actual command to the gateway... */
 		return gateway_command(buffer, len);
