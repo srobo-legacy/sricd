@@ -45,9 +45,9 @@ typedef struct _sric_context* sric_context;
  * A single frame.
  */
 typedef struct _sric_frame {
-	int           address;                        /**< Remote address.               */
-	int           note;                           /**< Note ID, or -1 for non-notes. */
-	int           payload_length;                 /**< Length of the payload field.  */
+	int address;                        /**< Remote address.               */
+	int note;                           /**< Note ID, or -1 for non-notes. */
+	int payload_length;                 /**< Length of the payload field.  */
 	unsigned char payload[SRIC_MAX_PAYLOAD_SIZE]; /**< Frame payload. */
 } sric_frame;
 

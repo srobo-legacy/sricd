@@ -9,35 +9,35 @@
 #include <arpa/inet.h>
 #include <sys/un.h>
 
-static const char*         SRICD_PATH         = "/tmp/sricd.sock";
+static const char* SRICD_PATH = "/tmp/sricd.sock";
 
-static const unsigned char SRICD_TX           = 0;
-static const unsigned char SRICD_NOTE_FLAGS   = 1;
-static const unsigned char SRICD_POLL_RX      = 2;
-static const unsigned char SRICD_POLL_NOTE    = 3;
-static const unsigned char SRICD_NOTE_CLEAR   = 4;
+static const unsigned char SRICD_TX = 0;
+static const unsigned char SRICD_NOTE_FLAGS = 1;
+static const unsigned char SRICD_POLL_RX = 2;
+static const unsigned char SRICD_POLL_NOTE = 3;
+static const unsigned char SRICD_NOTE_CLEAR = 4;
 static const unsigned char SRICD_LIST_DEVICES = 5;
 
-static const unsigned char SRIC_E_BADADDR     = 1;
-static const unsigned char SRIC_E_TIMEOUT     = 2;
+static const unsigned char SRIC_E_BADADDR = 1;
+static const unsigned char SRIC_E_TIMEOUT = 2;
 
 struct _sric_context {
-	int          fd;
-	sric_error   error;
-	uint64_t     noteflags[SRIC_HIGH_ADDRESS];
+	int fd;
+	sric_error error;
+	uint64_t noteflags[SRIC_HIGH_ADDRESS];
 	sric_device* devices;
 };
 
 sric_context sric_init(void)
 {
 	struct sockaddr_un address;
-	socklen_t          len;
-	int                fd;
-	sric_context       ctx;
+	socklen_t len;
+	int fd;
+	sric_context ctx;
 	address.sun_family = AF_UNIX;
 	strcpy(address.sun_path, SRICD_PATH);
-	fd                 = socket(PF_UNIX, SOCK_STREAM, 0);
-	len                = sizeof (address);
+	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	len = sizeof (address);
 	if (!fd) {
 		return 0;
 	}
@@ -45,7 +45,7 @@ sric_context sric_init(void)
 		close(fd);
 		return 0;
 	}
-	ctx     = malloc(sizeof (*ctx));
+	ctx = malloc(sizeof (*ctx));
 	assert(ctx);
 	memset(ctx, 0, sizeof (*ctx));
 	ctx->fd = fd;
@@ -107,12 +107,12 @@ static int check_frame(sric_context ctx, const sric_frame* frame)
 	return 1;
 }
 
-static int send_command(sric_context         ctx,
+static int send_command(sric_context ctx,
                         const unsigned char* data,
-                        int                  length)
+                        int length)
 {
 	unsigned char result;
-	ssize_t       rv;
+	ssize_t rv;
 	assert(ctx);
 	assert(data);
 	assert(length >= 1);
@@ -228,17 +228,17 @@ int sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
 		// do stuff
 		ctx->noteflags[device] = flags;
 		// send some stuff
-		command[ 0]            = SRICD_NOTE_FLAGS;
-		command[ 1]            = (device & 0xFF);
-		command[ 2]            = ((device >> 8) & 0xFF);
-		command[ 3]            = ((flags >>  0) & 0xFF);
-		command[ 4]            = ((flags >>  8) & 0xFF);
-		command[ 5]            = ((flags >> 16) & 0xFF);
-		command[ 6]            = ((flags >> 24) & 0xFF);
-		command[ 7]            = ((flags >> 32) & 0xFF);
-		command[ 8]            = ((flags >> 40) & 0xFF);
-		command[ 9]            = ((flags >> 48) & 0xFF);
-		command[10]            = ((flags >> 56) & 0xFF);
+		command[ 0] = SRICD_NOTE_FLAGS;
+		command[ 1] = (device & 0xFF);
+		command[ 2] = ((device >> 8) & 0xFF);
+		command[ 3] = ((flags >>  0) & 0xFF);
+		command[ 4] = ((flags >>  8) & 0xFF);
+		command[ 5] = ((flags >> 16) & 0xFF);
+		command[ 6] = ((flags >> 24) & 0xFF);
+		command[ 7] = ((flags >> 32) & 0xFF);
+		command[ 8] = ((flags >> 40) & 0xFF);
+		command[ 9] = ((flags >> 48) & 0xFF);
+		command[10] = ((flags >> 56) & 0xFF);
 		return send_command(ctx, command, sizeof (command));
 	} else {
 		// trivial: flags have not changed
@@ -276,7 +276,7 @@ int sric_poll_note(sric_context ctx, sric_frame* frame, int timeout)
 static void sric_refresh_devices(sric_context ctx)
 {
 	unsigned short device_count = 0, i;
-	short          data;
+	short data;
 	assert(ctx);
 	if (ctx->devices) {
 		free(ctx->devices);
@@ -296,19 +296,19 @@ static void sric_refresh_devices(sric_context ctx)
 			ctx->devices = 0;
 			return;
 		}
-		data                    = ntohs(data);
+		data = ntohs(data);
 		ctx->devices[i].address = data;
 		if (read_data(ctx, &data, 2)) {
 			free(ctx->devices);
 			ctx->devices = 0;
 			return;
 		}
-		data                 = ntohs(data);
+		data = ntohs(data);
 		ctx->devices[i].type = data;
 	}
 	// add the sentinel
 	ctx->devices[i].address = 0;
-	ctx->devices[i].type    = -1;
+	ctx->devices[i].type = -1;
 }
 
 const sric_device* sric_enumerate_devices(sric_context       ctx,
