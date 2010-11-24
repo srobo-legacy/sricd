@@ -21,7 +21,7 @@ enum {
 	SRIC_SRC = 2,
 	SRIC_LEN = 3,
 	SRIC_DATA = 4
-	            /* CRC is last two bytes */
+	/* CRC is last two bytes */
 };
 
 /* The number of bytes in a SRIC header, including framing byte */
