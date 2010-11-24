@@ -276,6 +276,30 @@ static void handle_note_clear(int fd, client* c)
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
 
+static void handle_list_devices(int fd, client* c)
+{
+	int i;
+	uint16_t deviceCount = 0;
+	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i)
+		if (device_exists(i))
+			deviceCount++;
+	deviceCount = htons(deviceCount);
+	write_result(fd, c, SRIC_E_BADADDR);
+	write_data(fd, c, &deviceCount, 2);
+	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i)
+	{
+		if (device_exists(i))
+		{
+			short data = (short)i;
+			data = htons(data);
+			write_data(fd, c, &data, 2);
+			data = (short)device_type(i);
+			data = htons(data);
+			write_data(fd, c, &data, 2);
+		}
+	}
+}
+
 static gboolean ipc_client_incoming(GIOChannel*  gio,
                                     GIOCondition cond,
                                     gpointer _client)
@@ -310,6 +334,10 @@ static gboolean ipc_client_incoming(GIOChannel*  gio,
 
 	case SRICD_NOTE_CLEAR:
 		handle_note_clear(fd, c);
+		break;
+
+	case SRICD_LIST_DEVICES:
+		handle_list_devices(fd, c);
 		break;
 
 	default:
