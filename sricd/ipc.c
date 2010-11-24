@@ -10,6 +10,7 @@
 #include "log.h"
 #include "output-queue.h"
 #include "sched.h"
+#include "device.h"
 #include <stdbool.h>
 #include <arpa/inet.h>
 #include <glib.h>
@@ -231,6 +232,50 @@ static void handle_poll_note(int fd, client* c)
 	}
 }
 
+static uint64_t ntohll(uint64_t x)
+{
+#ifdef __BIG_ENDIAN__
+	return x;
+#else
+	int i;
+	union {
+		uint64_t intVal;
+		uint8_t bytes[8];
+	} src, dst;
+	src.intVal = x;
+	for (i = 0; i < 8; ++i)
+		dst.bytes[7 - i] = src.bytes[i];
+	return dst.intVal;
+#endif
+}
+
+static void handle_note_flags(int fd, client* c)
+{
+	uint16_t device;
+	uint64_t flags;
+	if (!read_data(fd, &device, 2)) {
+		write_result(fd, c, SRIC_E_BADREQUEST);
+		return;
+	}
+	device = ntohs(device);
+	if (!read_data(fd, &flags, 2)) {
+		write_result(fd, c, SRIC_E_BADREQUEST);
+	}
+	flags = ntohll(flags);
+	if (!device_exists(device)) {
+		write_result(fd, c, SRIC_E_BADADDR);
+		return;
+	}
+	device_set_client_notes(device, c, flags);
+	write_result(fd, c, SRIC_E_SUCCESS);
+}
+
+static void handle_note_clear(int fd, client* c)
+{
+	device_clear_client_notes(c);
+	write_result(fd, c, SRIC_E_SUCCESS);
+}
+
 static gboolean ipc_client_incoming(GIOChannel*  gio,
                                     GIOCondition cond,
                                     gpointer _client)
@@ -257,6 +302,14 @@ static gboolean ipc_client_incoming(GIOChannel*  gio,
 
 	case SRICD_POLL_NOTE:
 		handle_poll_note(fd, c);
+		break;
+
+	case SRICD_NOTE_FLAGS:
+		handle_note_flags(fd, c);
+		break;
+
+	case SRICD_NOTE_CLEAR:
+		handle_note_clear(fd, c);
 		break;
 
 	default:
