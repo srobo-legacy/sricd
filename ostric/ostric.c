@@ -24,6 +24,12 @@ main()
 		return 1;
 	}
 
+	if (unlockpt(fd)) {
+		perror("Couldn't unlock pty");
+		close(fd);
+		return 1;
+	}
+
 	printf("Creating pseudo-terminal with name \"%s\", impersonating a "
 		"sric bus on that terminal\n", ptsname(fd));
 
