@@ -1,5 +1,6 @@
 #ifndef _SRICD_OSTRIC_OSTRIC_H_
 #define _SRICD_OSTRIC_OSTRIC_H_
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <glib.h>
@@ -13,7 +14,11 @@ struct ostric_client {
 };
 
 extern int ostric_pty_fd;
-
 extern GSList *ostric_client_list;
+
+/* Bus / gateway state */
+extern bool gw_token_mode;	/* False -> no tokens, True -> tokens on */
+extern GSList *next_token_recp;	/* Next recepient of token in client list, or
+				 * null if it should be the gateway */
 
 #endif /* _SRICD_OSTRIC_OSTRIC_H_ */

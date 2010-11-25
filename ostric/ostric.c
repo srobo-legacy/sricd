@@ -17,6 +17,8 @@
 
 int ostric_pty_fd;
 GSList *ostric_client_list = NULL;
+bool gw_token_mode = false;
+GSList *next_token_recp = NULL;
 
 void read_frames();
 int process_command(uint8_t *buffer, int len);
