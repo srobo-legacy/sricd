@@ -12,6 +12,8 @@ struct ostric_client {
 	void *priv;
 };
 
+extern int ostric_pty_fd;
+
 extern GSList *ostric_client_list;
 
 #endif /* _SRICD_OSTRIC_OSTRIC_H_ */

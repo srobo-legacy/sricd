@@ -15,6 +15,7 @@
 #include "cmds.h"
 #include "generic.h"
 
+int ostric_pty_fd;
 GSList *ostric_client_list;
 
 void read_frames(int fd);
@@ -24,33 +25,32 @@ void read_arguments(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
-	int fd;
 
 	read_arguments(argc, argv);
 
-	fd = getpt();
-	if (fd < 0) {
+	ostric_pty_fd = getpt();
+	if (ostric_pty_fd < 0) {
 		perror("Couldn't fetch a pseudo-terminal");
 		return 1;
 	}
 
-	if (unlockpt(fd)) {
+	if (unlockpt(ostric_pty_fd)) {
 		perror("Couldn't unlock pty");
-		close(fd);
+		close(ostric_pty_fd);
 		return 1;
 	}
 
 	printf("Creating pseudo-terminal with name \"%s\", impersonating a "
-		"sric bus on that terminal\n", ptsname(fd));
+		"sric bus on that terminal\n", ptsname(ostric_pty_fd));
 
-	read_frames(fd);
+	read_frames();
 
-	close(fd);
+	close(ostric_pty_fd);
 	return 0;
 }
 
 void
-read_frames(int fd)
+read_frames()
 {
 	uint8_t tmp_buf[128], frame_buf[128];;
 	int ret, len, src_len;
@@ -58,7 +58,7 @@ read_frames(int fd)
 
 	while (1) {
 		while (tmp_buf[0] != 0x7E && tmp_buf[0] != 0x8E) {
-			ret = read(fd, &tmp_buf[0], 1);
+			ret = read(ostric_pty_fd, &tmp_buf[0], 1);
 			if (ret < 0) {
 				perror("Couldn't read from terminal");
 				return;
@@ -68,7 +68,8 @@ read_frames(int fd)
 		/* Only reachable once we've read a start-of-frame */
 		len = 1;
 		while (1) {
-			ret = read(fd, &tmp_buf[len], sizeof(tmp_buf)- len);
+			ret = read(ostric_pyt_fd, &tmp_buf[len],
+						sizeof(tmp_buf)- len);
 			if (ret < 0) {
 				perror("Couldn't read from terminal");
 				return;
