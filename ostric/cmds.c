@@ -64,6 +64,9 @@ gateway_command(uint8_t *buffer, int len)
 		else
 			gw_token_mode = true;
 
+		printf("USE_TOKEN mode set to %s\n", (gw_token_mode) ? "true"
+							: "false");
+
 		break;
 
 	case GW_CMD_REQ_TOKEN:
