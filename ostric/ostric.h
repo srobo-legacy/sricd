@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #include <glib.h>
 
 struct ostric_client;
