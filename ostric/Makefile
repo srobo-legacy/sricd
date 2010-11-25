@@ -1,5 +1,8 @@
 include ../makeflags
 
+CFLAGS+=	`pkg-config --cflags glib`
+LDFLAGS+=	`pkg-config --libs glib`
+
 all: ostric
 
 ostric: ostric.o escape.o cmds.o crc16.o generic.o
