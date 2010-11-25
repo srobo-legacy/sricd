@@ -1,3 +1,5 @@
+#ifndef _SRICD_OSTRIC_CMDS_H_
+#define _SRICD_OSTRIC_CMDS_H_
 #include <stdint.h>
 
 #define GW_CMD_USE_TOKEN	0
@@ -7,3 +9,4 @@
 
 void bus_command(uint8_t *buffer, int len);
 void gateway_command(uint8_t *buffer, int len);
+#endif /* _SRICD_OSTRIC_CMDS_H_ */
