@@ -75,8 +75,10 @@ read_frames()
 				return;
 			} else {
 				len += ret;
-				src_len = unescape(tmp_buf, len, frame_buf,
-						sizeof(frame_buf),
+				frame_buf[0] = tmp_buf[0];
+				src_len = unescape(&tmp_buf[1], len - 1,
+						&frame_buf[1],
+						sizeof(frame_buf) - 1,
 						&decode_len);
 				if (!process_command(frame_buf, decode_len)) {
 					memcpy(tmp_buf, &tmp_buf[src_len],
