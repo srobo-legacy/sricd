@@ -1,4 +1,5 @@
 #define _GNU_SOURCE /* ;O */
+#include <fcntl.h>
 #include <poll.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -24,6 +25,8 @@ GSList *next_token_recp = NULL;
 void read_frames();
 int process_command(uint8_t *buffer, int len);
 void read_arguments(int argc, char **argv);
+void try_reading_stuff();
+void try_parsing_stuff();
 
 int
 main(int argc, char **argv)
@@ -69,77 +72,74 @@ main(int argc, char **argv)
 		}
 
 		/* Otherwise, wait a little and prod the token situation */
-		/* XXX - do some stuff */
+		//circulate_token();
 	}
 
 	close(ostric_pty_fd);
 	return 0;
 }
 
+int pty_buf_len;
+uint8_t pty_buf[128];
+
 void
 read_frames()
 {
-	static uint8_t frame_buf[128];
-	static int len;
 
+	try_reading_stuff();
+	try_parsing_stuff();
+}
+
+void
+try_reading_stuff()
+{
+	int ret;
+
+	ret = read(ostric_pty_fd, &pty_buf[pty_buf_len],
+				sizeof(pty_buf)- pty_buf_len);
+	if (ret < 0) {
+		perror("Couldn't read from pty");
+		exit(1);
+	}
+
+	pty_buf_len += ret;
+	return;
+}
+
+
+void
+try_parsing_stuff()
+{
 	uint8_t tmp_buf[128];
-	int ret, src_len;
+	int src_len;
 	uint8_t decode_len;
 
 and_again:
-	/* Do we have any data in the buffer right now? */
-	if (len == 0) {
-		/* Nothing in buffer - read a start of frame */
-		ret = read(ostric_pty_fd, &frame_buf[0], 1);
-		if (ret < 0) {
-			perror("Couldn't read from terminal");
-			return;
-		} else if (ret == 1) {
-			/* Read a byte, good */
-			len = 1;
-		} else {
-			/* Invalid read */
-			return;
-		}
-	}
+	if (pty_buf_len == 0)
+		return;
 
-	if (frame_buf[0] != 0x7E && frame_buf[0] != 0x8E) {
-		/* Not a start-of-frame: if we just read it, return,
-		 * if it's part of a lump of buffer, shift forwards */
-		if (len == 1) {
-			len = 0;
-			return;
-		}
+	if (pty_buf[0] != 0x7E && pty_buf[0] != 0x8E) {
+		/* Not a start-of-frame:  shift forwards */
+		memcpy(pty_buf, &pty_buf[1], pty_buf_len - 1);
+		pty_buf_len--;
 
-		memcpy(frame_buf, &frame_buf[1], len - 1);
-		len--;
-
-		if (len != 0)
 		/* And try to process a frame again */
 		goto and_again;
 	}
 
-	ret = read(ostric_pty_fd, &frame_buf[len], sizeof(frame_buf)- len);
-	if (ret < 0) {
-		perror("Couldn't read from terminal");
-		return;
-	} else {
-		len += ret;
-		tmp_buf[0] = frame_buf[0];
-		src_len = unescape(&frame_buf[1], len - 1, &tmp_buf[1],
-				sizeof(tmp_buf) - 1, &decode_len);
-		src_len++; /* unescape returns position, not length, of src */
+	tmp_buf[0] = pty_buf[0];
+	src_len = unescape(&pty_buf[1], pty_buf_len - 1, &tmp_buf[1],
+			sizeof(tmp_buf) - 1, &decode_len);
+	src_len++; /* unescape returns position, not length, of src */
 
-		if (!process_command(tmp_buf, decode_len + 1)){
-			/* Shift used data out; if there's more, then start
-			 * this function again to read another frame */
-			memcpy(frame_buf, &frame_buf[src_len], len - src_len);
-			len -= src_len;
-			if (len != 0)
-				goto and_again;
-		}
+	if (!process_command(tmp_buf, decode_len + 1)){
+		/* Shift used data out; if there's more, then start
+		 * this function again to read another frame */
+		memcpy(pty_buf, &pty_buf[src_len], pty_buf_len - src_len);
+		pty_buf_len -= src_len;
+		if (pty_buf_len != 0)
+			goto and_again;
 	}
-
 
 	return;
 }
