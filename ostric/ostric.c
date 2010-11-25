@@ -80,7 +80,7 @@ read_frames()
 						&frame_buf[1],
 						sizeof(frame_buf) - 1,
 						&decode_len);
-				if (!process_command(frame_buf, decode_len)) {
+				if (!process_command(frame_buf,decode_len + 1)){
 					memcpy(tmp_buf, &tmp_buf[src_len],
 							len - src_len);
 					len -= src_len;
