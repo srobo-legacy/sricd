@@ -18,7 +18,7 @@
 int ostric_pty_fd;
 GSList *ostric_client_list;
 
-void read_frames(int fd);
+void read_frames();
 int process_command(uint8_t *buffer, int len);
 void read_arguments(int argc, char **argv);
 
@@ -68,7 +68,7 @@ read_frames()
 		/* Only reachable once we've read a start-of-frame */
 		len = 1;
 		while (1) {
-			ret = read(ostric_pyt_fd, &tmp_buf[len],
+			ret = read(ostric_pty_fd, &tmp_buf[len],
 						sizeof(tmp_buf)- len);
 			if (ret < 0) {
 				perror("Couldn't read from terminal");
