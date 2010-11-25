@@ -1,6 +1,8 @@
 #include "sric-enum.h"
 #include "output-queue.h"
 #include "sric-cmds.h"
+#include <assert.h>
+#include <string.h>
 
 #define ENUM_PRI 0
 
@@ -69,6 +71,41 @@ static void send_tok_advance( uint8_t addr )
 	txq_push(&f, ENUM_PRI);
 }
 
+static void gw_cmd( uint8_t cmd, uint8_t len, uint8_t *d )
+{
+	frame_t f;
+	assert( len+1 <= PAYLOAD_MAX );
+
+	f.type = FRAME_GW_CONF;
+	f.payload_length = len + 1;
+	f.payload[0] = cmd;
+	if( d != NULL )
+		memcpy( f.payload+1, d, len );
+
+	txq_push(&f, ENUM_PRI);
+}
+
+static void gw_cmd_use_token( bool use )
+{
+	uint8_t b = use;
+	gw_cmd( GW_CMD_USE_TOKEN, 1, &b );
+}
+
+static void gw_cmd_req_token( void )
+{
+	gw_cmd( GW_CMD_REQ_TOKEN, 0, NULL );
+}
+
+static void gw_cmd_have_token( void )
+{
+	gw_cmd( GW_CMD_HAVE_TOKEN, 0, NULL );
+}
+
+static void gw_cmd_gen_token( void )
+{
+	gw_cmd( GW_CMD_GEN_TOKEN, 0, NULL );
+}
+
 static gboolean send_reset_timeout( void* _rs )
 {
 	uint8_t *rs = _rs;
@@ -91,6 +128,7 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_IDLE:
 		if( ev == EV_START_ENUM ) {
+			gw_cmd_use_token( false );
 			g_timeout_add( 50, send_reset_timeout, &reset_count );
 			state = S_RESETTING;
 		}
@@ -98,6 +136,8 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_RESETTING:
 		if( ev == EV_BUS_RESET ) {
+			gw_cmd_req_token();
+			gw_cmd_gen_token();
 			state = S_ENUMERATED;
 		}
 		break;
