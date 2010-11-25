@@ -106,7 +106,7 @@ process_command(uint8_t *buffer, int len)
 	sentcrc = buffer[cmdlen-1];
 	sentcrc |= buffer[cmdlen-2] << 8;
 	if (crc != sentcrc) {
-		fprintf(stderr, "Bad crc in received frame\n");
+		fprintf(stderr, "Bad CRC in received frame\n");
 		/* However, return 0 indicating that we've ingested that data.
 		 * After all, we're not going to do anything else with it */
 		return 0;
