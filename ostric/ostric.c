@@ -54,43 +54,48 @@ main(int argc, char **argv)
 void
 read_frames()
 {
-	uint8_t tmp_buf[128], frame_buf[128];;
-	int ret, len, src_len;
+	static uint8_t tmp_buf[128];
+	static int len;
+
+	uint8_t frame_buf[128];
+	int ret, src_len;
 	uint8_t decode_len;
 
-	while (1) {
-		while (tmp_buf[0] != 0x7E && tmp_buf[0] != 0x8E) {
-			ret = read(ostric_pty_fd, &tmp_buf[0], 1);
-			if (ret < 0) {
-				perror("Couldn't read from terminal");
-				return;
-			}
-		}
-
-		/* Only reachable once we've read a start-of-frame */
-		len = 1;
-		while (1) {
-			ret = read(ostric_pty_fd, &tmp_buf[len],
-						sizeof(tmp_buf)- len);
-			if (ret < 0) {
-				perror("Couldn't read from terminal");
-				return;
-			} else {
-				len += ret;
-				frame_buf[0] = tmp_buf[0];
-				src_len = unescape(&tmp_buf[1], len - 1,
-						&frame_buf[1],
-						sizeof(frame_buf) - 1,
-						&decode_len);
-				src_len++; /* unescape returns pos, not len */
-				if (!process_command(frame_buf,decode_len + 1)){
-					memcpy(tmp_buf, &tmp_buf[src_len],
-							len - src_len);
-					len -= src_len;
-				}
-			}
+	if (tmp_buf[0] != 0x7E && tmp_buf[0] != 0x8E) {
+		ret = read(ostric_pty_fd, &tmp_buf[0], 1);
+		if (ret < 0) {
+			perror("Couldn't read from terminal");
+			return;
+		} else if (ret == 1) {
+			ret = 1;
+		} else {
+			/* Invalid read */
+			return;
 		}
 	}
+
+	ret = read(ostric_pty_fd, &tmp_buf[len], sizeof(tmp_buf)- len);
+	if (ret < 0) {
+		perror("Couldn't read from terminal");
+		return;
+	} else {
+		len += ret;
+		frame_buf[0] = tmp_buf[0];
+		src_len = unescape(&tmp_buf[1], len - 1,
+				&frame_buf[1],
+				sizeof(frame_buf) - 1,
+				&decode_len);
+		src_len++; /* unescape returns pos, not len */
+		if (!process_command(frame_buf,decode_len + 1)){
+			memcpy(tmp_buf, &tmp_buf[src_len],
+					len - src_len);
+			len -= src_len;
+			/* Null out all data in buffer that isn't valid - we
+			 * don't wish to read a stale start-of-frame */
+			memset(&tmp_buf[len], 0, sizeof(tmp_buf) - len);
+		}
+	}
+
 
 	return;
 }
