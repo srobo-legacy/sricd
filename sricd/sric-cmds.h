@@ -9,4 +9,12 @@ enum {
 	SRIC_SYSCMD_ADDR_INFO,
 };
 
+/* Gateway control commands */
+enum {
+	GW_CMD_USE_TOKEN,
+	GW_CMD_REQ_TOKEN,
+	GW_CMD_HAVE_TOKEN,
+	GW_CMD_GEN_TOKEN,
+};
+
 #endif	/* _INCLUDED_SRIC_CMDS */
