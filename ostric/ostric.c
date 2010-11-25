@@ -61,17 +61,37 @@ read_frames()
 	int ret, src_len;
 	uint8_t decode_len;
 
-	if (frame_buf[0] != 0x7E && frame_buf[0] != 0x8E) {
+and_again:
+	/* Do we have any data in the buffer right now? */
+	if (len == 0) {
+		/* Nothing in buffer - read a start of frame */
 		ret = read(ostric_pty_fd, &frame_buf[0], 1);
 		if (ret < 0) {
 			perror("Couldn't read from terminal");
 			return;
 		} else if (ret == 1) {
+			/* Read a byte, good */
 			len = 1;
 		} else {
 			/* Invalid read */
 			return;
 		}
+	}
+
+	if (frame_buf[0] != 0x7E && frame_buf[0] != 0x8E) {
+		/* Not a start-of-frame: if we just read it, return,
+		 * if it's part of a lump of buffer, shift forwards */
+		if (len == 1) {
+			len = 0;
+			return;
+		}
+
+		memcpy(frame_buf, &frame_buf[1], len - 1);
+		len--;
+
+		if (len != 0)
+		/* And try to process a frame again */
+		goto and_again;
 	}
 
 	ret = read(ostric_pty_fd, &frame_buf[len], sizeof(frame_buf)- len);
@@ -93,6 +113,8 @@ read_frames()
 			/* Null out all data in buffer that isn't valid - we
 			 * don't wish to read a stale start-of-frame */
 			memset(&frame_buf[len], 0, sizeof(frame_buf) - len);
+			if (len != 0)
+				goto and_again;
 		}
 	}
 
