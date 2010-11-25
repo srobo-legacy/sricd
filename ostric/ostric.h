@@ -1,3 +1,5 @@
+#ifndef _SRICD_OSTRIC_OSTRIC_H_
+#define _SRICD_OSTRIC_OSTRIC_H_
 #include <stdint.h>
 
 #include <glib.h>
@@ -13,3 +15,5 @@ struct ostric_client {
 };
 
 extern GSList *ostric_client_list;
+
+#endif /* _SRICD_OSTRIC_OSTRIC_H_ */
