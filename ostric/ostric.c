@@ -67,7 +67,7 @@ read_frames()
 			perror("Couldn't read from terminal");
 			return;
 		} else if (ret == 1) {
-			ret = 1;
+			len = 1;
 		} else {
 			/* Invalid read */
 			return;
