@@ -10,6 +10,15 @@ extern "C"
 
 #define FRAME_PAYLOAD_MAX 64
 
+/* Offsets of fields in frames */
+enum {
+	SRIC_DEST = 1,
+	SRIC_SRC,
+	SRIC_LEN,
+	SRIC_DATA
+	/* CRC is last two bytes */
+};
+
 // one SRIC frame
 typedef struct _frame frame;
 
