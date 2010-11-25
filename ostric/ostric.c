@@ -1,4 +1,5 @@
 #define _GNU_SOURCE /* ;O */
+#include <poll.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,6 +28,8 @@ void read_arguments(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
+	struct pollfd fd;
+	int timeout;
 
 	read_arguments(argc, argv);
 
@@ -45,7 +48,29 @@ main(int argc, char **argv)
 	printf("Creating pseudo-terminal with name \"%s\", impersonating a "
 		"sric bus on that terminal\n", ptsname(ostric_pty_fd));
 
-	read_frames();
+	fd.fd = ostric_pty_fd;
+	timeout = 10;
+	while (1) {
+		fd.events = POLLIN;
+		fd.revents = 0;
+		if (poll(&fd, 1, timeout) < 0) {
+			perror("Couldn't poll");
+			exit(1);
+		}
+
+		if (fd.revents & (POLLERR | POLLHUP)) {
+			fprintf(stderr, "Error/Hangup reading from pty\n");
+			exit(1);
+		}
+
+		if (fd.revents & POLLIN) {
+			read_frames();
+			continue;
+		}
+
+		/* Otherwise, wait a little and prod the token situation */
+		/* XXX - do some stuff */
+	}
 
 	close(ostric_pty_fd);
 	return 0;
