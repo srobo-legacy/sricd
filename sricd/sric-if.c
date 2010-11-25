@@ -3,6 +3,7 @@
 #include "client.h"
 #include "escape.h"
 #include "sric-if.h"
+#include "sric-enum.h"
 #include "log.h"
 #include "output-queue.h"
 #include <errno.h>
@@ -50,6 +51,9 @@ static uint8_t rxpos = 0;
 /* Receive buffer for a single unescaped frame */
 static uint8_t unesc_rx[ SRIC_OVERHEAD + PAYLOAD_MAX ];
 static uint8_t unesc_pos = 0;
+
+/* Whether we've finished enumerating */
+static bool enumerated = false;
 
 /* Open and configure the serial port */
 static void serial_conf(void)
@@ -263,6 +267,8 @@ void sric_if_init(const char* fname)
 	if_gio = g_io_channel_unix_new(fd);
 
 	g_io_add_watch(if_gio, G_IO_IN, rx, NULL);
+
+	sric_enum_start();
 }
 
 /* Set up the next frame for transmission
@@ -276,7 +282,7 @@ static gboolean next_tx(void)
 		free((frame_t*)tx_frame);
 	}
 
-	tx_frame = txq_next(1);
+	tx_frame = txq_next( enumerated?1:0 );
 
 	if (tx_frame == NULL) {
 		/* Queue's empty */
