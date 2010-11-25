@@ -1,9 +1,10 @@
-#include "cmds.h"
+#include "ostric.h"
+#include "generic.h"
 
 /* That is, the code for some generic sric bus client */
 
 void
-generic_enum_callback(struct ostric_client *this, uint8_t *buffer, int len,
+generic_enum(struct ostric_client *this, uint8_t *buffer, int len,
 			uint8_t **resp, int *rlen)
 {
 
@@ -11,7 +12,7 @@ generic_enum_callback(struct ostric_client *this, uint8_t *buffer, int len,
 }
 
 void
-generic_msg_callback(struct ostric_client *this, uint8_t *buffer, int len,
+generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 			uint8_t **resp, int *rlen)
 {
 

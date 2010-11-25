@@ -13,6 +13,7 @@
 
 #include "ostric.h"
 #include "cmds.h"
+#include "generic.h"
 
 GSList *ostric_client_list;
 
