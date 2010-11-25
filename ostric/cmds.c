@@ -8,7 +8,6 @@
 #include "cmds.h"
 
 struct bus_msg {
-	int result;
 	int len;
 	uint8_t *buffer;
 };
@@ -27,7 +26,7 @@ bus_cmd_despatch(void *self, void *msg)
 	return;
 }
 
-int
+void
 bus_command(uint8_t *buffer, int len)
 {
 	struct bus_msg bus_msg;
@@ -40,7 +39,7 @@ bus_command(uint8_t *buffer, int len)
 	return;
 }       
 
-int
+void
 gateway_command(uint8_t *buffer, int len)
 {
 
