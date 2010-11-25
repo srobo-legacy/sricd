@@ -18,9 +18,6 @@ bus_cmd_despatch(void *self, void *msg)
 	struct ostric_client *client;
 	struct bus_msg *bus_msg;
 
-	if (self == NULL)
-		return;
-
 	client = self;
 	bus_msg = msg;
 
