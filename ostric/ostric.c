@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <glib.h>
+
 #include "../sricd/escape.h"
 #include "../sricd/frame.h"
 #include "../sricd/crc16/crc16.h"
@@ -12,13 +14,18 @@
 #include "ostric.h"
 #include "cmds.h"
 
+GSList *ostric_client_list;
+
 void read_frames(int fd);
 int process_command(uint8_t *buffer, int len);
+void read_arguments(int argc, char **argv);
 
 int
-main()
+main(int argc, char **argv)
 {
 	int fd;
+
+	read_arguments(argc, argv);
 
 	fd = getpt();
 	if (fd < 0) {
@@ -110,4 +117,42 @@ process_command(uint8_t *buffer, int len)
 
 	/* Always return 0; we've always done /something/ with this data */
 	return 0;
+}
+
+static struct {
+	const char *name;
+	void (*msg_callback) (struct ostric_client *this, uint8_t *buffer,
+				int len, uint8_t **resp, int *rlen);
+	void (*enum_callback) (struct ostric_client *this, uint8_t *buffer,
+				int len, uint8_t **resp, int *rlen);
+} client_types[] = {
+{	"generic",		generic_msg, 		generic_enum	},
+{	NULL,			NULL,			NULL		}
+};
+
+void
+read_arguments(int argc, char **argv)
+{
+	struct ostric_client *client;
+	int i, j;
+
+	ostric_client_list = g_slist_alloc();
+
+	for (i = 1; i < argc; i++) {
+		for (j = 0; client_types[j].name != NULL; j++) {
+			if (!strcmp(client_types[j].name, argv[i])) {
+				client = malloc(sizeof(*client));
+				client->address = -1;
+				client->msg_callback =
+						client_types[j].msg_callback;
+				client->enum_callback =
+						client_types[j].enum_callback;
+				client->priv = NULL;
+				g_slist_append(ostric_client_list, client);
+				break;
+			}
+		}
+	}
+
+	return;
 }
