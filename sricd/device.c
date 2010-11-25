@@ -73,7 +73,7 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 {
 	device_note_target* cur;
 	if (!targets[address]) {
-		targets[address] = malloc(sizeof(device_note_target));
+		targets[address] = malloc(sizeof (device_note_target));
 		targets[address]->c = c;
 		targets[address]->next = NULL;
 		targets[address]->flags = notes;
@@ -86,7 +86,7 @@ static void device_update_client_notes(int address, client* c, uint64_t notes)
 			} else if (cur->next) {
 				cur = cur->next;
 			} else {
-				cur->next = malloc(sizeof(device_note_target));
+				cur->next = malloc(sizeof (device_note_target));
 				cur = cur->next;
 				cur->c = c;
 				cur->next = NULL;

@@ -15,15 +15,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-/* Offsets of fields in the tx buffer */
-enum {
-	SRIC_DEST = 1,
-	SRIC_SRC = 2,
-	SRIC_LEN = 3,
-	SRIC_DATA = 4
-	            /* CRC is last two bytes */
-};
-
 /* The number of bytes in a SRIC header, including framing byte */
 #define SRIC_HEADER_SIZE 4
 
@@ -248,8 +239,8 @@ static gboolean rx(GIOChannel* src, GIOCondition cond, gpointer data)
 		}
 
 		crc = crc16(unesc_rx, SRIC_HEADER_SIZE + len);
-		recv_crc = unesc_rx[SRIC_DATA + len] |
-		           (unesc_rx[SRIC_DATA + len + 1] << 8);
+		recv_crc = unesc_rx[SRIC_DATA + len]
+		           | (unesc_rx[SRIC_DATA + len + 1] << 8);
 		if (crc != recv_crc) {
 			continue;
 		}

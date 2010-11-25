@@ -10,6 +10,7 @@
 #include "log.h"
 #include "output-queue.h"
 #include "sched.h"
+#include "device.h"
 #include <stdbool.h>
 #include <arpa/inet.h>
 #include <glib.h>
@@ -122,6 +123,17 @@ static void handle_tx(int fd, client* c)
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
 
+static void send_note(int fd, client* c, const frame* note)
+{
+	uint8_t response_header[4];
+	response_header[0] = SRIC_E_SUCCESS;
+	response_header[1] = note->source_address;
+	response_header[2] = note->note;
+	response_header[3] = note->payload_length;
+	write_data(fd, c, response_header, 7);
+	write_data(fd, c, note->payload, note->payload_length);
+}
+
 static void send_rx(int fd, client* c, const frame* rx)
 {
 	uint8_t response_header[4];
@@ -133,7 +145,7 @@ static void send_rx(int fd, client* c, const frame* rx)
 	write_data(fd, c, rx->payload,     rx->payload_length);
 }
 
-static gboolean rx_timeout(gpointer _client)
+static gboolean timeout_callback(gpointer _client)
 {
 	// client* c = (client*)_client;
 	// TODO: stuff here
@@ -148,11 +160,26 @@ static void rx_ping(client* c)
 		c->rx_timer = 0;
 	}
 	c->rx_ping = NULL;
-	rx         = client_pop_rx(c);
+	rx = client_pop_rx(c);
 	assert(rx);
 	send_rx(c->fd, c, rx);
 
 	g_free(rx);
+}
+
+static void note_ping(client* c)
+{
+	frame* note;
+	if (c->note_timer != 0) {
+		g_source_remove(c->note_timer);
+		c->note_timer = 0;
+	}
+	c->note_ping = NULL;
+	note = client_pop_note(c);
+	assert(note);
+	send_note(c->fd, c, note);
+
+	g_free(note);
 }
 
 static void handle_poll_rx(int fd, client* c)
@@ -174,15 +201,109 @@ static void handle_poll_rx(int fd, client* c)
 	} else {
 		// schedule for timeout
 		if (timeout != -1) {
-			c->rx_timer = g_timeout_add(timeout, rx_timeout, c);
+			c->rx_timer = g_timeout_add(timeout, timeout_callback, c);
 		}
 		c->rx_ping = rx_ping;
 	}
 }
 
+static void handle_poll_note(int fd, client* c)
+{
+	frame* note;
+	int32_t timeout;
+	if (!read_data(fd, &timeout, 4)) {
+		write_result(fd, c, SRIC_E_BADREQUEST);
+		return;
+	}
+	timeout = ntohl(timeout);
+	if ((note = client_pop_note(c))) {
+		// RX was immediately available, return it
+		send_rx(fd, c, note);
+		g_free(note);
+	} else if (timeout == 0) {
+		// immediately return
+		write_result(fd, c, SRIC_E_TIMEOUT);
+	} else {
+		// schedule for timeout
+		if (timeout != -1) {
+			c->note_timer = g_timeout_add(timeout, timeout_callback, c);
+		}
+		c->note_ping = note_ping;
+	}
+}
+
+static uint64_t ntohll(uint64_t x)
+{
+#ifdef __BIG_ENDIAN__
+	return x;
+#else
+	int i;
+	union {
+		uint64_t intVal;
+		uint8_t bytes[8];
+	} src, dst;
+	src.intVal = x;
+	for (i = 0; i < 8; ++i) {
+		dst.bytes[7 - i] = src.bytes[i];
+	}
+	return dst.intVal;
+#endif
+}
+
+static void handle_note_flags(int fd, client* c)
+{
+	uint16_t device;
+	uint64_t flags;
+	if (!read_data(fd, &device, 2)) {
+		write_result(fd, c, SRIC_E_BADREQUEST);
+		return;
+	}
+	device = ntohs(device);
+	if (!read_data(fd, &flags, 2)) {
+		write_result(fd, c, SRIC_E_BADREQUEST);
+	}
+	flags = ntohll(flags);
+	if (!device_exists(device)) {
+		write_result(fd, c, SRIC_E_BADADDR);
+		return;
+	}
+	device_set_client_notes(device, c, flags);
+	write_result(fd, c, SRIC_E_SUCCESS);
+}
+
+static void handle_note_clear(int fd, client* c)
+{
+	device_clear_client_notes(c);
+	write_result(fd, c, SRIC_E_SUCCESS);
+}
+
+static void handle_list_devices(int fd, client* c)
+{
+	int i;
+	uint16_t deviceCount = 0;
+	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i) {
+		if (device_exists(i)) {
+			deviceCount++;
+		}
+	}
+	deviceCount = htons(deviceCount);
+	write_result(fd, c, SRIC_E_BADADDR);
+	write_data(fd, c, &deviceCount, 2);
+	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i) {
+		if (device_exists(i)) {
+			short data = (short)i;
+			data = htons(data);
+			write_data(fd, c, &data, 2);
+			data = (short)device_type(i);
+			data = htons(data);
+			write_data(fd, c, &data, 2);
+		}
+	}
+}
+
 static gboolean ipc_client_incoming(GIOChannel*  gio,
                                     GIOCondition cond,
-                                    gpointer     _client)
+                                    gpointer _client)
 {
 	unsigned char cmd;
 	client* c  = (client*)_client;
@@ -202,6 +323,22 @@ static gboolean ipc_client_incoming(GIOChannel*  gio,
 
 	case SRICD_POLL_RX:
 		handle_poll_rx(fd, c);
+		break;
+
+	case SRICD_POLL_NOTE:
+		handle_poll_note(fd, c);
+		break;
+
+	case SRICD_NOTE_FLAGS:
+		handle_note_flags(fd, c);
+		break;
+
+	case SRICD_NOTE_CLEAR:
+		handle_note_clear(fd, c);
+		break;
+
+	case SRICD_LIST_DEVICES:
+		handle_list_devices(fd, c);
 		break;
 
 	default:
