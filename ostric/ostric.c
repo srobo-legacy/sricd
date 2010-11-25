@@ -101,18 +101,15 @@ and_again:
 	} else {
 		len += ret;
 		tmp_buf[0] = frame_buf[0];
-		src_len = unescape(&frame_buf[1], len - 1,
-				&tmp_buf[1],
-				sizeof(tmp_buf) - 1,
-				&decode_len);
-		src_len++; /* unescape returns pos, not len */
-		if (!process_command(tmp_buf,decode_len + 1)){
-			memcpy(frame_buf, &frame_buf[src_len],
-					len - src_len);
+		src_len = unescape(&frame_buf[1], len - 1, &tmp_buf[1],
+				sizeof(tmp_buf) - 1, &decode_len);
+		src_len++; /* unescape returns position, not length, of src */
+
+		if (!process_command(tmp_buf, decode_len + 1)){
+			/* Shift used data out; if there's more, then start
+			 * this function again to read another frame */
+			memcpy(frame_buf, &frame_buf[src_len], len - src_len);
 			len -= src_len;
-			/* Null out all data in buffer that isn't valid - we
-			 * don't wish to read a stale start-of-frame */
-			memset(&frame_buf[len], 0, sizeof(frame_buf) - len);
 			if (len != 0)
 				goto and_again;
 		}
