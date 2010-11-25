@@ -2,7 +2,7 @@ include ../makeflags
 
 all: ostric
 
-ostric: ostric.o escape.o cmds.o crc16.o
+ostric: ostric.o escape.o cmds.o crc16.o generic.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 escape.o: ../sricd/escape.c
