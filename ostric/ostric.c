@@ -104,8 +104,8 @@ process_command(uint8_t *buffer, int len)
 		return 1;
 
 	crc = crc16(&buffer[0], cmdlen - 2);
-	sentcrc = buffer[cmdlen-1];
-	sentcrc |= buffer[cmdlen-2] << 8;
+	sentcrc = buffer[cmdlen-2];
+	sentcrc |= buffer[cmdlen-1] << 8;
 	if (crc != sentcrc) {
 		fprintf(stderr, "Bad CRC in received frame\n");
 		/* However, return 0 indicating that we've ingested that data.
