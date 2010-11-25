@@ -9,6 +9,7 @@
 #include "../sricd/frame.h"
 #include "../sricd/crc16/crc16.h"
 
+#include "ostric.h"
 #include "cmds.h"
 
 void read_frames(int fd);
