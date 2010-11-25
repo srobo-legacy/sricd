@@ -16,7 +16,7 @@
 #include "generic.h"
 
 int ostric_pty_fd;
-GSList *ostric_client_list;
+GSList *ostric_client_list = NULL;
 
 void read_frames();
 int process_command(uint8_t *buffer, int len);
@@ -138,8 +138,6 @@ read_arguments(int argc, char **argv)
 {
 	struct ostric_client *client;
 	int i, j;
-
-	ostric_client_list = g_slist_alloc();
 
 	for (i = 1; i < argc; i++) {
 		for (j = 0; client_types[j].name != NULL; j++) {
