@@ -50,6 +50,22 @@ gateway_command(uint8_t *buffer, int len)
 
 	switch (buffer[4]) {
 	case GW_CMD_USE_TOKEN:
+		/* Dictates whether we're to wait for a token when sending data,
+		 * or whether to send things out uninhibited. Tokens on or off
+		 * is indicated by boolean in first byte */
+		if (len != 8) {
+			fprintf(stderr, "Invalid GW_CMD_USE_TOKEN size: %d\n",
+									len);
+			break;
+		}
+
+		if (buffer[5] == 0)
+			gw_token_mode = false;
+		else
+			gw_token_mode = true;
+
+		break;
+
 	case GW_CMD_REQ_TOKEN:
 	case GW_CMD_HAVE_TOKEN:
 	case GW_CMD_GEN_TOKEN:
