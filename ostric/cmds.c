@@ -2,15 +2,41 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <glib.h>
+
 #include "ostric.h"
 #include "cmds.h"
+
+struct bus_msg {
+	int len;
+	uint8_t *buffer;
+};
+
+void
+bus_cmd_despatch(void *self, void *msg)
+{
+	struct ostric_client *client;
+	struct bus_msg *bus_msg;
+
+	client = self;
+	bus_msg = msg;
+
+	/* Ahem */
+	client->msg_callback(client, bus_msg->buffer, bus_msg->len, NULL, NULL);
+	return;
+}
 
 void
 bus_command(uint8_t *buffer, int len)
 {
+	struct bus_msg bus_msg;
 
-        printf("Unimplemented: client commands\n");
-        abort();
+	bus_msg.len = len;
+	bus_msg.buffer = buffer;
+
+	/* Send this bus message to all clients */
+	g_slist_foreach(ostric_client_list, bus_cmd_despatch, &bus_msg);
+	return;
 }       
 
 void
