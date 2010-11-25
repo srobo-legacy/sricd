@@ -30,6 +30,14 @@ struct _frame {
 	uint8_t payload[FRAME_PAYLOAD_MAX];
 };
 
+// A packed SRIC frame
+typedef struct {
+	uint8_t dest_address;
+	uint8_t source_address;
+	uint8_t payload_len;
+	uint8_t payload[FRAME_PAYLOAD_MAX];
+} __attribute__ ((__packed__)) packed_frame_t;
+
 #ifdef __cplusplus
 }
 #endif
