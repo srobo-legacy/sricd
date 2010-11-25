@@ -1,7 +1,7 @@
 include ../makeflags
 
-CFLAGS+=	`pkg-config --cflags glib`
-LDFLAGS+=	`pkg-config --libs glib`
+CFLAGS+=	`pkg-config --cflags glib-2.0`
+LDFLAGS+=	`pkg-config --libs glib-2.0`
 
 all: ostric
 
