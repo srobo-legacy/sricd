@@ -153,7 +153,7 @@ void sric_enum_start( void )
 	sric_enum_fsm( EV_START_ENUM );
 }
 
-bool sric_enum_rx( void )
+bool sric_enum_rx( packed_frame_t *f )
 {
 	/* Return false when done */
 

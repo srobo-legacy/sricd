@@ -2,6 +2,7 @@
 #include "crc16/crc16.h"
 #include "client.h"
 #include "escape.h"
+#include "frame.h"
 #include "sric-if.h"
 #include "sric-enum.h"
 #include "log.h"
@@ -204,6 +205,7 @@ static gboolean advance_rx(void)
 /* Process the valid frame found in unesc_rx */
 static void proc_rx_frame(void)
 {
+	packed_frame_t *f = (packed_frame_t*) &unesc_rx[1];
 
 	if (!frame_for_me(unesc_rx)) {
 		/* Ignore frames not for us */
@@ -222,6 +224,10 @@ static void proc_rx_frame(void)
 		txq_push(&resp, 0);
 		return;
 	}
+
+	if( !enumerated )
+		if( !sric_enum_rx(f) )
+			enumerated = true;
 }
 
 /* Data ready on serial port callback */
