@@ -138,6 +138,7 @@ void sric_enum_fsm( enum_event_t ev )
 		if( ev == EV_BUS_RESET ) {
 			gw_cmd_req_token();
 			gw_cmd_gen_token();
+			gw_cmd_have_token();
 			state = S_ENUMERATED;
 		}
 		break;
