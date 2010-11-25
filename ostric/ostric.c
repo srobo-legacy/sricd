@@ -103,7 +103,7 @@ process_command(uint8_t *buffer, int len)
 	if (cmdlen > len)
 		return 1;
 
-	crc = crc16(&buffer[1], cmdlen - 3);
+	crc = crc16(&buffer[0], cmdlen - 2);
 	sentcrc = buffer[cmdlen-1];
 	sentcrc |= buffer[cmdlen-2] << 8;
 	if (crc != sentcrc) {
