@@ -6,6 +6,7 @@
 
 #include "ostric.h"
 #include "cmds.h"
+#include "reply.h"
 
 struct bus_msg {
 	int len;
@@ -67,6 +68,8 @@ gateway_command(uint8_t *buffer, int len)
 		printf("USE_TOKEN mode set to %s\n", (gw_token_mode) ? "true"
 							: "false");
 
+		/* Response acknowledging receipt, no actual data in response */
+		emit_response(buffer[1], buffer[2], NULL, 0);
 		break;
 
 	case GW_CMD_REQ_TOKEN:
