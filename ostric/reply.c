@@ -17,7 +17,7 @@ emit_response(uint8_t src, uint8_t dst, const void *data, int len)
 
 	resp[0] = 0x7E;
 	resp[1] = dst | 0x80;
-	resp[2] = src;
+	resp[2] = src & 0x7F;
 	resp[3] = len;
 	memcpy(&resp[4], data, len);
 	crc = crc16(&resp[0], len + 4);
