@@ -24,7 +24,7 @@ emit_response(uint8_t src, uint8_t dst, const void *data, int len)
 	resp[4+len] = crc & 0xFF;
 	resp[5+len] = crc >> 8;
 
-	escaped_len = escape_frame(resp, 6 + len, sizeof(resp));
+	escaped_len = escape_frame(&resp[1], 5 + len, sizeof(resp) - 1);
 
 	ret = write(ostric_pty_fd, resp, escaped_len);
 	if (ret < 0) {
