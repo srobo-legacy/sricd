@@ -5,7 +5,7 @@ LDFLAGS+=	`pkg-config --libs glib-2.0`
 
 all: ostric
 
-ostric: ostric.o escape.o cmds.o crc16.o generic.o
+ostric: ostric.o escape.o cmds.o crc16.o generic.o reply.o
 	$(CC) $(LDFLAGS) -o $@ $^
 
 escape.o: ../sricd/escape.c
