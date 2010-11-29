@@ -19,6 +19,13 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 
 	switch (buffer[4]) {
 	case SRIC_SYSCMD_RESET:
+		printf("Generic client received reset\n");
+		/* Move to reset state; keep token if it turns up */
+		this->address = -1;
+		this->has_token = false;
+		this->keep_token = true;
+		break;
+
 	case SRIC_SYSCMD_TOK_ADVANCE:
 	case SRIC_SYSCMD_ADDR_ASSIGN:
 	case SRIC_SYSCMD_ADDR_INFO:
