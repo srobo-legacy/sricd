@@ -147,7 +147,6 @@ and_again:
 int
 process_command(uint8_t *buffer, int len)
 {
-	int ret;
 	uint16_t crc, sentcrc, cmdlen;
 
 	/* Is there actually enough space for this? */
