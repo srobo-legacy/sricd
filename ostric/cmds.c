@@ -32,6 +32,9 @@ bus_command(uint8_t *buffer, int len)
 {
 	struct bus_msg bus_msg;
 
+	if (!gw_has_token && gw_token_mode)
+		printf("Gateway sending bus msg while not holding token\n");
+
 	bus_msg.len = len;
 	bus_msg.buffer = buffer;
 
