@@ -97,6 +97,12 @@ gateway_command(uint8_t *buffer, int len)
 		break;
 
 	case GW_CMD_REQ_TOKEN:
+		printf("Gateway requesting token\n");
+		/* Set flag for us to keep token when it comes around again */
+		gw_keep_token = true;
+		emit_response(buffer[1], buffer[2], NULL, 0);
+		break;
+
 	case GW_CMD_HAVE_TOKEN:
 	default:
 		fprintf(stderr, "Unimplemented gateway cmd %d\n", buffer[4]);
