@@ -45,6 +45,7 @@ gateway_command(uint8_t *buffer, int len)
 {
 	struct ostric_client *client;
 	GSList *scan;
+	uint8_t have_token;
 
 	if (len < 5) {
 		fprintf(stderr, "Gateway command has invalid length %d\n", len);
@@ -104,6 +105,15 @@ gateway_command(uint8_t *buffer, int len)
 		break;
 
 	case GW_CMD_HAVE_TOKEN:
+		/* Do we have the token right now? Tell sricd */
+		if (gw_has_token)
+			have_token = 1;
+		else
+			have_token = 0;
+
+		emit_response(buffer[1], buffer[2], &have_token, 1);
+		break;
+
 	default:
 		fprintf(stderr, "Unimplemented gateway cmd %d\n", buffer[4]);
 		break;
