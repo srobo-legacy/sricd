@@ -13,6 +13,10 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 			uint8_t **resp, int *rlen)
 {
 
+	/* Don't handle messages that aren't for us / broadcast */
+	if (buffer[1] & 0x7F != this->address && (buffer[1] & 0x7F) != 0)
+		return;
+
 	switch (buffer[4]) {
 	case SRIC_SYSCMD_RESET:
 	case SRIC_SYSCMD_TOK_ADVANCE:
