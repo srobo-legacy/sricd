@@ -27,6 +27,19 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		break;
 
 	case 0x80 | SRIC_SYSCMD_TOK_ADVANCE:
+		/* We should have received an address by now; there's no real
+		 * way to detect whether we've just been reset though. Can
+		 * check that we're still sat on the token though: */
+		if (!this->has_token && !this->keep_token)
+			printf("Generic client 0x%X instructed to advance "
+				"token while not retaining it\n",
+				this->address);
+
+		/* Stop retaining. This should take effect when the token
+		 * rotates, IE immediately after this frame is procesed. */
+		this->keep_token = false;
+		break;
+
 	case 0x80 | SRIC_SYSCMD_ADDR_ASSIGN:
 	case 0x80 | SRIC_SYSCMD_ADDR_INFO:
 	default:
