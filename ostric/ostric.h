@@ -19,7 +19,6 @@ extern GSList *ostric_client_list;
 
 /* Bus / gateway state */
 extern bool gw_token_mode;	/* False -> no tokens, True -> tokens on */
-extern GSList *next_token_recp;	/* Next recepient of token in client list, or
-				 * null if it should be the gateway */
+extern bool gw_has_token;	/* Self explanatory */
 
 #endif /* _SRICD_OSTRIC_OSTRIC_H_ */
