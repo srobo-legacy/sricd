@@ -199,6 +199,7 @@ read_arguments(int argc, char **argv)
 				client->msg_callback =
 						client_types[j].msg_callback;
 				client->priv = NULL;
+				client->has_token = false;
 
 				ostric_client_list =
 				g_slist_append(ostric_client_list, client);
