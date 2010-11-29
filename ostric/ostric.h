@@ -11,7 +11,8 @@ struct ostric_client {
 	void (*msg_callback)(struct ostric_client *this, uint8_t *buffer,
 				int len, uint8_t **resp, int *rlen);
 	void *priv;
-	bool has_token;
+	bool has_token;		/* Self explanatory */
+	bool keep_token;	/* Don't propagate token once we have it */
 };
 
 extern int ostric_pty_fd;
