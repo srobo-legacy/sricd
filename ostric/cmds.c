@@ -92,6 +92,7 @@ gateway_command(uint8_t *buffer, int len)
 		/* Record that we've generated a token to spin around the
 		 * bus, also acknowledge to sricd */
 		gw_has_token = true;
+		gw_keep_token = false;
 		emit_response(buffer[1], buffer[2], NULL, 0);
 		break;
 
