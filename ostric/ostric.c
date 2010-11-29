@@ -16,6 +16,7 @@
 #include "ostric.h"
 #include "cmds.h"
 #include "generic.h"
+#include "token.h"
 
 int ostric_pty_fd;
 GSList *ostric_client_list = NULL;
@@ -54,7 +55,7 @@ main(int argc, char **argv)
 		"sric bus on that terminal\n", ptsname(ostric_pty_fd));
 
 	fd.fd = ostric_pty_fd;
-	timeout = 10;
+	timeout = 1;
 	while (1) {
 		fd.events = POLLIN;
 		fd.revents = 0;
@@ -73,8 +74,8 @@ main(int argc, char **argv)
 			continue;
 		}
 
-		/* Otherwise, wait a little and prod the token situation */
-		//circulate_token();
+		/* Otherwise, We've waited a little, so prod the token */
+		advance_token();
 	}
 
 	close(ostric_pty_fd);
