@@ -43,6 +43,8 @@ bus_command(uint8_t *buffer, int len)
 void
 gateway_command(uint8_t *buffer, int len)
 {
+	struct ostric_client *client;
+	GSList *scan;
 
 	if (len < 5) {
 		fprintf(stderr, "Gateway command has invalid length %d\n", len);
@@ -72,9 +74,29 @@ gateway_command(uint8_t *buffer, int len)
 		emit_response(buffer[1], buffer[2], NULL, 0);
 		break;
 
+	case GW_CMD_GEN_TOKEN:
+		scan = ostric_client_list;
+
+		while (scan != NULL) {
+			client = scan->data;
+			if (client->has_token) {
+				printf("SRICD issued GEN_TOKEN gw command "
+					"while token is still on the bus\n");
+			}
+
+			scan = g_slist_next(scan);
+		}
+
+		printf("Generating bus token\n");
+
+		/* Record that we've generated a token to spin around the
+		 * bus, also acknowledge to sricd */
+		gw_has_token = true;
+		emit_response(buffer[1], buffer[2], NULL, 0);
+		break;
+
 	case GW_CMD_REQ_TOKEN:
 	case GW_CMD_HAVE_TOKEN:
-	case GW_CMD_GEN_TOKEN:
 	default:
 		fprintf(stderr, "Unimplemented gateway cmd %d\n", buffer[4]);
 		break;
