@@ -25,7 +25,10 @@ bool gw_has_token = false;
 bool gw_keep_token = false;
 GSList *next_token_recp = NULL;
 
-void read_frames();
+int pty_buf_len = 0;
+uint8_t pty_buf[128];
+
+void read_frames(bool more_data);
 int process_command(uint8_t *buffer, int len);
 void read_arguments(int argc, char **argv);
 void try_reading_stuff();
@@ -69,8 +72,8 @@ main(int argc, char **argv)
 			exit(1);
 		}
 
-		if (fd.revents & POLLIN)
-			read_frames();
+		if (fd.revents & POLLIN || pty_buf_len != 0)
+			read_frames((fd.revents & POLLIN) ? true : false);
 
 		/* We've waited a little or send a msg, so prod the token */
 		advance_token();
@@ -80,15 +83,15 @@ main(int argc, char **argv)
 	return 0;
 }
 
-int pty_buf_len;
-uint8_t pty_buf[128];
-
 void
-read_frames()
+read_frames(bool more_data)
 {
 
-	try_reading_stuff();
+	if (more_data)
+		try_reading_stuff();
+
 	try_parsing_stuff();
+	return;
 }
 
 void
@@ -138,8 +141,6 @@ and_again:
 		 * this function again to read another frame */
 		memcpy(pty_buf, &pty_buf[src_len], pty_buf_len - src_len);
 		pty_buf_len -= src_len;
-		if (pty_buf_len != 0)
-			goto and_again;
 	}
 
 	return;
