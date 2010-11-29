@@ -210,6 +210,12 @@ read_arguments(int argc, char **argv)
 				break;
 			}
 		}
+
+		if (client_types[j].name == NULL) {
+			fprintf(stderr, "No client type \"%s\" found\n",
+								argv[i]);
+			exit(1);
+		}
 	}
 
 	return;
