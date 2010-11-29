@@ -45,6 +45,10 @@ void
 generic_token(struct ostric_client *this)
 {
 
+	/* We're in the reset state; don't do anything with token */
+	if (this->address == -1)
+		return;
+
 	printf("Generic client aquired token. Except I don't want it.\n");
 	this->keep_token = false;
 	return;
