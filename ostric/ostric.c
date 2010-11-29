@@ -69,12 +69,10 @@ main(int argc, char **argv)
 			exit(1);
 		}
 
-		if (fd.revents & POLLIN) {
+		if (fd.revents & POLLIN)
 			read_frames();
-			continue;
-		}
 
-		/* Otherwise, We've waited a little, so prod the token */
+		/* We've waited a little or send a msg, so prod the token */
 		advance_token();
 	}
 
