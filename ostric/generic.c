@@ -18,7 +18,7 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		return;
 
 	switch (buffer[4]) {
-	case SRIC_SYSCMD_RESET:
+	case 0x80 | SRIC_SYSCMD_RESET:
 		printf("Generic client received reset\n");
 		/* Move to reset state; keep token if it turns up */
 		this->address = -1;
@@ -26,9 +26,9 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		this->keep_token = true;
 		break;
 
-	case SRIC_SYSCMD_TOK_ADVANCE:
-	case SRIC_SYSCMD_ADDR_ASSIGN:
-	case SRIC_SYSCMD_ADDR_INFO:
+	case 0x80 | SRIC_SYSCMD_TOK_ADVANCE:
+	case 0x80 | SRIC_SYSCMD_ADDR_ASSIGN:
+	case 0x80 | SRIC_SYSCMD_ADDR_INFO:
 	default:
 		printf("Generic client received unimplemented command %X for "
 				"addr %X, from %X\n", buffer[4], buffer[1],
