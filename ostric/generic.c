@@ -35,9 +35,6 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 				buffer[2]);
 	}
 
-	/* Emit acknowledgement of receipt, even if we don't know what
-	 * something is. */
-	emit_response(buffer[1], buffer[2], NULL, 0);
 	return;
 }
 
