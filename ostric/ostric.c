@@ -180,9 +180,10 @@ static struct {
 	const char *name;
 	void (*msg_callback) (struct ostric_client *this, uint8_t *buffer,
 				int len, uint8_t **resp, int *rlen);
+	void (*token_callback) (struct ostric_client *this);
 } client_types[] = {
-{	"generic",		generic_msg, 		},
-{	NULL,			NULL,			}
+{	"generic",		generic_msg, 		generic_token	},
+{	NULL,			NULL,			NULL		}
 };
 
 void
@@ -198,6 +199,8 @@ read_arguments(int argc, char **argv)
 				client->address = -1;
 				client->msg_callback =
 						client_types[j].msg_callback;
+				client->token_callback =
+						client_types[j].token_callback;
 				client->priv = NULL;
 				client->has_token = false;
 				client->keep_token = false;

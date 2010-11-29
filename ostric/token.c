@@ -15,6 +15,7 @@ juggle_token(void *self, void *null __attribute__((unused)))
 
 	/* If we're keeping the token, don't move it onwards */
 	if (client->has_token && client->keep_token) {
+		client->token_callback(client);
 		token_on_wire = false;
 		return;
 	}

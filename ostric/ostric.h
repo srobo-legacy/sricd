@@ -10,6 +10,7 @@ struct ostric_client {
 	int address;
 	void (*msg_callback)(struct ostric_client *this, uint8_t *buffer,
 				int len, uint8_t **resp, int *rlen);
+	void (*token_callback)(struct ostric_client *this);
 	void *priv;
 	bool has_token;		/* Self explanatory */
 	bool keep_token;	/* Don't propagate token once we have it */

@@ -19,3 +19,12 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 	emit_response(buffer[1], buffer[2], NULL, 0);
 	return;
 }
+
+void
+generic_token(struct ostric_client *this)
+{
+
+	printf("Generic client aquired token. Except I don't want it.\n");
+	this->keep_token = false;
+	return;
+}
