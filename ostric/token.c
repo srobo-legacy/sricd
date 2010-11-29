@@ -23,6 +23,10 @@ void
 advance_token()
 {
 
+	/* If we're sitting on the token, don't send it back round the bus */
+	if (gw_keep_token && gw_has_token)
+		return;
+
 	/* Rotate token around list of clients */
 	token_on_wire = gw_has_token;
 	gw_has_token = false;

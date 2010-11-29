@@ -20,5 +20,6 @@ extern GSList *ostric_client_list;
 /* Bus / gateway state */
 extern bool gw_token_mode;	/* False -> no tokens, True -> tokens on */
 extern bool gw_has_token;	/* Self explanatory */
+extern bool gw_keep_token;	/* "REQ_TOKEN" command issued, sit on token */
 
 #endif /* _SRICD_OSTRIC_OSTRIC_H_ */
