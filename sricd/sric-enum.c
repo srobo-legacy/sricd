@@ -189,8 +189,11 @@ void sric_enum_start( void )
 
 bool sric_enum_rx( packed_frame_t *f )
 {
-	/* Return false when done */
 
-	/* Push items onto the output queue as we go */
-	return FALSE;
+	if (f->source_address == 1) {
+		/* Do some stuff */
+	}
+
+	/* Return false when done */
+	return TRUE;
 }
