@@ -42,10 +42,10 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 
 	case 0x80 | SRIC_SYSCMD_ADDR_ASSIGN:
 		/* To take an address we need to be a) reset, b) have token */
-		if (client->address != -1 || !client->has_token)
+		if (this->address != -1 || !this->has_token)
 			return;
 
-		client->address = buffer[5] & 0x7F;
+		this->address = buffer[5] & 0x7F;
 		break;
 
 	case 0x80 | SRIC_SYSCMD_ADDR_INFO:
