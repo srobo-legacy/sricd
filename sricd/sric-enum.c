@@ -2,15 +2,18 @@
 #include "output-queue.h"
 #include "sric-cmds.h"
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 
 #define ENUM_PRI 0
 
 static uint8_t reset_count = 0;
+static bool enum_token_at_gw = false;	/* Has token circumnavigated bus yet? */
 
 typedef enum {
 	S_IDLE,
 	S_RESETTING,
+	S_ENUMERATING,
 	S_ENUMERATED,
 } enum_state_t;
 
@@ -133,6 +136,22 @@ static gboolean send_reset_timeout( void* _rs )
 	return TRUE;
 }
 
+static gboolean check_new_device(void *_done)
+{
+	bool *done;
+
+	done = _done;
+
+	/* Has the token gone around the bus yet? */
+	if (*done)
+		return FALSE;
+
+	/* If not, query gateway about it; if it's not there yet, this begins
+	 * another portion of the enum FSM */
+	gw_cmd_have_token();
+	return TRUE;
+}
+
 void sric_enum_fsm( enum_event_t ev )
 {
 	static enum_state_t state = S_IDLE;
@@ -149,13 +168,13 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_RESETTING:
 		if( ev == EV_BUS_RESET ) {
-			gw_cmd_req_token();
 			gw_cmd_gen_token();
-			gw_cmd_have_token();
-			state = S_ENUMERATED;
+			g_timeout_add(50, check_new_device, &enum_token_at_gw);
+			state = S_ENUMERATING;
 		}
 		break;
 
+	case S_ENUMERATING:
 	case S_ENUMERATED:
 		break;
 	}
