@@ -4,6 +4,9 @@
 
 #include "ostric.h"
 
-int emit_response(uint8_t src, uint8_t dst, const void *data, int len);
+int send_msg(uint8_t src, uint8_t dst, const void *data, int len);
+#define emit_ack(src, dst) send_msg((src), (dst) | 0x80, NULL, 0)
+#define emit_data_ack(src, dst, data, len) \
+		send_msg((src), (dst) | 0x80, (data), (len))
 
 #endif /* _SRICD_OSTRIC_REPLY_H_ */

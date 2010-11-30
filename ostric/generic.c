@@ -53,7 +53,7 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		/* If we're reset and have token, inform controller about what
 		 * kind of sric thing we are. Exact format as yet undecided. */
 		resp_byte = 0;
-		emit_response(0, buffer[2] & 0x7F, &resp_byte, 1);
+		emit_data_ack(0, buffer[2] & 0x7F, &resp_byte, 1);
 		break;
 
 	default:

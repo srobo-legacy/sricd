@@ -75,7 +75,7 @@ gateway_command(uint8_t *buffer, int len)
 							: "false");
 
 		/* Response acknowledging receipt, no actual data in response */
-		emit_response(buffer[1], buffer[2], NULL, 0);
+		emit_ack(buffer[1], buffer[2]);
 		break;
 
 	case GW_CMD_GEN_TOKEN:
@@ -97,14 +97,14 @@ gateway_command(uint8_t *buffer, int len)
 		 * bus, also acknowledge to sricd */
 		gw_has_token = true;
 		gw_keep_token = false;
-		emit_response(buffer[1], buffer[2], NULL, 0);
+		emit_ack(buffer[1], buffer[2]);
 		break;
 
 	case GW_CMD_REQ_TOKEN:
 		printf("Gateway requesting token\n");
 		/* Set flag for us to keep token when it comes around again */
 		gw_keep_token = true;
-		emit_response(buffer[1], buffer[2], NULL, 0);
+		emit_ack(buffer[1], buffer[2]);
 		break;
 
 	case GW_CMD_HAVE_TOKEN:
@@ -114,7 +114,7 @@ gateway_command(uint8_t *buffer, int len)
 		else
 			have_token = 0;
 
-		emit_response(buffer[1], buffer[2], &have_token, 1);
+		emit_data_ack(buffer[1], buffer[2], &have_token, 1);
 		break;
 
 	default:

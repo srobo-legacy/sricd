@@ -9,14 +9,14 @@
 #include "../sricd/crc16/crc16.h"
 
 int
-emit_response(uint8_t src, uint8_t dst, const void *data, int len)
+send_msg(uint8_t src, uint8_t dst, const void *data, int len)
 {
 	uint8_t resp[256];
 	int escaped_len, ret;
 	uint16_t crc;
 
 	resp[0] = 0x7E;
-	resp[1] = dst | 0x80;
+	resp[1] = dst;
 	resp[2] = src & 0x7F;
 	resp[3] = len;
 	memcpy(&resp[4], data, len);
