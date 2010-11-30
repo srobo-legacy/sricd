@@ -71,6 +71,19 @@ static void send_tok_advance( uint8_t addr )
 	txq_push(&f, ENUM_PRI);
 }
 
+static void send_addr_info_req()
+{
+	frame_t f;
+
+	f.type = FRAME_SRIC;
+	f.address = 0;
+	f.tag = NULL;
+	f.payload_length = 1;
+	f.payload[0] = 0x80 | SRIC_SYSCMD_ADDR_INFO;
+
+	txq_push(&f, ENUM_PRI);
+}
+
 static void gw_cmd( uint8_t cmd, uint8_t len, uint8_t *d )
 {
 	frame_t f;
