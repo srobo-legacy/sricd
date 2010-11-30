@@ -12,6 +12,7 @@ void
 generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 			uint8_t **resp, int *rlen)
 {
+	uint8_t resp_byte;
 
 	/* Don't handle messages that aren't for us / broadcast */
 	if ((buffer[1] & 0x7F) != this->address && (buffer[1] & 0x7F) != 0)
@@ -49,6 +50,12 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		break;
 
 	case 0x80 | SRIC_SYSCMD_ADDR_INFO:
+		/* If we're reset and have token, inform controller about what
+		 * kind of sric thing we are. Exact format as yet undecided. */
+		resp_byte = 0;
+		emit_response(0, buffer[2] & 0x7F, &resp_byte, 1);
+		break;
+
 	default:
 		printf("Generic client received unimplemented command %X for "
 				"addr %X, from %X\n", buffer[4], buffer[1],
