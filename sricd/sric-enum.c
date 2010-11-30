@@ -3,16 +3,20 @@
 #include "sric-cmds.h"
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define ENUM_PRI 0
 
 static uint8_t reset_count = 0;
+static uint8_t current_next_address = 2;
 
 typedef enum {
 	S_IDLE,
 	S_RESETTING,
 	S_ENUMERATING,
+	S_SETTING_ADDR,
 	S_ENUMERATED,
 } enum_state_t;
 
@@ -163,6 +167,29 @@ void sric_enum_fsm( enum_event_t ev )
 		break;
 
 	case S_ENUMERATING:
+		if ( ev == EV_DEV_PRESENT) {
+
+			if (current_next_address > 0x7F) {
+				fprintf(stderr, "More than 126 devices on sric "
+						"bus, you must be in some kind "
+						"of alternate reality (or an "
+						"error occured\n");
+				exit(1);
+			}
+
+			/* Give it an address */
+			send_address( current_next_address++ );
+			state = S_SETTING_ADDR;
+		} else if (ev == EV_TOK_AT_GW) {
+
+			/* We're done */
+			/* XXX set some "enumerated" flag? */
+			state = S_ENUMERATED;
+		}
+
+		break;
+
+	case S_SETTING_ADDR:
 	case S_ENUMERATED:
 		break;
 	}
