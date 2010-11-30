@@ -17,6 +17,7 @@ typedef enum {
 	S_RESETTING,
 	S_ENUMERATING,
 	S_SETTING_ADDR,
+	S_ADVANCING_TOKEN,
 	S_ENUMERATED,
 } enum_state_t;
 
@@ -27,6 +28,8 @@ typedef enum {
 	EV_BUS_RESET,
 	/* An unenumerated device is on the bus */
 	EV_DEV_PRESENT,
+	/* Newest address on bus has acked ASSIGN_ADDR */
+	EV_ASSIGN_ADDR_ACK,
 	/* Token has reached gateway; bus enumerated */
 	EV_TOK_AT_GW
 } enum_event_t;
@@ -178,7 +181,7 @@ void sric_enum_fsm( enum_event_t ev )
 			}
 
 			/* Give it an address */
-			send_address( current_next_address++ );
+			send_address( current_next_address );
 			state = S_SETTING_ADDR;
 		} else if (ev == EV_TOK_AT_GW) {
 
@@ -190,6 +193,15 @@ void sric_enum_fsm( enum_event_t ev )
 		break;
 
 	case S_SETTING_ADDR:
+		if (ev == EV_ASSIGN_ADDR_ACK) {
+			/* Device has acked address; advance token */
+			send_tok_advance(current_next_address);
+			current_next_address++;
+			state = S_ADVANCING_TOKEN;
+		}
+		break;
+
+	case S_ADVANCING_TOKEN:
 	case S_ENUMERATED:
 		break;
 	}
@@ -215,6 +227,13 @@ bool sric_enum_rx( packed_frame_t *f )
 			else
 				sric_enum_fsm(EV_TOK_AT_GW);
 		}
+	}
+
+	/* If this is an ack from the newest address on the bus, then it's just
+	 * received an ASSIGN_ADDR. */
+	if ((f->source_address & 0x7F) == current_next_address &&
+					(f->dest_address & 0x80)) {
+		sric_enum_fsm(EV_ASSIGN_ADDR_ACK);
 	}
 
 	/* Return false when done */
