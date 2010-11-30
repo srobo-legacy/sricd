@@ -22,6 +22,10 @@ typedef enum {
 	EV_START_ENUM,
 	/* The bus has been reset */
 	EV_BUS_RESET,
+	/* An unenumerated device is on the bus */
+	EV_DEV_PRESENT,
+	/* Token has reached gateway; bus enumerated */
+	EV_TOK_AT_GW
 } enum_event_t;
 
 /* State machine for enumeration */
@@ -190,8 +194,18 @@ void sric_enum_start( void )
 bool sric_enum_rx( packed_frame_t *f )
 {
 
-	if (f->source_address == 1) {
-		/* Do some stuff */
+	/* If this is from the gateway... */
+	if ((f->source_address & 0x7F) == 1) {
+		/* And it has a nonzero payload... */
+		if (f->payload_len != 0) {
+			/* This is probably a response to HAS_TOKEN */
+			/* XXX - do this some other way. Seriously. */
+
+			if (f->payload[0] == 0)
+				sric_enum_fsm(EV_DEV_PRESENT);
+			else
+				sric_enum_fsm(EV_TOK_AT_GW);
+		}
 	}
 
 	/* Return false when done */
