@@ -168,7 +168,8 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_RESETTING:
 		if( ev == EV_BUS_RESET ) {
-			gw_cmd_gen_token();
+			gw_cmd_gen_token(); /* Put token on bus */
+			gw_cmd_use_token(); /* Hold onto it when it comes back*/
 			g_timeout_add(50, check_new_device, &enum_token_at_gw);
 			state = S_ENUMERATING;
 		}
