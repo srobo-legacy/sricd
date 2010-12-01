@@ -14,6 +14,11 @@ struct ostric_client {
 	void *priv;
 	bool has_token;		/* Self explanatory */
 	bool keep_token;	/* Don't propagate token once we have it */
+
+	/* message sending foo: */
+	bool has_resp;		/* There's a response waiting for the token */
+	uint8_t resp_len;	/* Self explanatory */
+	uint8_t resp[128];
 };
 
 extern int ostric_pty_fd;

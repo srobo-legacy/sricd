@@ -205,6 +205,7 @@ read_arguments(int argc, char **argv)
 				client->priv = NULL;
 				client->has_token = false;
 				client->keep_token = false;
+				client->has_resp = false;
 
 				ostric_client_list =
 				g_slist_append(ostric_client_list, client);
