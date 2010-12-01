@@ -60,6 +60,8 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 	case 0x80 | SRIC_SYSCMD_ADDR_INFO:
 		/* If we're reset and have token, inform controller about what
 		 * kind of sric thing we are. Exact format as yet undecided. */
+		printf("Generic device 0x%X issuing address info\n",
+						this->address);
 		resp_byte = 0;
 		emit_data_ack(0, buffer[2] & 0x7F, &resp_byte, 1);
 		break;
