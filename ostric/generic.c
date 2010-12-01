@@ -38,7 +38,11 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 
 		/* Stop retaining. This should take effect when the token
 		 * rotates, IE immediately after this frame is procesed. */
+		printf("Generic client: advancing token\n");
 		this->keep_token = false;
+
+		/* Acknowledge that to director */
+		emit_ack(this->address, buffer[2] & 0x7F);
 		break;
 
 	case 0x80 | SRIC_SYSCMD_ADDR_ASSIGN:
