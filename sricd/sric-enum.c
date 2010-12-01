@@ -1,11 +1,12 @@
-#include "sric-enum.h"
-#include "output-queue.h"
-#include "sric-cmds.h"
 #include <assert.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "sric-enum.h"
+#include "output-queue.h"
+#include "sric-cmds.h"
 
 #define ENUM_PRI 0
 
