@@ -46,7 +46,11 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		if (this->address != -1 || !this->has_token)
 			return;
 
+		printf("Generic device taking address 0x%X\n", buffer[5]);
 		this->address = buffer[5] & 0x7F;
+
+		/* We also need to send an ack */
+		emit_ack(this->address, buffer[2] & 0x7F);
 		break;
 
 	case 0x80 | SRIC_SYSCMD_ADDR_INFO:
