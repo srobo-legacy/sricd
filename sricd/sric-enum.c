@@ -290,6 +290,9 @@ bool sric_enum_rx( packed_frame_t *f )
 		addr_info_replies[f->source_address & 0x7F] = true;
 		device_classes[f->source_address & 0x7F] = f->payload[0];
 		sric_enum_fsm(EV_ADDR_INFO_ACK);
+	} else {
+		fprintf(stderr, "Unexpected message from dev 0x%X during "
+				"enumeration\n", f->source_address & 0x7F);
 	}
 
 	/* Return false when done */
