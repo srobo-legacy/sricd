@@ -7,6 +7,7 @@
 #include "sric-enum.h"
 #include "output-queue.h"
 #include "sric-cmds.h"
+#include "device.h"
 
 #define ENUM_PRI 0
 
@@ -176,8 +177,8 @@ void sric_enum_fsm( enum_event_t ev )
 	case S_ENUMERATING:
 		if ( ev == EV_DEV_PRESENT) {
 
-			if (current_next_address > 0x7F) {
-				fprintf(stderr, "More than 126 devices on sric "
+			if (current_next_address >= DEVICE_HIGH_ADDRESS) {
+				fprintf(stderr, "Too many devices on sric "
 						"bus, you must be in some kind "
 						"of alternate reality (or an "
 						"error occured\n");
