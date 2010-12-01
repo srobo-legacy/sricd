@@ -24,9 +24,11 @@ send_msg(uint8_t src, uint8_t dst, const void *data, int len)
 	resp[4+len] = crc & 0xFF;
 	resp[5+len] = crc >> 8;
 
+	/* Escape everything *but* the SOF byte */
 	escaped_len = escape_frame(&resp[1], 5 + len, sizeof(resp) - 1);
 
-	ret = write(ostric_pty_fd, resp, escaped_len);
+	/* Write everything including SOF */
+	ret = write(ostric_pty_fd, resp, escaped_len + 1);
 	if (ret < 0) {
 		perror("Writing a response failed");
 		return 1;
