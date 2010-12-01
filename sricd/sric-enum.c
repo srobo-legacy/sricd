@@ -235,7 +235,12 @@ void sric_enum_fsm( enum_event_t ev )
 
 			if (i == current_next_address) {
 				/* We've received all replies */
-				/* XXX do something */
+				for (i = 2; i < current_next_address; i++) {
+					device_add(i, device_classes[i]);
+				}
+
+				/* Move into enumerated state */
+				state = S_ENUMERATED;
 			}
 		}
 		break;
