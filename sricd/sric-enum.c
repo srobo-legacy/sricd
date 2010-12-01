@@ -251,17 +251,15 @@ bool sric_enum_rx( packed_frame_t *f )
 			else
 				sric_enum_fsm(EV_TOK_AT_GW);
 		}
-	}
 
 	/* If this is an ack from the newest address on the bus, then it's just
 	 * received an ASSIGN_ADDR. */
-	if ((f->source_address & 0x7F) == current_next_address &&
+	} else if ((f->source_address & 0x7F) == current_next_address &&
 					(f->dest_address & 0x80)) {
 		sric_enum_fsm(EV_NEW_DEV_ACK);
-	}
 
 	/* Otherwise it can only be a response to addr info. */
-	if (!(f->dest_address & 0x80) && f->payload_len == 1) {
+	} else if (!(f->dest_address & 0x80) && f->payload_len == 1) {
 		addr_info_replies[f->source_address & 0x7F] = true;
 		device_classes[f->source_address & 0x7F] = f->payload[0];
 		sric_enum_fsm(EV_ADDR_INFO_ACK);
