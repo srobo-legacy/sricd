@@ -199,12 +199,20 @@ void sric_enum_fsm( enum_event_t ev )
 		if (ev == EV_NEW_DEV_ACK) {
 			/* Device has acked address; advance token */
 			send_tok_advance(current_next_address);
-			current_next_address++;
 			state = S_ADVANCING_TOKEN;
 		}
 		break;
 
 	case S_ADVANCING_TOKEN:
+		if (ev == EV_NEW_DEV_ACK) {
+			/* Excellent; new device enumerated and token passed
+			 * onwards. Increase address, check where token is. */
+			current_next_address++;
+			gw_cmd_has_token();
+			state = S_ENUMERATING;
+		}
+		break;
+
 	case S_ENUMERATED:
 		break;
 	}
