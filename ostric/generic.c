@@ -77,11 +77,11 @@ void
 generic_token(struct ostric_client *this)
 {
 
-	/* We're in the reset state; don't do anything with token */
-	if (this->address == -1)
-		return;
-
-	printf("Generic client aquired token. Except I don't want it.\n");
-	this->keep_token = false;
+	/* In this routine, we send messages / acks that we require the token
+	 * for. We can also get the token during enumeration, and not be
+	 * supposed to do anything at all. So, default to doing /nothing/, and
+	 * hoping we receive a msg telling us what to do. If there's something
+	 * to be done, do it and release the token */
+	/* Right now there's nothing to be done /other/ than enum stuff */
 	return;
 }
