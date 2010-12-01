@@ -32,7 +32,7 @@ send_msg(uint8_t src, uint8_t dst, const void *data, int len)
 	if (ret < 0) {
 		perror("Writing a response failed");
 		return 1;
-	} else if (ret != escaped_len) {
+	} else if (ret != escaped_len + 1) {
 		fprintf(stderr, "Short write when emitting a response\n");
 		return 1;
 	}
