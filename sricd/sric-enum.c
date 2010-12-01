@@ -153,6 +153,7 @@ static gboolean send_reset_timeout( void* _rs )
 void sric_enum_fsm( enum_event_t ev )
 {
 	static enum_state_t state = S_IDLE;
+	int i;
 
 	switch( state ) {
 
@@ -194,7 +195,9 @@ void sric_enum_fsm( enum_event_t ev )
 			/* Now we want to fetch bus devices classes */
 			state = S_FETCHING_CLASSES;
 			gw_cmd_use_token(true);
-			gw_cmd_have_token();
+
+			for (i = 2; i < current_next_address; i++)
+				send_addr_info_req(i);
 		}
 
 		break;
