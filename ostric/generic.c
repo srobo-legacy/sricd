@@ -63,7 +63,7 @@ generic_msg(struct ostric_client *this, uint8_t *buffer, int len,
 		printf("Generic device 0x%X issuing address info\n",
 						this->address);
 		resp_byte = 0;
-		emit_data_ack(0, buffer[2] & 0x7F, &resp_byte, 1);
+		emit_data_ack(this->address, buffer[2] & 0x7F, &resp_byte, 1);
 		break;
 
 	default:
