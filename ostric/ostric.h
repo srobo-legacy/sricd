@@ -17,6 +17,8 @@ struct ostric_client {
 
 	/* message sending foo: */
 	bool has_resp;		/* There's a response waiting for the token */
+	bool is_ack;		/* Response should have ack bit set */
+	uint8_t resp_dst;	/* Destination address of response */
 	uint8_t resp_len;	/* Self explanatory */
 	uint8_t resp[128];
 };
