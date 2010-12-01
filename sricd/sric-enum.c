@@ -20,6 +20,7 @@ typedef enum {
 	S_ENUMERATING,
 	S_SETTING_ADDR,
 	S_ADVANCING_TOKEN,
+	S_FETCHING_CLASSES,
 	S_ENUMERATED,
 } enum_state_t;
 
@@ -190,9 +191,10 @@ void sric_enum_fsm( enum_event_t ev )
 			state = S_SETTING_ADDR;
 		} else if (ev == EV_TOK_AT_GW) {
 
-			/* We're done */
-			/* XXX set some "enumerated" flag? */
-			state = S_ENUMERATED;
+			/* Now we want to fetch bus devices classes */
+			state = S_FETCHING_CLASSES;
+			gw_cmd_use_token(true);
+			gw_cmd_have_token();
 		}
 
 		break;
@@ -215,6 +217,7 @@ void sric_enum_fsm( enum_event_t ev )
 		}
 		break;
 
+	case S_FETCHING_CLASSES:
 	case S_ENUMERATED:
 		break;
 	}
