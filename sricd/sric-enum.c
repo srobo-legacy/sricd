@@ -26,6 +26,8 @@ typedef enum {
 	S_ENUMERATED,
 } enum_state_t;
 
+static enum_state_t state = S_IDLE;
+
 typedef enum {
 	/* Start enumeration */
 	EV_START_ENUM,
@@ -156,7 +158,6 @@ static gboolean send_reset_timeout( void* _rs )
 
 void sric_enum_fsm( enum_event_t ev )
 {
-	static enum_state_t state = S_IDLE;
 	int i;
 
 	switch( state ) {
@@ -258,17 +259,19 @@ bool sric_enum_rx( packed_frame_t *f )
 {
 
 	/* If this is from the gateway... */
-	if ((f->source_address & 0x7F) == 1) {
-		/* And it has a nonzero payload... */
-		if (f->payload_len != 0) {
-			/* This is probably a response to HAS_TOKEN */
-			/* XXX - do this some other way. Seriously. */
+	if ((f->source_address & 0x7F) == 1 && state == S_ENUMERATING) {
 
-			if (f->payload[0] == 0)
-				sric_enum_fsm(EV_DEV_PRESENT);
-			else
-				sric_enum_fsm(EV_TOK_AT_GW);
+		/* This is a response to HAS_TOKEN */
+		if (f->payload_len != 1) {
+			fprintf(stderr, "Gateway replied to HAS_TOKEN with "
+					"no payload\n");
+			return TRUE;
 		}
+
+		if (f->payload[0] == 0)
+			sric_enum_fsm(EV_DEV_PRESENT);
+		else
+			sric_enum_fsm(EV_TOK_AT_GW);
 
 	/* If this is an ack from the newest address on the bus, then it's just
 	 * received an ASSIGN_ADDR. */
@@ -277,7 +280,13 @@ bool sric_enum_rx( packed_frame_t *f )
 		sric_enum_fsm(EV_NEW_DEV_ACK);
 
 	/* Otherwise it can only be a response to addr info. */
-	} else if ((f->dest_address & 0x80) && f->payload_len == 1) {
+	} else if ((f->dest_address & 0x80) && state == S_FETCHING_CLASSES) {
+		if (f->payload_len != 1) {
+			fprintf(stderr, "Reply to ADDR_INFO_REQ from device "
+					"has invalid length\n");
+			return TRUE;
+		}
+
 		addr_info_replies[f->source_address & 0x7F] = true;
 		device_classes[f->source_address & 0x7F] = f->payload[0];
 		sric_enum_fsm(EV_ADDR_INFO_ACK);
