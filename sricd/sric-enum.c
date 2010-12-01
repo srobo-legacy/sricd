@@ -226,6 +226,19 @@ void sric_enum_fsm( enum_event_t ev )
 		break;
 
 	case S_FETCHING_CLASSES:
+		if (ev == EV_ADDR_INFO_ACK) {
+			/* Check to see whether or not we've collected all
+			 * responses yet */
+			for (i = 2; i < current_next_address; i++)
+				if (!addr_info_replies[i])
+					break;
+
+			if (i == current_next_address) {
+				/* We've received all replies */
+				/* XXX do something */
+			}
+		}
+		break;
 	case S_ENUMERATED:
 		break;
 	}
