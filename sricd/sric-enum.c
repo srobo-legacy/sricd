@@ -165,6 +165,9 @@ void sric_enum_fsm( enum_event_t ev )
 		if( ev == EV_BUS_RESET ) {
 			gw_cmd_gen_token(); /* Put token on bus */
 			gw_cmd_req_token(); /* Hold onto it when it comes back*/
+			/* We next want to know whether the token went all the
+			 * way around the bus, or if it's blocked by a device */
+			gw_cmd_has_token();
 			state = S_ENUMERATING;
 		}
 		break;
