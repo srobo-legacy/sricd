@@ -13,6 +13,8 @@
 
 static uint8_t reset_count = 0;
 static uint8_t current_next_address = 2;
+static uint8_t device_classes[DEVICE_HIGH_ADDRESS];
+static bool addr_info_replies[DEVICE_HIGH_ADDRESS];
 
 typedef enum {
 	S_IDLE,
@@ -198,6 +200,7 @@ void sric_enum_fsm( enum_event_t ev )
 			state = S_FETCHING_CLASSES;
 			gw_cmd_use_token(true);
 
+			memset(addr_info_replies, 0, sizeof(addr_info_replies));
 			for (i = 2; i < current_next_address; i++)
 				send_addr_info_req(i);
 		}
@@ -258,7 +261,9 @@ bool sric_enum_rx( packed_frame_t *f )
 	}
 
 	/* Otherwise it can only be a response to addr info. */
-	if (!(f->dest_address & 0x80)) {
+	if (!(f->dest_address & 0x80) && f->payload_len == 1) {
+		addr_info_replies[f->source_address & 0x7F] = true;
+		device_classes[f->source_address & 0x7F] = f->payload[0];
 		sric_enum_fsm(EV_ADDR_INFO_ACK);
 	}
 
