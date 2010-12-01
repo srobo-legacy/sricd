@@ -34,7 +34,9 @@ typedef enum {
 	/* Received ack from newest device on bus */
 	EV_NEW_DEV_ACK,
 	/* Token has reached gateway; bus enumerated */
-	EV_TOK_AT_GW
+	EV_TOK_AT_GW,
+	/* Received an addr info response */
+	EV_ADDR_INFO_ACK
 } enum_event_t;
 
 /* State machine for enumeration */
@@ -253,6 +255,11 @@ bool sric_enum_rx( packed_frame_t *f )
 	if ((f->source_address & 0x7F) == current_next_address &&
 					(f->dest_address & 0x80)) {
 		sric_enum_fsm(EV_NEW_DEV_ACK);
+	}
+
+	/* Otherwise it can only be a response to addr info. */
+	if (!(f->dest_address & 0x80)) {
+		sric_enum_fsm(EV_ADDR_INFO_ACK);
 	}
 
 	/* Return false when done */
