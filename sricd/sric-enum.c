@@ -258,15 +258,9 @@ void sric_enum_start( void )
 bool sric_enum_rx( packed_frame_t *f )
 {
 
-	/* If this is from the gateway... */
-	if ((f->source_address & 0x7F) == 1 && state == S_ENUMERATING) {
-
-		/* This is a response to HAS_TOKEN */
-		if (f->payload_len != 1) {
-			fprintf(stderr, "Gateway replied to HAS_TOKEN with "
-					"no payload\n");
-			return TRUE;
-		}
+	/* Catch HAVE_TOKEN response in ENUMERATING state */
+	if (state == S_ENUMERATING && f->payload_len == 1 &&
+				(f->dest_address & 0x80)) {
 
 		if (f->payload[0] == 0)
 			sric_enum_fsm(EV_DEV_PRESENT);
