@@ -204,6 +204,9 @@ void sric_enum_fsm( enum_event_t ev )
 			memset(addr_info_replies, 0, sizeof(addr_info_replies));
 			for (i = 2; i < current_next_address; i++)
 				send_addr_info_req(i);
+
+			/* Despatch token around bus */
+			gw_cmd_gen_token();
 		}
 
 		break;
