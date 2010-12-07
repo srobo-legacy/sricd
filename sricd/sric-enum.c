@@ -199,12 +199,13 @@ void sric_enum_fsm( enum_event_t ev )
 
 			/* Now we want to fetch bus devices classes */
 			state = S_FETCHING_CLASSES;
-			gw_cmd_use_token(true);
 
 			memset(addr_info_replies, 0, sizeof(addr_info_replies));
 			for (i = 2; i < current_next_address; i++)
 				send_addr_info_req(i);
 
+			/* Start using token for all subsequent transmissions */
+			gw_cmd_use_token(true);
 			/* Despatch token around bus */
 			gw_cmd_gen_token();
 		}
