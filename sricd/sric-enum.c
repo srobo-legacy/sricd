@@ -215,9 +215,7 @@ void sric_enum_fsm( enum_event_t ev )
 	case S_SETTING_ADDR:
 		if (ev == EV_NEW_DEV_ACK) {
 			/* Device has acked address; advance token */
-			/* XXX - libsric will allegedly only accept for
-			 * broadcast addr */
-			send_tok_advance(0);
+			send_tok_advance(current_next_address);
 			state = S_ADVANCING_TOKEN;
 		}
 		break;
