@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "log.h"
 #include "sric-enum.h"
 #include "output-queue.h"
 #include "sric-cmds.h"
@@ -185,10 +186,10 @@ void sric_enum_fsm( enum_event_t ev )
 		if ( ev == EV_DEV_PRESENT) {
 
 			if (current_next_address >= DEVICE_HIGH_ADDRESS) {
-				fprintf(stderr, "Too many devices on sric "
-						"bus, you must be in some kind "
-						"of alternate reality (or an "
-						"error occured\n");
+				wlog( "Too many devices on sric "
+				      "bus, you must be in some kind "
+				      "of alternate reality (or an "
+				      "error occured\n" );
 				exit(1);
 			}
 
@@ -280,8 +281,8 @@ bool sric_enum_rx( packed_frame_t *f )
 	/* Otherwise it can only be a response to addr info. */
 	} else if ((f->dest_address & 0x80) && state == S_FETCHING_CLASSES) {
 		if (f->payload_len != 1) {
-			fprintf(stderr, "Reply to ADDR_INFO_REQ from device "
-					"has invalid length\n");
+			wlog( "Reply to ADDR_INFO_REQ from device "
+			      "has invalid length\n");
 			return TRUE;
 		}
 
@@ -289,8 +290,8 @@ bool sric_enum_rx( packed_frame_t *f )
 		device_classes[f->source_address & 0x7F] = f->payload[0];
 		sric_enum_fsm(EV_ADDR_INFO_ACK);
 	} else {
-		fprintf(stderr, "Unexpected message from dev 0x%X during "
-				"enumeration\n", f->source_address & 0x7F);
+		wlog( "Unexpected message from dev 0x%X during "
+		      "enumeration\n", f->source_address & 0x7F );
 	}
 
 	/* Return false when done */
