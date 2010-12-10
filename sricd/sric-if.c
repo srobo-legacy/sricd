@@ -246,6 +246,9 @@ static void proc_rx_frame(void)
 				client *c = frame->tag;
 				g_queue_push_tail(c->rx_q, f);
 
+				/* Tell client about it */
+				c->rx_ping(c);
+
 				/* Dispose of txed frame */
 				txed_frames = g_list_remove(txed_frames, frame);
 				free(frame);
