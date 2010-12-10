@@ -37,7 +37,7 @@ static GIOChannel* if_gio = NULL;
 static guint write_srcid = 0;
 
 /* Frame we're currently working on transmitting */
-static const frame_t* tx_frame = NULL;
+static frame_t* tx_frame = NULL;
 /* Output buffer that we're currently transmitting -- allow enough space for escaping */
 static uint8_t txbuf[ (SRIC_OVERHEAD + PAYLOAD_MAX) * 2 ];
 /* Number of bytes currently in txbuf */
@@ -55,6 +55,11 @@ static uint8_t unesc_pos = 0;
 
 /* Whether we've finished enumerating */
 static bool enumerated = false;
+
+/* Queue of frames we've sent to devices, outside of enumeration mode, that
+ * we're expecting an acknowledgement back from. Use to route acknowledgements
+ * back to clients */
+static GList *txed_frames = NULL;
 
 /* Open and configure the serial port */
 static void serial_conf(void)
@@ -225,9 +230,25 @@ static void proc_rx_frame(void)
 		return;
 	}
 
-	if( !enumerated )
+	if( !enumerated ) {
 		if( !sric_enum_rx(f) )
 			enumerated = true;
+	} else {
+		/* As it's an ack, there should be a corresponding item in the
+		 * txed_frames list. Find it, route response to client */
+		GList *iter = g_list_first(txed_frames);
+
+		while (iter->data != NULL) {
+			frame_t *frame = iter->data;
+			if ((frame->address & 0x7F) ==
+						(f->source_address & 0x7F)) {
+				/* Do something, free item from list too */
+				break;
+			}
+
+			iter = g_list_next(iter);
+		}
+	}
 }
 
 /* Data ready on serial port callback */
@@ -284,8 +305,14 @@ static gboolean next_tx(void)
 	uint16_t crc;
 	uint8_t  len;
 	int16_t  esclen;
+
 	if (tx_frame != NULL) {
-		free((frame_t*)tx_frame);
+		if (!enumerated) {
+			free((frame_t*)tx_frame);
+		} else {
+			/* Place in queue, waiting for acknowledgement */
+			txed_frames = g_list_append(txed_frames, tx_frame);
+		}
 	}
 
 	tx_frame = txq_next( enumerated?1:0 );
