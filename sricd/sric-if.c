@@ -242,7 +242,13 @@ static void proc_rx_frame(void)
 			frame_t *frame = iter->data;
 			if ((frame->address & 0x7F) ==
 						(f->source_address & 0x7F)) {
-				/* Do something, free item from list too */
+				/* Hand frame to client */
+				client *c = frame->tag;
+				g_queue_push_tail(c->rx_q, f);
+
+				/* Dispose of txed frame */
+				txed_frames = g_list_remove(txed_frames, frame);
+				free(frame);
 				break;
 			}
 
