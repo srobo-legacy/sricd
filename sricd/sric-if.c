@@ -242,9 +242,20 @@ static void proc_rx_frame(void)
 			frame_t *frame = iter->data;
 			if ((frame->address & 0x7F) ==
 						(f->source_address & 0x7F)) {
-				/* Hand frame to client */
 				client *c = frame->tag;
-				g_queue_push_tail(c->rx_q, f);
+
+				/* Format packed frame into frame_t */
+				frame_t *rxed_frame =
+						malloc(sizeof(*rxed_frame));
+				rxed_frame->type = FRAME_SRIC;
+				rxed_frame->address = f->source_address & 0x7F;
+				rxed_frame->tag = c;
+				rxed_frame->payload_length = f->payload_len;
+				memcpy(&rxed_frame->payload, &f->payload,
+							f->payload_len);
+
+				/* Hand frame to client */
+				g_queue_push_tail(c->rx_q, rxed_frame);
 
 				/* Tell client about it */
 				c->rx_ping(c);
