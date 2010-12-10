@@ -279,19 +279,11 @@ bool sric_enum_rx( packed_frame_t *f )
 		sric_enum_fsm(EV_NEW_DEV_ACK);
 
 	/* Otherwise it can only be a response to addr info. */
-	} else if ((f->dest_address & 0x80) && state == S_FETCHING_CLASSES) {
-		if (f->payload_len != 1) {
-			wlog( "Reply to ADDR_INFO_REQ from device "
-			      "has invalid length\n");
-			return TRUE;
-		}
-
+	} else if ((f->dest_address & 0x80) && state == S_FETCHING_CLASSES &&
+			f->payload_len == 1) {
 		addr_info_replies[f->source_address & 0x7F] = true;
 		device_classes[f->source_address & 0x7F] = f->payload[0];
 		sric_enum_fsm(EV_ADDR_INFO_ACK);
-	} else {
-		wlog( "Unexpected message from dev 0x%X during "
-		      "enumeration\n", f->source_address & 0x7F );
 	}
 
 	/* Return false when done */
