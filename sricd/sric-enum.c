@@ -287,5 +287,8 @@ bool sric_enum_rx( packed_frame_t *f )
 	}
 
 	/* Return false when done */
-	return TRUE;
+	if (state == S_ENUMERATED)
+		return FALSE;
+	else
+		return TRUE;
 }
