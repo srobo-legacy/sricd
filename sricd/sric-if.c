@@ -239,20 +239,22 @@ static void proc_rx_frame(void)
 		GList *iter = g_list_first(txed_frames);
 
 		while (iter->data != NULL) {
-			frame_t *frame = iter->data;
-			if ((frame->address & 0x7F) ==
+			frame_t *txed_frame = iter->data;
+			if ((txed_frame->address & 0x7F) ==
 						(f->source_address & 0x7F)) {
-				client *c = frame->tag;
+				client *c = txed_frame->tag;
 
 				/* Format packed frame into frame_t */
-				frame_t *rxed_frame =
-						malloc(sizeof(*rxed_frame));
-				rxed_frame->type = FRAME_SRIC;
-				rxed_frame->address = f->source_address & 0x7F;
-				rxed_frame->tag = c;
+				frame *rxed_frame = malloc(sizeof(frame));
+				rxed_frame->dest_address = f->dest_address;
+				rxed_frame->source_address = f->source_address;
+				rxed_frame->note = 0; /* XXX */
 				rxed_frame->payload_length = f->payload_len;
 				memcpy(&rxed_frame->payload, &f->payload,
 							f->payload_len);
+
+				rxed_frame->source_address &= 0x7F;
+				rxed_frame->dest_address &= 0x7F;
 
 				/* Hand frame to client */
 				g_queue_push_tail(c->rx_q, rxed_frame);
@@ -261,8 +263,9 @@ static void proc_rx_frame(void)
 				c->rx_ping(c);
 
 				/* Dispose of txed frame */
-				txed_frames = g_list_remove(txed_frames, frame);
-				free(frame);
+				txed_frames = g_list_remove(txed_frames,
+								txed_frame);
+				free(txed_frame);
 				break;
 			}
 
