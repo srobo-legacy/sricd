@@ -38,13 +38,13 @@ void txq_init(void);
 /* Push a frame onto the transmit queue.
    Frame is copied into freshly allocated memory.
    pri is the priority of the frame -- for normal frames, this should be 1. */
-void txq_push(const frame_t* tx, uint8_t pri);
+void txq_push(frame_t* tx, uint8_t pri);
 
 /* Pop the next frame off the transmit queue.
    max_pri is the maximum priority that this may look at.
    The caller must free the result when they are done with it.
    Returns NULL if the queue is empty. */
-const frame_t* txq_next(uint8_t max_pri);
+frame_t* txq_next(uint8_t max_pri);
 
 /* Returns true if the queue is empty. */
 bool txq_empty(void);
