@@ -206,6 +206,10 @@ static int sric_poll(sric_context  ctx,
 		return 1;
 	}
 	frame->payload_length = ntohs(sdata);
+
+	if (frame->payload_length == 0)
+		return 0;	/* No data to be read */
+
 	return read_data(ctx, frame->payload, frame->payload_length);
 }
 
