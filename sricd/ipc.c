@@ -138,8 +138,8 @@ static void send_rx(int fd, client* c, const frame* rx)
 {
 	uint8_t response_header[4];
 	response_header[0] = SRIC_E_SUCCESS;
-	response_header[1] = rx->source_address;
-	response_header[2] = 0xFF;
+	response_header[1] = 0x0;
+	response_header[2] = rx->source_address;
 	response_header[3] = rx->payload_length;
 	write_data(fd, c, response_header, 7);
 	write_data(fd, c, rx->payload,     rx->payload_length);
