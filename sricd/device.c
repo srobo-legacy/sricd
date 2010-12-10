@@ -19,7 +19,7 @@ static device_note_target* targets[DEVICE_HIGH_ADDRESS];
 
 bool device_exists(int address)
 {
-	return device_types[address] == NO_DEVICE;
+	return device_types[address] != NO_DEVICE;
 }
 
 char device_type(int address)
