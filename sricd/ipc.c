@@ -287,7 +287,7 @@ static void handle_list_devices(int fd, client* c)
 		}
 	}
 	deviceCount = htons(deviceCount);
-	write_result(fd, c, SRIC_E_BADADDR);
+	write_result(fd, c, SRIC_E_SUCCESS);
 	write_data(fd, c, &deviceCount, 2);
 	for (i = 0; i < DEVICE_HIGH_ADDRESS; ++i) {
 		if (device_exists(i)) {
