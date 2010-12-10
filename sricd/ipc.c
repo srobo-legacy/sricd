@@ -140,7 +140,10 @@ static void send_rx(int fd, client* c, const frame* rx)
 	response_header[0] = SRIC_E_SUCCESS;
 	response_header[1] = 0x0;
 	response_header[2] = rx->source_address;
-	response_header[3] = rx->payload_length;
+	response_header[3] = rx->note >> 8;
+	response_header[4] = rx->note & 0xFF;
+	response_header[5] = 0;
+	response_header[6] = rx->payload_length;
 	write_data(fd, c, response_header, 7);
 	write_data(fd, c, rx->payload,     rx->payload_length);
 }
