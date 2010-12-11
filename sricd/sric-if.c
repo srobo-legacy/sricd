@@ -403,6 +403,11 @@ static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 {
 	int w;
 
+	if (tx_frame != NULL && txpos == txlen)
+		/* We've transmitted, not yet had an ack; so, we've arrived here
+		 * because another frame got queued. Don't send it yet. */
+		goto empty;
+
 	if (tx_frame == NULL && !next_tx()) {
 		/* Nothing to transmit at this time */
 		goto empty;
@@ -427,9 +432,8 @@ static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 		return TRUE;
 	}
 
-	if (retxmit_timeout_id == 0)
-		retxmit_timeout_id = g_timeout_add(RETXMIT_TIMEOUT,
-						tx_timeout, NULL);
+	retxmit_timeout_id = g_timeout_add(RETXMIT_TIMEOUT, tx_timeout, NULL);
+
 empty:
 	write_srcid = 0;
 	return FALSE;
