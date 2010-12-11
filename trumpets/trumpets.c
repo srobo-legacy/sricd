@@ -90,7 +90,7 @@ gboolean
 rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 {
 	struct trumpet_channel *c, *target;
-	int ret, i;
+	int ret, i, bit;
 
 	c = data;
 
@@ -101,6 +101,14 @@ rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 	} else if (ret == 0 && c->rxpos != sizeof(c->buffer)) {
 		fprintf(stderr, "Read an EOF, shutting down\n");
 		exit(1);
+	}
+
+	for (i = 0; i < ret; i++) {
+		if ((rand() % rand_modulus) == 0) {
+			/* Insert a one bit error */
+			bit = rand() % 8;
+			c->buffer[c->rxpos + i] ^= (1 << bit);
+		}
 	}
 
 	c->rxpos += ret;
