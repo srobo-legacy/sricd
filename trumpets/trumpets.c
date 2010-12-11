@@ -133,8 +133,10 @@ tx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 	source->rxpos -= ret;
 
 	/* If we're done, */
-	if (source->rxpos == 0)
+	if (source->rxpos == 0) {
+		c->tx_watch_id = 0;
 		return FALSE;
+	}
 
 	return TRUE;
 }
