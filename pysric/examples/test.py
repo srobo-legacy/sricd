@@ -17,4 +17,5 @@ txframe.payload[1] = 32
 txframe.payload[2] = 0
 rxframe = ctl.txrx(txframe)
 
-print "bees: " + str(rxframe.address) + " " + str(rxframe.payload_length)
+print "bees:", rxframe.address, rxframe.payload_length
+
