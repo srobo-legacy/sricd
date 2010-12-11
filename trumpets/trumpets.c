@@ -29,12 +29,12 @@ static void serial_conf(void)
 {
 	struct termios t;
 
-	if (!isatty(fd)) {
+	if (!isatty(tty_channel.fd)) {
 		fprintf(stderr, "Device is not a tty.  Fail.");
 		exit(1);
 	}
 
-	if (tcgetattr(fd, &t) < 0) {
+	if (tcgetattr(tty_channel.fd, &t) < 0) {
 		fprintf(stderr, "Failed to retrieve term info");
 		exit(1);
 	}
@@ -77,7 +77,7 @@ static void serial_conf(void)
 		exit(1);
 	}
 
-	if (tcsetattr(fd, TCSANOW, &t) < 0) {
+	if (tcsetattr(tty_channel.fd, TCSANOW, &t) < 0) {
 		fprintf(stderr, "Failed to configure terminal");
 		exit(1);
 	}
