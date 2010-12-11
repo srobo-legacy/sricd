@@ -21,12 +21,12 @@ static void serial_conf(void)
 	struct termios t;
 
 	if (!isatty(fd)) {
-		wlog("Device is not a tty.  Fail.");
+		fprintf(stderr, "Device is not a tty.  Fail.");
 		exit(1);
 	}
 
 	if (tcgetattr(fd, &t) < 0) {
-		wlog("Failed to retrieve term info");
+		fprintf(stderr, "Failed to retrieve term info");
 		exit(1);
 	}
 
@@ -64,12 +64,12 @@ static void serial_conf(void)
 	t.c_lflag |= ECHONL;
 
 	if (cfsetspeed(&t, 115200) < 0) {
-		wlog("Failed to set serial baud rate");
+		fprintf(stderr, "Failed to set serial baud rate");
 		exit(1);
 	}
 
 	if (tcsetattr(fd, TCSANOW, &t) < 0) {
-		wlog("Failed to configure terminal");
+		fprintf(stderr, "Failed to configure terminal");
 		exit(1);
 	}
 }
