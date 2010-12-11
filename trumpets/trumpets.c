@@ -20,7 +20,7 @@ struct trumpet_channel {
 };
 
 struct trumpet_channel tty_channel;
-struct trumpet_channel pts_channel;
+struct trumpet_channel pty_channel;
 
 /* The write glib source ID (0 = invalid/not-registered) */
 static guint write_srcid = 0;
@@ -121,7 +121,7 @@ main(int argc, char **argv)
 	}
 
 	pty_channel.gio = g_io_channel_unix_new(pty_channel.fd);
-	g_io_add_watch(pty_channel.gio, G_IO_IN, rx_data, &pts_channel);
+	g_io_add_watch(pty_channel.gio, G_IO_IN, rx_data, &pty_channel);
 
 	pty_channel.rxpos = 0;
 	pty_channel.txpos = 0;
