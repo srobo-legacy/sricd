@@ -22,13 +22,6 @@ struct trumpet_channel {
 struct trumpet_channel tty_channel;
 struct trumpet_channel pts_channel;
 
-/* Serial port file descriptor */
-static int fd = -1;
-/* Fake pty for sricd to attach to */
-static int pty_fd = -1;
-static GIOChannel* if_gio = NULL;
-static GIOChannel* pty_gio = NULL;
-
 /* The write glib source ID (0 = invalid/not-registered) */
 static guint write_srcid = 0;
 
@@ -101,42 +94,38 @@ main(int argc, char **argv)
 	}
 
 	/* Open tty, attempt to configure */
-	fd = open(argv[1], O_RDWR | O_NONBLOCK);
-	if (fd < 1) {
+	tty_channel.fd = open(argv[1], O_RDWR | O_NONBLOCK);
+	if (tty_channel.fd < 1) {
 		perror("Couldn't open sric tty device");
 		return 1;
 	}
 
 	serial_conf();
 
-	if_gio = g_io_channel_unix_new(fd);
-	g_io_add_watch(if_gio, G_IO_IN, rx_data, &tty_channel);
+	tty_channel.gio = g_io_channel_unix_new(tty_channel.fd);
+	g_io_add_watch(tty_channel.gio, G_IO_IN, rx_data, &tty_channel);
 
-	tty_channel.fd = tty_fd;
 	tty_channel.rxpos = 0;
 	tty_channel.txpos = 0;
 	tty_channel.tx_watch_id = 0;
-	tty_channel.gio = tty_gio;
 
-	pty_fd = getpt();
-	if (pty_fd < 0) {
+	pty_channel.fd = getpt();
+	if (pty_channel.fd < 0) {
 		perror("Couldn't generate a pty");
 		return 1;
 	}
 
-	if (unlockpt(pty_fd)) {
+	if (unlockpt(pty_channel.fd)) {
 		perror("Couldn't unlock pty");
 		return 1;
 	}
 
-	pty_gio = g_io_channel_unix_new(pty_fd);
-	g_io_add_watch(pty_gio, G_IO_IN, rx_data, &pts_channel);
+	pty_channel.gio = g_io_channel_unix_new(pty_channel.fd);
+	g_io_add_watch(pty_channel.gio, G_IO_IN, rx_data, &pts_channel);
 
-	pty_channel.fd = pty_fd;
 	pty_channel.rxpos = 0;
 	pty_channel.txpos = 0;
 	pty_channel.tx_watch_id = 0;
-	pty_channel.gio = pty_gio;
 
 	ml = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(ml);
