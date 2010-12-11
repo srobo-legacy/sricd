@@ -29,6 +29,9 @@
 #define frame_set_ack(buf) do {(buf)[SRIC_DEST] |= 0x80; } \
     while (0)
 
+/* Number of milliseconds after which to retransmit a packet */
+#define RETXMIT_TIMEOUT		50
+
 /* Serial port file descriptor */
 static int fd = -1;
 static GIOChannel* if_gio = NULL;
@@ -60,6 +63,9 @@ static bool enumerated = false;
  * we're expecting an acknowledgement back from. Use to route acknowledgements
  * back to clients */
 static GList *txed_frames = NULL;
+
+/* ID for timeout that will cause sric frame retransmission */
+static gint retxmit_timeout_id = 0;
 
 /* Open and configure the serial port */
 static void serial_conf(void)
@@ -230,6 +236,15 @@ static void proc_rx_frame(void)
 		return;
 	}
 
+	/* We reach this point if we've received an ack, for sricd. If so,
+	 * we needn't timeout and retransmit that frame again */
+	g_source_remove(retxmit_timeout_id);
+	retxmit_timeout_id = 0;
+	tx_frame = NULL;
+
+	/* In case there are other frames blocked, check if we can transmit */
+	sric_if_tx_ready();
+
 	if( !enumerated ) {
 		if( !sric_enum_rx(f) )
 			enumerated = true;
@@ -373,6 +388,17 @@ static gboolean next_tx(void)
 	return TRUE;
 }
 
+static gboolean tx_timeout(void *dummy __attribute__((unused)))
+{
+
+	/* If this is reached, we haven't received an ack for the most recently
+	 * sent frame, so it requires retransmission. */
+
+	txpos = 0;
+	sric_if_tx_ready();
+	return FALSE;
+}
+
 static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 {
 	int w;
@@ -389,13 +415,13 @@ static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 	}
 
 	txpos += w;
-	if (txpos == txlen && !next_tx()) {
-		/* Queue has been emptied */
-		goto empty;
-	}
+	if (txpos != txlen)
+		/* There's more to be transmitted */
+		return TRUE;
 
-	return TRUE;
-
+	if (retxmit_timeout_id == 0)
+		retxmit_timeout_id = g_timeout_add(RETXMIT_TIMEOUT,
+						tx_timeout, NULL);
 empty:
 	write_srcid = 0;
 	return FALSE;
