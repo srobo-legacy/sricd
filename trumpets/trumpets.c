@@ -73,3 +73,25 @@ static void serial_conf(void)
 		exit(1);
 	}
 }
+
+int
+main(int argc, char **argv)
+{
+
+	if (argc != 2) {
+		fprintf(stderr, "Usage: trumpets /dev/sric_tty_dev\n");
+		return 1;
+	}
+
+	/* Open tty, attempt to configure */
+	fd = open(argv[1], O_RDWR | O_NONBLOCK);
+	if (fd < 1) {
+		perror("Couldn't open sric tty device");
+		return 1;
+	}
+
+	serial_conf();
+
+	/* Do some stuff */
+	return 0;
+}
