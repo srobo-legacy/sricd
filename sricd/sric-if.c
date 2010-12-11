@@ -236,6 +236,12 @@ static void proc_rx_frame(void)
 		return;
 	}
 
+	if (tx_frame == NULL) {
+		wlog("Error: Suddenly, an unsolicited (or extra) ack from "
+			"device %X\n", f->source_address);
+		return;
+	}
+
 	/* We reach this point if we've received an ack, for sricd. If so,
 	 * we needn't timeout and retransmit that frame again */
 	g_source_remove(retxmit_timeout_id);
