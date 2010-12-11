@@ -24,6 +24,8 @@ struct trumpet_channel {
 struct trumpet_channel tty_channel;
 struct trumpet_channel pty_channel;
 
+int rand_modulus = 0;
+
 gboolean rx_data(GIOChannel *src, GIOCondition cond, gpointer data);
 gboolean tx_data(GIOChannel *src, GIOCondition cond, gpointer data);
 
@@ -147,7 +149,14 @@ main(int argc, char **argv)
 	GMainLoop *ml;
 
 	if (argc != 2) {
-		fprintf(stderr, "Usage: trumpets /dev/sric_tty_dev\n");
+		fprintf(stderr, "Usage: trumpets /dev/sric_tty_dev "
+						"rand_modulus\n");
+		return 1;
+	}
+
+	rand_modulus = strtol(argv[2], NULL, 10);
+	if (rand_modulus == 0) {
+		fprintf(stderr, "Invalid rand modulus\n");
 		return 1;
 	}
 
