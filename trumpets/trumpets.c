@@ -11,9 +11,12 @@
 #include <unistd.h>
 
 struct trumpet_channel {
+	int fd;
 	uint8_t buffer[256];
 	int rxpos;
 	int txpos;
+	int tx_watch_id;
+	GIOChannel *gio;
 };
 
 struct trumpet_channel tty_rxbuf;
