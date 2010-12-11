@@ -27,6 +27,9 @@ struct trumpet_channel pty_channel;
 /* The write glib source ID (0 = invalid/not-registered) */
 static guint write_srcid = 0;
 
+gboolean rx_data(GIOChannel *src, GIOCondition cond, gpointer data);
+gboolean tx_data(GIOChannel *src, GIOCondition cond, gpointer data);
+
 static void serial_conf(void)
 {
 	struct termios t;
@@ -109,6 +112,32 @@ rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 	if (target->tx_watch_id == 0)
 		target->tx_watch_id = g_io_add_watch(target->gio, G_IO_OUT,
 							tx_data, target);
+
+	return TRUE;
+}
+
+gboolean
+tx_data(GIOChannel *src, GIOCondition cond, gpointer data)
+{
+	struct trumpet_channel *c, *source;
+	int ret;
+
+	c = data;
+	source = c->target_channel;
+
+	ret = write(c->fd, &source->buffer[0], source->rxpos);
+	if (ret < 0) {
+		perror("Write error");
+		exit(1);
+	}
+
+	/* Shift data over what we just wrote out */
+	memcpy(&source->buffer[0], &source->buffer[ret], source->rxpos - ret);
+	source->rxpos -= ret;
+
+	/* If we're done, */
+	if (source->rxpos == 0)
+		return FALSE;
 
 	return TRUE;
 }
