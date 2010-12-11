@@ -6,7 +6,7 @@ class sric_device(Structure):
 class sric_frame(Structure):
 	_fields_ = [("address", c_int), ("note", c_int),
 			("payload_length", c_int),
-			("payload", c_char * 64)]
+			("payload", c_byte * 64)]
 
 libsric = cdll.LoadLibrary("../libsric/libsric.so")
 libsric.sric_init.argtypes = []
