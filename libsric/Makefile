@@ -1,6 +1,6 @@
 include ../makeflags
 
-all: libsric.a
+all: libsric.a libsric.so
 
 include depend
 
@@ -13,6 +13,9 @@ depend: *.c
 libsric.a: sric.o
 	rm -f $@
 	ar -cqs $@ $^
+
+libsric.so: sric.o
+	$(CC) $^ -o $@ -shared
 
 .PHONY: clean
 
