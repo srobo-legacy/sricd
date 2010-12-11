@@ -34,3 +34,18 @@ class pysric(object):
 	
 	def __del__(self):
 		libsric.sric_quit(self.sric_ctx)
+
+	def txrx(self, txframe):
+		rxframe = sric_frame()
+		txframe.note = -1	# As I understand it, txed frames
+					# have no notification id
+		ret = libsric.sric_tx(self.sric_ctx, txframe)
+		if ret != 0:
+			print "Error " + str(ret) + " txing sric frame"
+			return None
+
+		ret = libsric.sric_poll_rx(self.sric_ctx, rxframe, -1)
+		if ret != 0:
+			print "Error " + str(ret) + " rxing sric frame"
+
+		return rxframe
