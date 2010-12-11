@@ -6,9 +6,9 @@ import sys
 sys.path.append( os.path.join( os.path.dirname(__file__), "../" ) )
 import pysric
 
-ctl = pysric.pysric()
+ctl = pysric.PySric()
 
-txframe = pysric.sric_frame()
+txframe = pysric.SricFrame()
 txframe.address = 3
 txframe.note = -1
 txframe.payload_length = 3

@@ -1,9 +1,9 @@
 from ctypes import *
 
-class sric_device(Structure):
+class SricDevice(Structure):
 	_fields_ = [("address", c_int), ("type", c_int)]
 
-class sric_frame(Structure):
+class SricFrame(Structure):
 	_fields_ = [("address", c_int), ("note", c_int),
 			("payload_length", c_int),
 			("payload", c_byte * 64)]
@@ -14,13 +14,13 @@ libsric.sric_init.restype = c_void_p
 libsric.sric_quit.argtypes = [c_void_p]
 libsric.sric_quit.restype = None
 libsric.sric_enumerate_devices.argtypes = [c_void_p, c_void_p]
-libsric.sric_enumerate_devices.restype = POINTER(sric_device)
-libsric.sric_tx.argtypes = [c_void_p, POINTER(sric_frame)]
+libsric.sric_enumerate_devices.restype = POINTER(SricDevice)
+libsric.sric_tx.argtypes = [c_void_p, POINTER(SricFrame)]
 libsric.sric_tx.restype = c_int
-libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(sric_frame), c_int]
+libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(SricFrame), c_int]
 libsric.sric_poll_rx.restype = c_int
 
-class pysric(object):
+class PySric(object):
 	sric_ctx = libsric.sric_init()
 
 	devices = []
@@ -36,7 +36,7 @@ class pysric(object):
 		libsric.sric_quit(self.sric_ctx)
 
 	def txrx(self, txframe):
-		rxframe = sric_frame()
+		rxframe = SricFrame()
 		txframe.note = -1	# As I understand it, txed frames
 					# have no notification id
 		ret = libsric.sric_tx(self.sric_ctx, txframe)
