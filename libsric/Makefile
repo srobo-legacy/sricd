@@ -1,5 +1,8 @@
 include ../makeflags
 
+PYCFLAGS=	`python-config --cflags`
+PYLDFLAGS=	`python-config --ldflags`
+
 all: libsric.a pysricmodule.so
 
 include depend
@@ -16,7 +19,7 @@ libsric.a: sric.o
 
 # XXX - python doesn't appear to have pkgconfig?
 pysricmodule.so: pysric.c
-	$(CC) $(LDFLAGS) -I/usr/include/python2.6 $^ -o $@ -shared -lsric -L.
+	$(CC) $(PYCFLAGS) $(PYLDFLAGS) $^ -o $@ -shared -lsric -L.
 
 .PHONY: clean
 
