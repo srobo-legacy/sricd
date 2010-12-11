@@ -10,6 +10,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+struct trumpet_channel;
 struct trumpet_channel {
 	int fd;
 	uint8_t buffer[256];
@@ -17,6 +18,7 @@ struct trumpet_channel {
 	int txpos;
 	int tx_watch_id;
 	GIOChannel *gio;
+	struct trumpet_channel *target_channel;
 };
 
 struct trumpet_channel tty_channel;
@@ -151,6 +153,9 @@ main(int argc, char **argv)
 	pty_channel.rxpos = 0;
 	pty_channel.txpos = 0;
 	pty_channel.tx_watch_id = 0;
+
+	tty_channel.target_channel = &pty_channel;
+	pty_channel.target_channel = &tty_channel;
 
 	ml = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(ml);
