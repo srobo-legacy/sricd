@@ -19,8 +19,8 @@ struct trumpet_channel {
 	GIOChannel *gio;
 };
 
-struct trumpet_channel tty_rxbuf;
-struct trumpet_channel pts_rxbuf;
+struct trumpet_channel tty_channel;
+struct trumpet_channel pts_channel;
 
 /* Serial port file descriptor */
 static int fd = -1;
@@ -110,13 +110,13 @@ main(int argc, char **argv)
 	serial_conf();
 
 	if_gio = g_io_channel_unix_new(fd);
-	g_io_add_watch(if_gio, G_IO_IN, rx_data, &tty_rxbuf);
+	g_io_add_watch(if_gio, G_IO_IN, rx_data, &tty_channel);
 
-	tty_rxbuf.fd = tty_fd;
-	tty_rxbuf.rxpos = 0;
-	tty_rxbuf.txpos = 0;
-	tty_rxbuf.tx_watch_id = 0;
-	tty_rxbuf.gio = tty_gio;
+	tty_channel.fd = tty_fd;
+	tty_channel.rxpos = 0;
+	tty_channel.txpos = 0;
+	tty_channel.tx_watch_id = 0;
+	tty_channel.gio = tty_gio;
 
 	pty_fd = getpt();
 	if (pty_fd < 0) {
@@ -130,13 +130,13 @@ main(int argc, char **argv)
 	}
 
 	pty_gio = g_io_channel_unix_new(pty_fd);
-	g_io_add_watch(pty_gio, G_IO_IN, rx_data, &pts_rxbuf);
+	g_io_add_watch(pty_gio, G_IO_IN, rx_data, &pts_channel);
 
-	pty_rxbuf.fd = pty_fd;
-	pty_rxbuf.rxpos = 0;
-	pty_rxbuf.txpos = 0;
-	pty_rxbuf.tx_watch_id = 0;
-	pty_rxbuf.gio = pty_gio;
+	pty_channel.fd = pty_fd;
+	pty_channel.rxpos = 0;
+	pty_channel.txpos = 0;
+	pty_channel.tx_watch_id = 0;
+	pty_channel.gio = pty_gio;
 
 	ml = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(ml);
