@@ -10,6 +10,15 @@
 #include <termios.h>
 #include <unistd.h>
 
+struct trumpet_channel {
+	uint8_t buffer[256];
+	int rxpos;
+	int txpos;
+};
+
+struct trumpet_channel tty_rxbuf;
+struct trumpet_channel pts_rxbuf;
+
 /* Serial port file descriptor */
 static int fd = -1;
 /* Fake pty for sricd to attach to */
