@@ -20,6 +20,7 @@
 
 static uint8_t reset_count = 0;
 static uint8_t current_next_address = 2;
+static uint8_t current_addr_info_addr = 2;
 static uint8_t device_classes[DEVICE_HIGH_ADDRESS];
 static bool addr_info_replies[DEVICE_HIGH_ADDRESS];
 
@@ -205,17 +206,28 @@ void sric_enum_fsm( enum_event_t ev )
 			state = S_SETTING_ADDR;
 		} else if (ev == EV_TOK_AT_GW) {
 
+			if (current_next_address == 2) {
+				/* If we discovered no devices, we enumerated.
+				 * Don't send the token round the bus; it's
+				 * going to deadlock the gateway with constant
+				 * receival and transmission */
+				state = S_ENUMERATED;
+				break;
+			}
+
 			/* Now we want to fetch bus devices classes */
 			state = S_FETCHING_CLASSES;
 
 			memset(addr_info_replies, 0, sizeof(addr_info_replies));
-			for (i = 2; i < current_next_address; i++)
-				send_addr_info_req(i);
+			current_addr_info_addr = 2;
 
-			/* Start using token for all subsequent transmissions */
+			/* Start using token for all transmissions */
 			gw_cmd_use_token(true);
 			/* Despatch token around bus */
 			gw_cmd_gen_token();
+
+			/* Issue first addr info req */
+			send_addr_info_req(current_addr_info_addr++);
 		}
 
 		break;
@@ -240,21 +252,19 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_FETCHING_CLASSES:
 		if (ev == EV_ADDR_INFO_ACK) {
-			/* Check to see whether or not we've collected all
-			 * responses yet */
-			for (i = 2; i < current_next_address; i++)
-				if (!addr_info_replies[i])
-					break;
-
-			if (i == current_next_address) {
-				/* We've received all replies */
+			if (current_addr_info_addr == current_next_address) {
+				/* We caught all the acks */
 				for (i = 2; i < current_next_address; i++) {
 					device_add(i, device_classes[i]);
 				}
 
 				/* Move into enumerated state */
 				state = S_ENUMERATED;
+				break;
 			}
+
+			/* Otherwise, issue next addr_info req */
+			send_addr_info_req(current_addr_info_addr++);
 		}
 		break;
 	case S_ENUMERATED:
