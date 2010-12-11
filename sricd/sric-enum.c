@@ -12,6 +12,12 @@
 
 #define ENUM_PRI 0
 
+/* We don't actually want a response from sric-if through the tag, but we also
+ * want to indicate that an ack is required. Therefore, feed a non-null tag
+ * when we want to elicit an ack, but which will never be used because we're
+ * in enumeration mode */
+#define BAD_ENUM_TAG	((void*)0xDEADDEAD)
+
 static uint8_t reset_count = 0;
 static uint8_t current_next_address = 2;
 static uint8_t device_classes[DEVICE_HIGH_ADDRESS];
@@ -72,7 +78,7 @@ static void send_address( uint8_t addr )
 	f.type = FRAME_SRIC;
 	/* Broadcast */
 	f.address = 0;
-	f.tag = NULL;
+	f.tag = BAD_ENUM_TAG;
 	f.payload_length = 2;
 	f.payload[0] = 0x80 | SRIC_SYSCMD_ADDR_ASSIGN;
 	f.payload[1] = addr;
@@ -87,7 +93,7 @@ static void send_tok_advance( uint8_t addr )
 
 	f.type = FRAME_SRIC;
 	f.address = addr;
-	f.tag = NULL;
+	f.tag = BAD_ENUM_TAG;
 	f.payload_length = 1;
 	f.payload[0] = 0x80 | SRIC_SYSCMD_TOK_ADVANCE;
 
@@ -100,7 +106,7 @@ static void send_addr_info_req( uint8_t addr )
 
 	f.type = FRAME_SRIC;
 	f.address = addr;
-	f.tag = NULL;
+	f.tag = BAD_ENUM_TAG;
 	f.payload_length = 1;
 	f.payload[0] = 0x80 | SRIC_SYSCMD_ADDR_INFO;
 
