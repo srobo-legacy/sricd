@@ -11,7 +11,10 @@
 
 /* Serial port file descriptor */
 static int fd = -1;
+/* Fake pty for sricd to attach to */
+static int pty_fd = -1;
 static GIOChannel* if_gio = NULL;
+static GIOChannel* pty_gio = NULL;
 
 /* The write glib source ID (0 = invalid/not-registered) */
 static guint write_srcid = 0;
@@ -77,6 +80,7 @@ static void serial_conf(void)
 int
 main(int argc, char **argv)
 {
+	GMainLoop *ml;
 
 	if (argc != 2) {
 		fprintf(stderr, "Usage: trumpets /dev/sric_tty_dev\n");
@@ -92,6 +96,25 @@ main(int argc, char **argv)
 
 	serial_conf();
 
-	/* Do some stuff */
+	if_gio = g_io_channel_unix_new(fd);
+	g_io_add_watch(if_gio, G_IO_IN, rx_data, &tty_rxbuf);
+
+	pty_fd = getpt();
+	if (pty_fd < 0) {
+		perror("Couldn't generate a pty");
+		return 1;
+	}
+
+	if (unlockpt(pty_fd)) {
+		perror("Couldn't unlock pty");
+		return 1;
+	}
+
+	pty_gio = g_io_channel_unix_new(pty_fd);
+	g_io_add_watch(pty_gio, G_IO_IN, rx_data, &pts_rxbuf);
+
+	ml = g_main_loop_new(NULL, FALSE);
+	g_main_loop_run(ml);
+
 	return 0;
 }
