@@ -21,16 +21,17 @@ libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(SricFrame), c_int]
 libsric.sric_poll_rx.restype = c_int
 
 class PySric(object):
-	sric_ctx = libsric.sric_init()
+	def __init__(self):
+		self.sric_ctx = libsric.sric_init()
 
-	devices = []
-	tmpdev = None
-	while True:
-		tmpdev = libsric.sric_enumerate_devices(sric_ctx, tmpdev)
-		if cast(tmpdev, c_void_p).value == None:
-			break
-		# Hello, a device
-		devices.append(tmpdev[0])
+		self.devices = []
+		tmpdev = None
+		while True:
+			tmpdev = libsric.sric_enumerate_devices(sric_ctx, tmpdev)
+			if cast(tmpdev, c_void_p).value == None:
+				break
+			# Hello, a device
+			self.devices.append(tmpdev[0])
 	
 	def __del__(self):
 		libsric.sric_quit(self.sric_ctx)
