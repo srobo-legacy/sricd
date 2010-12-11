@@ -228,7 +228,7 @@ static void proc_rx_frame(void)
 
 		/* Queue up an ACK for it */
 		resp.type = FRAME_SRIC;
-		resp.address = unesc_rx[SRIC_SRC];
+		resp.address = unesc_rx[SRIC_SRC] | 0x80;
 		resp.tag  = NULL;
 		resp.payload_length = 0;
 
