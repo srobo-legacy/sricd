@@ -15,7 +15,6 @@ struct trumpet_channel {
 	int fd;
 	uint8_t buffer[256];
 	int rxpos;
-	int txpos;
 	int tx_watch_id;
 	GIOChannel *gio;
 	struct trumpet_channel *target_channel;
@@ -91,7 +90,7 @@ gboolean
 rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 {
 	struct trumpet_channel *c, *target;
-	int ret;
+	int ret, i;
 
 	c = data;
 
@@ -173,7 +172,6 @@ main(int argc, char **argv)
 	g_io_add_watch(tty_channel.gio, G_IO_IN, rx_data, &tty_channel);
 
 	tty_channel.rxpos = 0;
-	tty_channel.txpos = 0;
 	tty_channel.tx_watch_id = 0;
 
 	pty_channel.fd = getpt();
@@ -191,7 +189,6 @@ main(int argc, char **argv)
 	g_io_add_watch(pty_channel.gio, G_IO_IN, rx_data, &pty_channel);
 
 	pty_channel.rxpos = 0;
-	pty_channel.txpos = 0;
 	pty_channel.tx_watch_id = 0;
 
 	tty_channel.target_channel = &pty_channel;
