@@ -119,6 +119,7 @@ static void gw_cmd( uint8_t cmd, uint8_t len, uint8_t *d )
 	assert( len+1 <= PAYLOAD_MAX );
 
 	f.type = FRAME_GW_CONF;
+	f.tag = BAD_ENUM_TAG;
 	f.address = 1;
 	f.payload_length = len + 1;
 	f.payload[0] = cmd;
