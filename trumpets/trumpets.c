@@ -1,4 +1,5 @@
 /* Copyright 2010 - Robert Spanton */
+#define _GNU_SOURCE /* ;O */
 #include <errno.h>
 #include <fcntl.h>
 #include <glib.h>
