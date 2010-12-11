@@ -24,9 +24,6 @@ struct trumpet_channel {
 struct trumpet_channel tty_channel;
 struct trumpet_channel pty_channel;
 
-/* The write glib source ID (0 = invalid/not-registered) */
-static guint write_srcid = 0;
-
 gboolean rx_data(GIOChannel *src, GIOCondition cond, gpointer data);
 gboolean tx_data(GIOChannel *src, GIOCondition cond, gpointer data);
 
