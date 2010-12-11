@@ -88,7 +88,7 @@ static void serial_conf(void)
 gboolean
 rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 {
-	struct trumpet_channel *c;
+	struct trumpet_channel *c, *target;
 	int ret;
 
 	c = data;
@@ -104,8 +104,11 @@ rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 
 	c->rxpos += ret;
 
-	if (c->tx_watch_id == 0)
-		c->tx_watch_id = g_io_add_watch(c->gio, G_IO_OUT, tx_data, c);
+	/* Generate a write event for /other/ channel */
+	target = c->target_channel;
+	if (target->tx_watch_id == 0)
+		target->tx_watch_id = g_io_add_watch(target->gio, G_IO_OUT,
+							tx_data, target);
 
 	return TRUE;
 }
