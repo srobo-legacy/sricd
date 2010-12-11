@@ -83,6 +83,31 @@ static void serial_conf(void)
 	}
 }
 
+gboolean
+rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
+{
+	struct trumpet_channel *c;
+	int ret;
+
+	c = data;
+
+	ret = read(c->fd, &c->buffer[c->rxpos], sizeof(c->buffer) - c->rxpos);
+	if (ret < 0) {
+		perror("Read error");
+		exit(1);
+	} else if (ret == 0 && c->rxpos != sizeof(c->buffer)) {
+		fprintf(stderr, "Read an EOF, shutting down\n");
+		exit(1);
+	}
+
+	c->rxpos += ret;
+
+	if (c->tx_watch_id == 0)
+		c->tx_watch_id = g_io_add_watch(c->gio, G_IO_OUT, tx_data, c);
+
+	return TRUE;
+}
+
 int
 main(int argc, char **argv)
 {
