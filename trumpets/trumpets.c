@@ -155,7 +155,7 @@ main(int argc, char **argv)
 {
 	GMainLoop *ml;
 
-	if (argc != 2) {
+	if (argc != 3) {
 		fprintf(stderr, "Usage: trumpets /dev/sric_tty_dev "
 						"rand_modulus\n");
 		return 1;
