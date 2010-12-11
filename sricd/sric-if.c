@@ -300,6 +300,8 @@ static gboolean rx(GIOChannel* src, GIOCondition cond, gpointer data)
 		}
 
 		proc_rx_frame();
+
+		unesc_pos = 0;
 	}
 
 	return TRUE;
