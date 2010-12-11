@@ -419,6 +419,14 @@ static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 		/* There's more to be transmitted */
 		return TRUE;
 
+	/* We've sent one frame. However, if it's an ack, or the sender
+	 * indicates they don't want a response, don't wait for an ack to come
+	 * back and just continue transmitting */
+	if (tx_frame->tag == NULL || tx_frame->address & 0x80) {
+		tx_frame = NULL;
+		return TRUE;
+	}
+
 	if (retxmit_timeout_id == 0)
 		retxmit_timeout_id = g_timeout_add(RETXMIT_TIMEOUT,
 						tx_timeout, NULL);
