@@ -59,11 +59,6 @@ static uint8_t unesc_pos = 0;
 /* Whether we've finished enumerating */
 static bool enumerated = false;
 
-/* Queue of frames we've sent to devices, outside of enumeration mode, that
- * we're expecting an acknowledgement back from. Use to route acknowledgements
- * back to clients */
-static GList *txed_frames = NULL;
-
 /* ID for timeout that will cause sric frame retransmission */
 static gint retxmit_timeout_id = 0;
 
@@ -246,7 +241,6 @@ static void proc_rx_frame(void)
 	 * we needn't timeout and retransmit that frame again */
 	g_source_remove(retxmit_timeout_id);
 	retxmit_timeout_id = 0;
-	tx_frame = NULL;
 
 	/* In case there are other frames blocked, check if we can transmit */
 	sric_if_tx_ready();
@@ -255,44 +249,29 @@ static void proc_rx_frame(void)
 		if( !sric_enum_rx(f) )
 			enumerated = true;
 	} else {
-		/* As it's an ack, there should be a corresponding item in the
-		 * txed_frames list. Find it, route response to client */
-		GList *iter = g_list_first(txed_frames);
+		client *c = tx_frame->tag;
 
-		while (iter->data != NULL) {
-			frame_t *txed_frame = iter->data;
-			if ((txed_frame->address & 0x7F) ==
-						(f->source_address & 0x7F)) {
-				client *c = txed_frame->tag;
+		/* Format packed frame into frame_t */
+		frame *rxed_frame = malloc(sizeof(frame));
+		rxed_frame->dest_address = f->dest_address;
+		rxed_frame->source_address = f->source_address;
+		rxed_frame->note = 0; /* XXX */
+		rxed_frame->payload_length = f->payload_len;
+		memcpy(&rxed_frame->payload, &f->payload, f->payload_len);
 
-				/* Format packed frame into frame_t */
-				frame *rxed_frame = malloc(sizeof(frame));
-				rxed_frame->dest_address = f->dest_address;
-				rxed_frame->source_address = f->source_address;
-				rxed_frame->note = 0; /* XXX */
-				rxed_frame->payload_length = f->payload_len;
-				memcpy(&rxed_frame->payload, &f->payload,
-							f->payload_len);
+		rxed_frame->source_address &= 0x7F;
+		rxed_frame->dest_address &= 0x7F;
 
-				rxed_frame->source_address &= 0x7F;
-				rxed_frame->dest_address &= 0x7F;
+		/* Hand frame to client */
+		g_queue_push_tail(c->rx_q, rxed_frame);
 
-				/* Hand frame to client */
-				g_queue_push_tail(c->rx_q, rxed_frame);
-
-				/* Tell client about it */
-				c->rx_ping(c);
-
-				/* Dispose of txed frame */
-				txed_frames = g_list_remove(txed_frames,
-								txed_frame);
-				free(txed_frame);
-				break;
-			}
-
-			iter = g_list_next(iter);
-		}
+		/* Tell client about it */
+		c->rx_ping(c);
 	}
+
+	/* Dispose of transmitted (and now retired) frame */
+	free(tx_frame);
+	tx_frame = NULL;
 }
 
 /* Data ready on serial port callback */
@@ -349,15 +328,6 @@ static gboolean next_tx(void)
 	uint16_t crc;
 	uint8_t  len;
 	int16_t  esclen;
-
-	if (tx_frame != NULL) {
-		if (!enumerated) {
-			free((frame_t*)tx_frame);
-		} else {
-			/* Place in queue, waiting for acknowledgement */
-			txed_frames = g_list_append(txed_frames, tx_frame);
-		}
-	}
 
 	tx_frame = txq_next( enumerated?1:0 );
 
