@@ -112,6 +112,12 @@ main(int argc, char **argv)
 	if_gio = g_io_channel_unix_new(fd);
 	g_io_add_watch(if_gio, G_IO_IN, rx_data, &tty_rxbuf);
 
+	tty_rxbuf.fd = tty_fd;
+	tty_rxbuf.rxpos = 0;
+	tty_rxbuf.txpos = 0;
+	tty_rxbuf.tx_watch_id = 0;
+	tty_rxbuf.gio = tty_gio;
+
 	pty_fd = getpt();
 	if (pty_fd < 0) {
 		perror("Couldn't generate a pty");
@@ -125,6 +131,12 @@ main(int argc, char **argv)
 
 	pty_gio = g_io_channel_unix_new(pty_fd);
 	g_io_add_watch(pty_gio, G_IO_IN, rx_data, &pts_rxbuf);
+
+	pty_rxbuf.fd = pty_fd;
+	pty_rxbuf.rxpos = 0;
+	pty_rxbuf.txpos = 0;
+	pty_rxbuf.tx_watch_id = 0;
+	pty_rxbuf.gio = pty_gio;
 
 	ml = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(ml);
