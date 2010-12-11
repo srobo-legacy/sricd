@@ -188,6 +188,8 @@ main(int argc, char **argv)
 	tty_channel.target_channel = &pty_channel;
 	pty_channel.target_channel = &tty_channel;
 
+	printf("Pumping tty data to pty \"%s\"\n", ptsname(pty_channel.fd));
+
 	ml = g_main_loop_new(NULL, FALSE);
 	g_main_loop_run(ml);
 
