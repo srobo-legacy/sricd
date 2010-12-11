@@ -3,6 +3,11 @@ from ctypes import *
 class sric_device(Structure):
 	_fields_ = [("address", c_int), ("type", c_int)]
 
+class sric_frame(Structure):
+	_fields_ = [("address", c_int), ("note", c_int),
+			("payload_length", c_int),
+			("payload", c_char * 64)]
+
 libsric = cdll.LoadLibrary("../libsric/libsric.so")
 libsric.sric_init.argtypes = []
 libsric.sric_init.restype = c_void_p
