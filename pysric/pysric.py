@@ -15,6 +15,10 @@ libsric.sric_quit.argtypes = [c_void_p]
 libsric.sric_quit.restype = None
 libsric.sric_enumerate_devices.argtypes = [c_void_p, c_void_p]
 libsric.sric_enumerate_devices.restype = POINTER(sric_device)
+libsric.sric_tx.argtypes = [c_void_p, POINTER(sric_frame)]
+libsric.sric_tx.restype = c_int
+libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(sric_frame), c_int]
+libsric.sric_poll_rx.restype = c_int
 
 class pysric(object):
 	sric_ctx = libsric.sric_init()
