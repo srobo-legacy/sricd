@@ -62,6 +62,10 @@ static bool enumerated = false;
 /* ID for timeout that will cause sric frame retransmission */
 static gint retxmit_timeout_id = 0;
 
+/* Boolean indicating current frame has been cancelled; It should not be
+ * retransmitted, and the ack shouldn't be handled either */
+static bool frame_cancelled = false;
+
 /* Open and configure the serial port */
 static void serial_conf(void)
 {
@@ -245,6 +249,13 @@ static void proc_rx_frame(void)
 	/* In case there are other frames blocked, check if we can transmit */
 	sric_if_tx_ready();
 
+	/* If frame was cancelled, stop further procesing */
+	if (frame_cancelled) {
+		free(tx_frame);
+		tx_frame = NULL;
+		return;
+	}
+
 	if( !enumerated ) {
 		if( !sric_enum_rx(f) )
 			enumerated = true;
@@ -339,6 +350,7 @@ static gboolean next_tx(void)
 	}
 
 	/*** Build up the frame in the output buffer ***/
+	frame_cancelled = false;
 
 	/* Alias payload length for convenience */
 	len = tx_frame->payload_length;
@@ -371,6 +383,12 @@ static gboolean tx_timeout(void *dummy __attribute__((unused)))
 
 	/* If this is reached, we haven't received an ack for the most recently
 	 * sent frame, so it requires retransmission. */
+
+	/* Unless it was cancelled */
+	if (frame_cancelled) {
+		free(tx_frame);
+		tx_frame = NULL;
+	}
 
 	txpos = 0;
 	sric_if_tx_ready();
@@ -424,3 +442,12 @@ void sric_if_tx_ready(void)
 	}
 }
 
+void sric_if_cancel(void *tag)
+{
+
+	if (tx_frame == NULL || tx_frame->tag != tag)
+		return;
+
+	frame_cancelled = true;
+	return;
+}
