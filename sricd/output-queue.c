@@ -54,3 +54,36 @@ bool txq_empty(void)
 	return TRUE;
 }
 
+struct queue_cancel_data {
+	GQueue *q;
+	void *tag;
+};
+
+static void rm_tag_frames(gpointer f, gpointer data)
+{
+	struct queue_cancel_data *rm_data;
+	frame_t *frame;
+
+	frame = f;
+	rm_data = data;
+	if (frame->tag == rm_data->tag) {
+		g_queue_remove(rm_data->q, frame);
+		free(frame);
+	}
+
+	return;
+}
+
+void txq_cancel(void *tag)
+{
+	struct queue_cancel_data rm_data;
+	int i;
+
+	for (i = 0; i < 2; i++) {
+		rm_data.q = tx_queue[i];
+		rm_data.tag = tag;
+		g_queue_foreach(tx_queue[i], rm_tag_frames, &rm_data);
+	}
+
+	return;
+}

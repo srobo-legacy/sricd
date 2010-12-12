@@ -150,8 +150,16 @@ static void send_rx(int fd, client* c, const frame* rx)
 
 static gboolean timeout_callback(gpointer _client)
 {
-	// client* c = (client*)_client;
-	// TODO: stuff here
+	client* c = (client*)_client;
+
+	/* Dequeue frames the client transmitted - preventing them from being
+	 * retransmitted forever. This can lead to unexpected behavior (IE,
+	 * send three frames, one times out, all three dequeued), but these
+	 * are all situation where strict request-ack ordering isn't honoured */
+	txq_cancel(c);
+
+	/* Tell client about it */
+	write_result(c->fd, c, SRIC_E_TIMEOUT);
 	return FALSE;
 }
 

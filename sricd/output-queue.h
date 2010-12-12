@@ -49,6 +49,11 @@ frame_t* txq_next(uint8_t max_pri);
 /* Returns true if the queue is empty. */
 bool txq_empty(void);
 
+/* Remove all frames from the transmit queue belonging to the specified tag.
+ * Also causes sric-if to cease retransmission of any frame belonging to tag
+ * that it's sent to the bus */
+void txq_cancel(void *tag);
+
 #ifdef __cplusplus
 }
 #endif
