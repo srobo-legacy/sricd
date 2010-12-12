@@ -186,10 +186,10 @@ static int sric_poll(sric_context  ctx,
 	}
 	sric_clear_error(ctx);
 	command[0] = type;
-	command[1] = ((timeout >>  0) & 0xFF);
-	command[2] = ((timeout >>  8) & 0xFF);
-	command[3] = ((timeout >> 16) & 0xFF);
-	command[4] = ((timeout >> 24) & 0xFF);
+	command[1] = ((timeout >> 24) & 0xFF);
+	command[2] = ((timeout >> 16) & 0xFF);
+	command[3] = ((timeout >>  8) & 0xFF);
+	command[4] = ((timeout >>  0) & 0xFF);
 	if (send_command(ctx, command, sizeof (command))) {
 		return 1;
 	}
