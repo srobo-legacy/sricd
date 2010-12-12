@@ -124,17 +124,6 @@ static void handle_tx(int fd, client* c)
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
 
-static void send_note(int fd, client* c, const frame* note)
-{
-	uint8_t response_header[4];
-	response_header[0] = SRIC_E_SUCCESS;
-	response_header[1] = note->source_address;
-	response_header[2] = note->note;
-	response_header[3] = note->payload_length;
-	write_data(fd, c, response_header, 7);
-	write_data(fd, c, note->payload, note->payload_length);
-}
-
 static void send_rx(int fd, client* c, const frame* rx)
 {
 	uint8_t response_header[4];
@@ -204,7 +193,7 @@ static void note_ping(client* c)
 	c->note_ping = NULL;
 	note = client_pop_note(c);
 	assert(note);
-	send_note(c->fd, c, note);
+	send_rx(c->fd, c, note);
 
 	g_free(note);
 }
