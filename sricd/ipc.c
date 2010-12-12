@@ -274,7 +274,7 @@ static void handle_note_flags(int fd, client* c)
 		return;
 	}
 	device = ntohs(device);
-	if (!read_data(fd, &flags, 2)) {
+	if (!read_data(fd, &flags, 8)) {
 		write_result(fd, c, SRIC_E_BADREQUEST);
 	}
 	flags = ntohll(flags);
