@@ -235,14 +235,14 @@ int sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
 		command[ 0] = SRICD_NOTE_FLAGS;
 		command[ 1] = (device & 0xFF);
 		command[ 2] = ((device >> 8) & 0xFF);
-		command[ 3] = ((flags >>  0) & 0xFF);
-		command[ 4] = ((flags >>  8) & 0xFF);
-		command[ 5] = ((flags >> 16) & 0xFF);
-		command[ 6] = ((flags >> 24) & 0xFF);
-		command[ 7] = ((flags >> 32) & 0xFF);
-		command[ 8] = ((flags >> 40) & 0xFF);
-		command[ 9] = ((flags >> 48) & 0xFF);
-		command[10] = ((flags >> 56) & 0xFF);
+		command[ 3] = ((flags >> 56) & 0xFF);
+		command[ 4] = ((flags >> 48) & 0xFF);
+		command[ 5] = ((flags >> 40) & 0xFF);
+		command[ 6] = ((flags >> 32) & 0xFF);
+		command[ 7] = ((flags >> 24) & 0xFF);
+		command[ 8] = ((flags >> 16) & 0xFF);
+		command[ 9] = ((flags >>  8) & 0xFF);
+		command[10] = ((flags >>  0) & 0xFF);
 		return send_command(ctx, command, sizeof (command));
 	} else {
 		// trivial: flags have not changed
