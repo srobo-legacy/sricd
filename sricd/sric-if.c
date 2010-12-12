@@ -224,7 +224,7 @@ static void proc_rx_frame(void)
 	}
 
 	if (!frame_is_ack(unesc_rx)) {
-		frame *note;
+		frame note;
 		frame_t resp;
 
 		/* Queue up an ACK for it */
@@ -238,13 +238,12 @@ static void proc_rx_frame(void)
 		if (unesc_rx[SRIC_LEN] == 0)
 			return;
 
-		note = malloc(sizeof(*note));
-		note->source_address = unesc_rx[SRIC_SRC] & 0x7F;
-		note->dest_address = unesc_rx[SRIC_DEST] & 0x7F;
-		note->note = unesc_rx[SRIC_DATA];
-		note->payload_length = unesc_rx[SRIC_LEN];
-		memcpy(&note->payload, &unesc_rx[SRIC_DATA],unesc_rx[SRIC_LEN]);
-		device_dispatch_note(note);
+		note.source_address = unesc_rx[SRIC_SRC] & 0x7F;
+		note.dest_address = unesc_rx[SRIC_DEST] & 0x7F;
+		note.note = unesc_rx[SRIC_DATA];
+		note.payload_length = unesc_rx[SRIC_LEN];
+		memcpy(&note.payload, &unesc_rx[SRIC_DATA], unesc_rx[SRIC_LEN]);
+		device_dispatch_note(&note);
 		return;
 	}
 
@@ -273,24 +272,20 @@ static void proc_rx_frame(void)
 		if( !sric_enum_rx(f) )
 			enumerated = true;
 	} else {
-		client *c = tx_frame->tag;
+		frame rxed_frame;
 
 		/* Format packed frame into frame_t */
-		frame *rxed_frame = malloc(sizeof(frame));
-		rxed_frame->dest_address = f->dest_address;
-		rxed_frame->source_address = f->source_address;
-		rxed_frame->note = 0; /* XXX */
-		rxed_frame->payload_length = f->payload_len;
-		memcpy(&rxed_frame->payload, &f->payload, f->payload_len);
+		rxed_frame.dest_address = f->dest_address;
+		rxed_frame.source_address = f->source_address;
+		rxed_frame.note = 0; /* XXX */
+		rxed_frame.payload_length = f->payload_len;
+		memcpy(&rxed_frame.payload, &f->payload, f->payload_len);
 
-		rxed_frame->source_address &= 0x7F;
-		rxed_frame->dest_address &= 0x7F;
+		rxed_frame.source_address &= 0x7F;
+		rxed_frame.dest_address &= 0x7F;
 
 		/* Hand frame to client */
-		g_queue_push_tail(c->rx_q, rxed_frame);
-
-		/* Tell client about it */
-		c->rx_ping(c);
+		client_push_rx(tx_frame->, &rxed_frame);
 	}
 
 	/* Dispose of transmitted (and now retired) frame */
