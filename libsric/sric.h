@@ -142,12 +142,12 @@ int sric_poll_rx(sric_context ctx, sric_frame* frame, int timeout);
  * @return Whether the TXRX was successful.
  */
 inline static int sric_txrx(sric_context ctx, const sric_frame* outframe,
-                            sric_frame* inframe)
+                            sric_frame* inframe, int timeout)
 {
 	if (sric_tx(ctx, outframe)) {
 		return 1;
 	}
-	return sric_poll_rx(ctx, inframe, -1);
+	return sric_poll_rx(ctx, inframe, timeout);
 }
 
 /**
