@@ -2,6 +2,7 @@
 #include "crc16/crc16.h"
 #include "client.h"
 #include "escape.h"
+#include "device.h"
 #include "frame.h"
 #include "sric-if.h"
 #include "sric-enum.h"
@@ -223,6 +224,7 @@ static void proc_rx_frame(void)
 	}
 
 	if (!frame_is_ack(unesc_rx)) {
+		frame *note;
 		frame_t resp;
 
 		/* Queue up an ACK for it */
@@ -230,8 +232,19 @@ static void proc_rx_frame(void)
 		resp.address = unesc_rx[SRIC_SRC] | 0x80;
 		resp.tag  = NULL;
 		resp.payload_length = 0;
-
 		txq_push(&resp, 0);
+
+		/* Need at least one byte of payload to be a note */
+		if (unesc_rx[SRIC_LEN] == 0)
+			return;
+
+		note = malloc(sizeof(*note));
+		note->source_address = unesc_rx[SRIC_SRC] & 0x7F;
+		note->dest_address = unesc_rx[SRIC_DEST] & 0x7F;
+		note->note = unesc_rx[SRIC_DATA];
+		note->payload_length = unesc_rx[SRIC_LEN];
+		memcpy(&note->payload, &unesc_rx[SRIC_DATA],unesc_rx[SRIC_LEN]);
+		device_dispatch_note(note);
 		return;
 	}
 
