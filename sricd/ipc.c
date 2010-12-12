@@ -112,6 +112,7 @@ static void handle_tx(int fd, client* c)
 		return;
 	}
 	frame.type = FRAME_SRIC;
+/* XXX - this isn't really big endian, is it? */
 	frame.address = (int)buf[0] | ((int)buf[1] << 8);
 	frame.payload_length = (int)buf[2] | ((int)buf[3] << 8);
 	if (!read_data(fd, frame.payload, frame.payload_length)) {
@@ -160,6 +161,9 @@ static gboolean timeout_callback(gpointer _client)
 
 	/* Tell client about it */
 	write_result(c->fd, c, SRIC_E_TIMEOUT);
+
+	/* Clear record for this timeout */
+	c->rx_timer = 0;
 	return FALSE;
 }
 
