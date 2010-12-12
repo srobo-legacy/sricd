@@ -10,12 +10,11 @@ typedef struct _device_note_target device_note_target;
 
 struct _device_note_target {
 	client* c;
-	device_note_target* next;
 	uint64_t flags;
 };
 
 static char device_types[DEVICE_HIGH_ADDRESS];
-static device_note_target* targets[DEVICE_HIGH_ADDRESS];
+static GList *targets[DEVICE_HIGH_ADDRESS];
 
 bool device_exists(int address)
 {
@@ -52,48 +51,45 @@ void device_reset(void)
 
 static void device_drop_client_notes(int address, client* c)
 {
-	device_note_target** ptr;
 	device_note_target*  cur;
-	if (!targets[address]) {
-		return;
-	}
-	ptr = &(targets[address]);
-	cur = targets[address];
-	while (cur) {
+	GList *iter;
+
+	iter = g_list_first(targets[address]);
+	while (iter != NULL) {
+		cur = iter->data;
 		if (cur->c == c) {
-			*ptr = cur->next;
-			free(ptr);
+			targets[address] = g_list_remove(targets[address], cur);
+			free(cur);
 			return;
 		}
-		cur = cur->next;
 	}
+
+	return;
 }
 
 static void device_update_client_notes(int address, client* c, uint64_t notes)
 {
 	device_note_target* cur;
-	if (!targets[address]) {
-		targets[address] = malloc(sizeof (device_note_target));
-		targets[address]->c = c;
-		targets[address]->next = NULL;
-		targets[address]->flags = notes;
-	} else {
-		cur = targets[address];
-		do {
-			if (cur->c == c) {
-				cur->flags = notes;
-				return;
-			} else if (cur->next) {
-				cur = cur->next;
-			} else {
-				cur->next = malloc(sizeof (device_note_target));
-				cur = cur->next;
-				cur->c = c;
-				cur->next = NULL;
-				cur->flags = notes;
-			}
-		} while (1);
+	GList *iter;
+
+	/* Has client already registered for notifications? */
+	iter = g_list_first(targets[address]);
+	while (iter != NULL) {
+		cur = iter->data;
+		if (cur->c == c) {
+			/* Client has already registered; update notes */
+			cur->flags = notes;
+			return;
+		}
+
+		iter = g_list_next(iter);
 	}
+
+	/* Nope; create a new record, put in list */
+	cur = malloc(sizeof (device_note_target));
+	cur->c = c;
+	cur->flags = notes;
+	targets[address] = g_list_append(targets[address], cur);
 }
 
 void device_set_client_notes(int address, client* c, uint64_t notes)
@@ -126,13 +122,20 @@ void device_clear_client_notes(client* c)
 
 void device_dispatch_note(const frame* note)
 {
-	device_note_target* cur  = targets[note->source_address];
-	uint64_t flag = ((uint64_t)1 << note->note);
-	while (cur) {
+	uint64_t flag;
+	device_note_target *cur;
+	GList *iter;
+
+	iter = g_list_first(targets[note->source_address]);
+	flag = (((uint64_t)1) << note->note);
+	while (iter != NULL) {
+		cur = iter->data;
 		if (cur->flags & flag) {
 			client_push_note(cur->c, note);
 		}
-		cur = cur->next;
+		iter = g_list_next(iter);
 	}
+
+	return;
 }
 
