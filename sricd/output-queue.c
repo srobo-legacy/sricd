@@ -85,5 +85,7 @@ void txq_cancel(void *tag)
 		g_queue_foreach(tx_queue[i], rm_tag_frames, &rm_data);
 	}
 
+	sric_if_cancel(tag);
+
 	return;
 }
