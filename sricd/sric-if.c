@@ -285,7 +285,7 @@ static void proc_rx_frame(void)
 		rxed_frame.dest_address &= 0x7F;
 
 		/* Hand frame to client */
-		client_push_rx(tx_frame->, &rxed_frame);
+		client_push_rx(tx_frame->tag, &rxed_frame);
 	}
 
 	/* Dispose of transmitted (and now retired) frame */
