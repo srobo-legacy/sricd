@@ -96,6 +96,10 @@ rx_data(GIOChannel *src, GIOCondition cond, gpointer data)
 
 	ret = read(c->fd, &c->buffer[c->rxpos], sizeof(c->buffer) - c->rxpos);
 	if (ret < 0) {
+		/* It's semi-acceptable to have no data available */
+		if (errno == EAGAIN)
+			return TRUE;
+
 		perror("Read error");
 		exit(1);
 	} else if (ret == 0 && c->rxpos != sizeof(c->buffer)) {
