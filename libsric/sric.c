@@ -233,8 +233,8 @@ int sric_note_set_flags(sric_context ctx, int device, uint64_t flags)
 		ctx->noteflags[device] = flags;
 		// send some stuff
 		command[ 0] = SRICD_NOTE_FLAGS;
-		command[ 1] = (device & 0xFF);
-		command[ 2] = ((device >> 8) & 0xFF);
+		command[ 1] = ((device >> 8) & 0xFF);
+		command[ 2] = (device & 0xFF);
 		command[ 3] = ((flags >> 56) & 0xFF);
 		command[ 4] = ((flags >> 48) & 0xFF);
 		command[ 5] = ((flags >> 40) & 0xFF);
