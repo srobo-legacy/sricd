@@ -182,6 +182,18 @@ static void rx_ping(client* c)
 	g_free(rx);
 }
 
+static gboolean note_timeout_callback(gpointer _client)
+{
+	client *c;
+
+	c = _client;
+
+	/* Inform client of timeout */
+	write_result(c->fd, c, SRIC_E_TIMEOUT);
+	c->note_timer = 0;
+	return FALSE;
+}
+
 static void note_ping(client* c)
 {
 	frame* note;
@@ -241,7 +253,8 @@ static void handle_poll_note(int fd, client* c)
 	} else {
 		// schedule for timeout
 		if (timeout != -1) {
-			c->note_timer = g_timeout_add(timeout, timeout_callback, c);
+			c->note_timer = g_timeout_add(timeout,
+						note_timeout_callback, c);
 		}
 		c->note_ping = note_ping;
 	}
