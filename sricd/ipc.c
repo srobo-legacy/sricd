@@ -126,7 +126,7 @@ static void handle_tx(int fd, client* c)
 
 static void send_rx(int fd, client* c, const frame* rx)
 {
-	uint8_t response_header[4];
+	uint8_t response_header[7];
 	response_header[0] = SRIC_E_SUCCESS;
 	response_header[1] = 0x0;
 	response_header[2] = rx->source_address;
