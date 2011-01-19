@@ -3,6 +3,8 @@
 CFLAGS := -Wall -g
 LDFLAGS :=
 
+HOSTCC ?= $(CC)
+
 ifeq ($(shell uname),Darwin)
 	CFLAGS += -arch i386
 	LDFLAGS += -arch i386
