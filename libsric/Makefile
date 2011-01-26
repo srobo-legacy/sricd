@@ -4,6 +4,8 @@ all: libsric.a libsric.so
 
 include depend
 
+CFLAGS += -fPIC
+
 depend: *.c
 	rm -f depend
 	for file in *.c; do \
