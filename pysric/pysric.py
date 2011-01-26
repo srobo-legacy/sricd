@@ -27,7 +27,7 @@ class PySric(object):
 		self.devices = []
 		tmpdev = None
 		while True:
-			tmpdev = libsric.sric_enumerate_devices(sric_ctx, tmpdev)
+			tmpdev = libsric.sric_enumerate_devices(self.sric_ctx, tmpdev)
 			if cast(tmpdev, c_void_p).value == None:
 				break
 			# Hello, a device
