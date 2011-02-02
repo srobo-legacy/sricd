@@ -3,6 +3,9 @@ from ctypes import *
 class SricDevice(Structure):
 	_fields_ = [("address", c_int), ("type", c_int)]
 
+	def __repr__(self):
+		return "SricDevice( address=%i, type=%i )" % (self.address, self.type)
+
 class SricFrame(Structure):
 	_fields_ = [("address", c_int), ("note", c_int),
 			("payload_length", c_int),
