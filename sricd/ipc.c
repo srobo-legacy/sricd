@@ -120,6 +120,12 @@ static void handle_tx(int fd, client* c)
 		return;
 	}
 	frame.tag = c;
+
+	if (!device_exists(frame.address)) {
+		write_result(fd, c, SRIC_E_BADADDR);
+		return;
+	}
+
 	txq_push(&frame, 1);
 	write_result(fd, c, SRIC_E_SUCCESS);
 }
