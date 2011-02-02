@@ -1,5 +1,17 @@
 from ctypes import *
 
+# Magic device addresses
+SRIC_MASTER_DEVICE = 0
+SRIC_BROADCAST = 254
+SRIC_NO_DEVICE = 255
+
+# Device classes
+SRIC_CLASS_POWER = 1
+SRIC_CLASS_MOTOR = 2
+SRIC_CLASS_JOINTIO = 3
+SRIC_CLASS_SERVO = 4
+SRIC_CLASS_PCSRIC = 5
+
 class SricDevice(Structure):
 	_fields_ = [("address", c_int), ("type", c_int)]
 
