@@ -39,14 +39,19 @@ class PySric(object):
 	def __init__(self):
 		self.sric_ctx = libsric.sric_init()
 
-		self.devices = []
+		# Indexes are device classes
+		self.devices = {}
 		tmpdev = None
 		while True:
 			tmpdev = libsric.sric_enumerate_devices(self.sric_ctx, tmpdev)
 			if cast(tmpdev, c_void_p).value == None:
 				break
-			# Hello, a device
-			self.devices.append(tmpdev[0])
+
+			dev = tmpdev[0]
+			if dev.type not in self.devices:
+				self.devices[dev.type] = []
+
+			self.devices[dev.type].append(dev)
 	
 	def __del__(self):
 		libsric.sric_quit(self.sric_ctx)
