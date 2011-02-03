@@ -3,12 +3,13 @@ include makeflags
 all: libsric/libsric.a sricd/sricd
 
 install: all
-	install -d $(prefix)/bin
-	install -d $(prefix)/include
-	install -d $(prefix)/lib
-	install -s sricd/sricd $(prefix)/bin/sricd]
-	install -m 0644 libsric/sric.h $(prefix)/include/sric.h
-	install -m 0644 libsric/libsric.a $(prefix)/lib/libsric.a
+	install -d $(DESTDIR)$(PREFIX)/bin
+	install -d $(DESTDIR)$(PREFIX)/include
+	install -d $(DESTDIR)$(PREFIX)/lib
+	install sricd/sricd $(DESTDIR)$(PREFIX)/bin/sricd
+	install -m 0644 libsric/sric.h $(DESTDIR)$(PREFIX)/include/sric.h
+	install -m 0644 libsric/libsric.a $(DESTDIR)$(PREFIX)/lib/libsric.a
+	install -m 0644 libsric/libsric.so $(DESTDIR)$(PREFIX)/lib/libsric.so
 
 libsric/libsric.a:
 	$(MAKE) -C libsric
