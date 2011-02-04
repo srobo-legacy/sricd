@@ -34,6 +34,7 @@ static void free_qitem(gpointer data, gpointer user_data)
 
 void client_destroy(client* c)
 {
+	txq_cancel(c);
 	device_clear_client_notes(c);
 	g_io_channel_unref(c->gio);
 	g_queue_foreach(c->note_q, free_qitem, NULL);
