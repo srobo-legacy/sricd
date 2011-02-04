@@ -1,0 +1,9 @@
+prefix=/usr
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libsric
+Description: Library for interacting with sricd
+Version: 0
+Libs: -L${libdir} -lsricd
+Cflags: -I${includedir}
