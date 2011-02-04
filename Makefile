@@ -6,10 +6,12 @@ install: all
 	install -d $(DESTDIR)$(PREFIX)/bin
 	install -d $(DESTDIR)$(PREFIX)/include
 	install -d $(DESTDIR)$(PREFIX)/lib
+	install -d $(DESTDIR)$(PREFIX)/lib/pkgconfig
 	install sricd/sricd $(DESTDIR)$(PREFIX)/bin/sricd
 	install -m 0644 libsric/sric.h $(DESTDIR)$(PREFIX)/include/sric.h
 	install -m 0644 libsric/libsric.a $(DESTDIR)$(PREFIX)/lib/libsric.a
 	install -m 0644 libsric/libsric.so $(DESTDIR)$(PREFIX)/lib/libsric.so
+	install -m 0644 libsric/libsric.pc $(DESTDIR)$(PREFIX)/lib/pkgconfig/
 
 libsric/libsric.a:
 	$(MAKE) -C libsric
