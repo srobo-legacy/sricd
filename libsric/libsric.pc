@@ -5,5 +5,5 @@ includedir=${prefix}/include
 Name: libsric
 Description: Library for interacting with sricd
 Version: 0
-Libs: -L${libdir} -lsricd
+Libs: -L${libdir} -lsric
 Cflags: -I${includedir}
