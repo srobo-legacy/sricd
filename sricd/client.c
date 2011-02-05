@@ -1,7 +1,9 @@
 #include "client.h"
+#include "device.h"
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "output-queue.h"
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
