@@ -64,14 +64,26 @@ class PySric(object):
         if libsric == None:
             raise Exception( "pysric: libsric.so not found" )
 
+        # sric_context sric_init( void )
         libsric.sric_init.argtypes = []
         libsric.sric_init.restype = c_void_p
+
+        # void sric_quit( sric_context ctx )
         libsric.sric_quit.argtypes = [c_void_p]
         libsric.sric_quit.restype = None
+
+        # const sric_device* sric_enumerate_devices( sric_context ctx,
+        #                                            const sric_device* device )
         libsric.sric_enumerate_devices.argtypes = [c_void_p, c_void_p]
         libsric.sric_enumerate_devices.restype = POINTER(SricDevice)
+
+        # int sric_tx( sric_context ctx, const sric_frame* frame )
         libsric.sric_tx.argtypes = [c_void_p, POINTER(SricFrame)]
         libsric.sric_tx.restype = c_int
+
+        # int sric_poll_rx( sric_context ctx,
+        #                   sric_frame* frame,
+        #                   int timeout )
         libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(SricFrame), c_int]
         libsric.sric_poll_rx.restype = c_int
 
