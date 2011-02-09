@@ -1,3 +1,4 @@
+import os
 from ctypes import *
 
 # Magic device addresses
@@ -23,27 +24,16 @@ class SricFrame(Structure):
             ("payload_length", c_int),
             ("payload", c_byte * 64)]
 
-libsric = cdll.LoadLibrary("/usr/lib/libsric.so")
-libsric.sric_init.argtypes = []
-libsric.sric_init.restype = c_void_p
-libsric.sric_quit.argtypes = [c_void_p]
-libsric.sric_quit.restype = None
-libsric.sric_enumerate_devices.argtypes = [c_void_p, c_void_p]
-libsric.sric_enumerate_devices.restype = POINTER(SricDevice)
-libsric.sric_tx.argtypes = [c_void_p, POINTER(SricFrame)]
-libsric.sric_tx.restype = c_int
-libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(SricFrame), c_int]
-libsric.sric_poll_rx.restype = c_int
-
 class PySric(object):
     def __init__(self):
-        self.sric_ctx = libsric.sric_init()
+        self._load_lib()
+        self.sric_ctx = self.libsric.sric_init()
 
         # Indexes are device classes
         self.devices = {}
         tmpdev = None
         while True:
-            tmpdev = libsric.sric_enumerate_devices(self.sric_ctx, tmpdev)
+            tmpdev = self.libsric.sric_enumerate_devices(self.sric_ctx, tmpdev)
             if cast(tmpdev, c_void_p).value == None:
                 break
 
@@ -52,9 +42,43 @@ class PySric(object):
                 self.devices[dev.type] = []
 
             self.devices[dev.type].append(dev)
-    
+
+    def _load_lib(self):
+        "Load the library and set up how to use it"
+
+        libsric = None
+        # Look in our directory first, then the specified search path
+        # Ideally, this would ask the dynamic linker where to find it
+        # (and allow override with an environment variable)
+        for d in [ os.getenv( "PYSRIC_LIBDIR", "" ),
+                   os.path.dirname( __file__ ),
+                   "./" ]:
+            if d == "":
+                continue
+
+            p = os.path.join( d, "libsric.so" )
+            if os.path.exists(p):
+                libsric = cdll.LoadLibrary(p)
+                break
+
+        if libsric == None:
+            raise Exception( "pysric: libsric.so not found" )
+
+        libsric.sric_init.argtypes = []
+        libsric.sric_init.restype = c_void_p
+        libsric.sric_quit.argtypes = [c_void_p]
+        libsric.sric_quit.restype = None
+        libsric.sric_enumerate_devices.argtypes = [c_void_p, c_void_p]
+        libsric.sric_enumerate_devices.restype = POINTER(SricDevice)
+        libsric.sric_tx.argtypes = [c_void_p, POINTER(SricFrame)]
+        libsric.sric_tx.restype = c_int
+        libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(SricFrame), c_int]
+        libsric.sric_poll_rx.restype = c_int
+
+        self.libsric = libsric
+
     def __del__(self):
-        libsric.sric_quit(self.sric_ctx)
+        self.libsric.sric_quit(self.sric_ctx)
 
     def txrx(self, txframe):
         rxframe = SricFrame()
@@ -62,12 +86,12 @@ class PySric(object):
 	# have no notification id
         txframe.note = -1
 
-        ret = libsric.sric_tx(self.sric_ctx, txframe)
+        ret = self.libsric.sric_tx(self.sric_ctx, txframe)
         if ret != 0:
             print "Error " + str(ret) + " txing sric frame"
             return None
 
-        ret = libsric.sric_poll_rx(self.sric_ctx, rxframe, -1)
+        ret = self.libsric.sric_poll_rx(self.sric_ctx, rxframe, -1)
         if ret != 0:
             print "Error " + str(ret) + " rxing sric frame"
 
