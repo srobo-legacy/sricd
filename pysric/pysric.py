@@ -21,6 +21,45 @@ sric_class_strings = { SRIC_CLASS_POWER: "POWER",
                        SRIC_MASTER_DEVICE: "MASTER_DEVICE",
                        SRIC_BROADCAST: "BROADCAST",
                        SRIC_NO_DEVICE: "NO_DEVICE" }
+
+class SricErrorNoSuchAddress(Exception):
+    "No such remote address"
+    pass
+
+class SricErrorNoSendNote(Exception):
+    "Cannot send notifications"
+    pass
+
+class SricErrorBadPayload(Exception):
+    "Payload length is greater than SRIC_MAX_PAYLOAD_SIZE"
+    pass
+
+class SricErrorSricd(Exception):
+    "Could not connect to sricd"
+    pass
+
+class SricErrorLoop(Exception):
+    "Cannot send to self"
+    pass
+
+class SricErrorTimeout(Exception):
+    "Request timed out"
+    pass
+
+class SricErrorBroadcast(Exception):
+    "Cannot listen on broadcast address"
+    pass
+
+# Lookup table for SRIC error codes
+sric_errors = [ None,           # SRIC_ERROR_NONE
+                SricErrorNoSuchAddress,
+                SricErrorNoSendNote,
+                SricErrorBadPayload,
+                SricErrorSricd,
+                SricErrorLoop,
+                SricErrorTimeout,
+                SricErrorBroadcast ]
+
 class SricDevice(Structure):
     _fields_ = [("address", c_int), ("type", c_int)]
 
