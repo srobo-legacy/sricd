@@ -71,6 +71,10 @@ class SricDevice(Structure):
 
         return "SricDevice( address=%i, type=%s )" % (self.address, t)
 
+    def txrx(self, data, timeout = -1):
+        "Transmit the given data"
+        self.pysric.txrx( self.address, data, timeout )
+
 class SricFrame(Structure):
     _fields_ = [("address", c_int), ("note", c_int),
             ("payload_length", c_int),
@@ -93,6 +97,7 @@ class PySric(object):
             if dev.type not in self.devices:
                 self.devices[dev.type] = []
 
+            dev.pysric = self
             self.devices[dev.type].append(dev)
 
     def _load_lib(self):
