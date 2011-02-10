@@ -80,6 +80,13 @@ class SricFrame(Structure):
             ("payload_length", c_int),
             ("payload", c_byte * 64)]
 
+    def __repr__(self):
+        if self.payload_length:
+            d = "data: " + "".join(["%2.2x" % s for s in self.payload[:self.payload_length]])
+        else:
+            d = "No data payload"
+        return "SricFrame( addr=%i, %s )" % (self.address, d)
+
 class PySric(object):
     def __init__(self):
         self._load_lib()
