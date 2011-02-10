@@ -139,6 +139,10 @@ class PySric(object):
         libsric.sric_poll_rx.argtypes = [c_void_p, POINTER(SricFrame), c_int]
         libsric.sric_poll_rx.restype = c_int
 
+        # sric_error sric_get_error(sric_context ctx)
+        libsric.sric_get_error.argtypes = [c_void_p]
+        libsric.sric_get_error.restype = c_int
+
         self.libsric = libsric
 
     def __del__(self):
