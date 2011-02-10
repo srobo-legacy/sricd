@@ -13,11 +13,24 @@ SRIC_CLASS_JOINTIO = 3
 SRIC_CLASS_SERVO = 4
 SRIC_CLASS_PCSRIC = 5
 
+sric_class_strings = { SRIC_CLASS_POWER: "POWER",
+                       SRIC_CLASS_MOTOR: "MOTOR",
+                       SRIC_CLASS_JOINTIO: "JOINTIO",
+                       SRIC_CLASS_SERVO: "SERVO",
+                       SRIC_CLASS_PCSRIC: "PCSRIC",
+                       SRIC_MASTER_DEVICE: "MASTER_DEVICE",
+                       SRIC_BROADCAST: "BROADCAST",
+                       SRIC_NO_DEVICE: "NO_DEVICE" }
 class SricDevice(Structure):
     _fields_ = [("address", c_int), ("type", c_int)]
 
     def __repr__(self):
-        return "SricDevice( address=%i, type=%i )" % (self.address, self.type)
+        if self.type in sric_class_strings:
+            t = sric_class_strings[self.type]
+        else:
+            t = str(self.type)
+
+        return "SricDevice( address=%i, type=%s )" % (self.address, t)
 
 class SricFrame(Structure):
     _fields_ = [("address", c_int), ("note", c_int),
