@@ -73,7 +73,7 @@ class SricDevice(Structure):
 
     def txrx(self, data, timeout = -1):
         "Transmit the given data"
-        self.pysric.txrx( self.address, data, timeout )
+        return self.pysric.txrx( self.address, data, timeout )
 
 class SricFrame(Structure):
     _fields_ = [("address", c_int), ("note", c_int),
