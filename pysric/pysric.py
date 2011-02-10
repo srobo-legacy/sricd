@@ -148,19 +148,27 @@ class PySric(object):
     def __del__(self):
         self.libsric.sric_quit(self.sric_ctx)
 
-    def txrx(self, txframe):
-        rxframe = SricFrame()
-	# As I understand it, txed frames
-	# have no notification id
+    def txrx(self, address, data, timeout=-1):
+        txframe = SricFrame()
+        txframe.address = address
+        # This should always be -1
         txframe.note = -1
 
-        ret = self.libsric.sric_tx(self.sric_ctx, txframe)
-        if ret != 0:
-            print "Error " + str(ret) + " txing sric frame"
-            return None
+        assert len(data) < 64
+        txframe.payload_length = len(data)
 
-        ret = self.libsric.sric_poll_rx(self.sric_ctx, rxframe, -1)
-        if ret != 0:
-            print "Error " + str(ret) + " rxing sric frame"
+        for i in range(0, len(data)):
+            "Fill the data in"
+            txframe.payload[i] = c_byte(data[i])
+
+        rxframe = SricFrame()
+
+        r = self.libsric.sric_tx(self.sric_ctx, txframe)
+        if r:
+            raise sric_errors[ self.libsric.sric_get_error(self.sric_ctx) ]
+
+        r = self.libsric.sric_poll_rx(self.sric_ctx, rxframe, -1)
+        if r:
+            raise sric_errors[ self.libsric.sric_get_error(self.sric_ctx) ]
 
         return rxframe
