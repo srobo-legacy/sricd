@@ -8,5 +8,5 @@ ctl = pysric.PySric()
 motor = ctl.devices[ pysric.SRIC_CLASS_MOTOR ][0]
 rxframe = motor.txrx( [0, 32, 0 ] )
 
-print "bees:", rxframe.address, rxframe.payload_length
+print "Response:", rxframe
 
