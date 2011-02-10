@@ -3,8 +3,8 @@ from ctypes import *
 
 # Magic device addresses
 SRIC_MASTER_DEVICE = 0
-SRIC_BROADCAST = 254
-SRIC_NO_DEVICE = 255
+SRIC_BROADCAST = -2
+SRIC_NO_DEVICE = -1
 
 # Device classes
 SRIC_CLASS_POWER = 1
