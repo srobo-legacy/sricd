@@ -29,6 +29,7 @@ typedef enum {
 	S_RESETTING,
 	S_ENUMERATING,
 	S_SETTING_ADDR,
+	S_SETTING_GW_ADDR,
 	S_ADVANCING_TOKEN,
 	S_FETCHING_CLASSES,
 	S_ENUMERATED,
@@ -191,7 +192,8 @@ void sric_enum_fsm( enum_event_t ev )
 		break;
 
 	case S_ENUMERATING:
-		if ( ev == EV_DEV_PRESENT) {
+
+		if ( ev == EV_TOK_AT_GW || ev == EV_DEV_PRESENT) {
 
 			if (current_next_address >= DEVICE_HIGH_ADDRESS) {
 				wlog( "Too many devices on sric "
@@ -203,17 +205,20 @@ void sric_enum_fsm( enum_event_t ev )
 
 			/* Give it an address */
 			send_address( current_next_address );
-			state = S_SETTING_ADDR;
-		} else if (ev == EV_TOK_AT_GW) {
 
-			if (current_next_address == 2) {
-				/* If we discovered no devices, we enumerated.
-				 * Don't send the token round the bus; it's
-				 * going to deadlock the gateway with constant
-				 * receival and transmission */
-				state = S_ENUMERATED;
-				break;
+			if ( ev == EV_DEV_PRESENT ) {
+				state = S_SETTING_ADDR;
+			} else {
+				state = S_SETTING_GW_ADDR;
 			}
+		}
+
+		break;
+
+	case S_SETTING_GW_ADDR:
+
+		if ( ev == EV_NEW_DEV_ACK ) {
+			current_next_address++;
 
 			/* Now we want to fetch bus devices classes */
 			state = S_FETCHING_CLASSES;
