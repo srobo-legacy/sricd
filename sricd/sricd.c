@@ -93,6 +93,7 @@ int main(int argc, char** argv)
 
 		case 'v':
 			log_enable = true;
+			log_level++;
 			break;
 
 		case 's':
