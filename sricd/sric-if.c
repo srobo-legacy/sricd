@@ -218,6 +218,22 @@ static void proc_rx_frame(void)
 {
 	packed_frame_t *f = (packed_frame_t*) &unesc_rx[1];
 
+	{
+		char *foo;
+		int i, pos;
+
+		foo = alloca((SRIC_OVERHEAD + unesc_rx[SRIC_LEN] * 3) + 16);
+
+		strcpy(foo, "r:");
+		pos = 2;
+		for (i = 0; i < unesc_rx[SRIC_LEN] + SRIC_OVERHEAD; i++) {
+			sprintf(&foo[pos], " %2X", unesc_rx[i]);
+			pos += strlen(&foo[pos]);
+		}
+
+		wlog_debug(foo);
+	}
+
 	if (!frame_for_me(unesc_rx)) {
 		/* Ignore frames not for us */
 		return;
@@ -415,6 +431,21 @@ static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 	if (tx_frame == NULL && !next_tx()) {
 		/* Nothing to transmit at this time */
 		goto empty;
+	}
+
+	{
+		char *foo;
+		int i, pos;
+
+		foo = alloca(((txlen - txpos) * 3) + 16);
+		strcpy(foo, "w:");
+		pos = 2;
+		for (i = txpos; i < txlen; i++) {
+			sprintf(&foo[pos], " %2X", txbuf[i]);
+			pos += strlen(&foo[pos]);
+		}
+
+		wlog_debug(foo);
 	}
 
 	w = write(fd, txbuf + txpos, txlen - txpos);
