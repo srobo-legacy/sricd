@@ -156,14 +156,14 @@ static gboolean send_reset_timeout( void* _rs )
 {
 	uint8_t *rs = _rs;
 
-	send_reset();
-
 	(*rs)++;
 	if( *rs > 5 ) {
 		sric_enum_fsm( EV_BUS_RESET );
 		return FALSE;
+	} else {
+		send_reset();
+		return TRUE;
 	}
-	return TRUE;
 }
 
 void sric_enum_fsm( enum_event_t ev )
