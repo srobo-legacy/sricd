@@ -227,7 +227,7 @@ static void proc_rx_frame(void)
 		strcpy(foo, "r:");
 		pos = 2;
 		for (i = 0; i < unesc_rx[SRIC_LEN] + SRIC_OVERHEAD; i++) {
-			sprintf(&foo[pos], " %2X", unesc_rx[i]);
+			sprintf(&foo[pos], " %2.2X", unesc_rx[i]);
 			pos += strlen(&foo[pos]);
 		}
 
@@ -441,7 +441,7 @@ static gboolean if_tx(GIOChannel* src, GIOCondition cond, gpointer data)
 		strcpy(foo, "w:");
 		pos = 2;
 		for (i = txpos; i < txlen; i++) {
-			sprintf(&foo[pos], " %2X", txbuf[i]);
+			sprintf(&foo[pos], " %2.2X", txbuf[i]);
 			pos += strlen(&foo[pos]);
 		}
 
