@@ -24,7 +24,7 @@ static void print_help_and_exit(const char* pname)
 	printf("\t-f\tkeep in foreground\n");
 	printf("\t-h\tprint this help\n");
 	printf("\t-s\tspecify the location of the socket\n");
-	printf("\t-v\tenable verbose mode\n");
+	printf("\t-v\tincrease verbosity (provide twice for even more)\n");
 	printf("\t-u\tspecify the serial port device path\n");
 	exit(0);
 }
