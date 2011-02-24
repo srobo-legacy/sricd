@@ -183,4 +183,5 @@ class PySric(object):
         if r:
             raise sric_errors[ self.libsric.sric_get_error(self.sric_ctx) ]
 
-        return rxframe
+        resp = [rxframe.payload[i] for i in range(0,rxframe.payload_length)]
+        return resp
