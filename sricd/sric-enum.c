@@ -26,6 +26,7 @@ static bool addr_info_replies[DEVICE_HIGH_ADDRESS];
 
 typedef enum {
 	S_IDLE,
+	S_KILLING_TOKEN,
 	S_RESETTING,
 	S_ENUMERATING,
 	S_SETTING_ADDR,
@@ -40,6 +41,8 @@ static enum_state_t state = S_IDLE;
 typedef enum {
 	/* Start enumeration */
 	EV_START_ENUM,
+	/* Have captured  token */
+	EV_TOKEN_CATCH_TIMEOUT,
 	/* The bus has been reset */
 	EV_BUS_RESET,
 	/* An unenumerated device is on the bus */
@@ -152,6 +155,13 @@ static void gw_cmd_gen_token( void )
 	gw_cmd( GW_CMD_GEN_TOKEN, 0, NULL );
 }
 
+static gboolean kill_token_timeout( void* _rs )
+{
+
+	sric_enum_fsm( EV_TOKEN_CATCH_TIMEOUT );
+	return FALSE;
+}
+
 static gboolean send_reset_timeout( void* _rs )
 {
 	uint8_t *rs = _rs;
@@ -174,6 +184,14 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_IDLE:
 		if( ev == EV_START_ENUM ) {
+			gw_cmd_req_token();
+			g_timeout_add( 100, kill_token_timeout, NULL );
+			state = S_KILLING_TOKEN;
+		}
+		break;
+
+	case S_KILLING_TOKEN:
+		if ( ev == EV_TOKEN_CATCH_TIMEOUT ) {
 			gw_cmd_use_token( false );
 			g_timeout_add( 50, send_reset_timeout, &reset_count );
 			state = S_RESETTING;
