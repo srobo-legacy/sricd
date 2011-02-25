@@ -12,6 +12,7 @@ extern "C"
 extern bool log_enable;
 extern int log_level;
 
+void wlog_init(void);
 void wlogv(const char* fmt, va_list va);
 void wlog(const char* fmt, ...);
 void wlog_debug(const char* fmt, ...);

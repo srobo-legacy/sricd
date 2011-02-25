@@ -9,6 +9,7 @@
 
 void init(const char* socket_path, const char* sdev_path)
 {
+	wlog_init();
 	assert(socket_path);
 	wlog("starting up tx queue");
 	txq_init();
