@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include <arpa/inet.h>
 #include <glib.h>
+#include <signal.h>
 
 static const char* sock_path;
 
@@ -51,6 +52,10 @@ static void ipc_boot(void)
 
 	g_io_add_watch(ipc_gio, G_IO_IN, ipc_new, NULL);
 	g_io_add_watch(ipc_gio, G_IO_HUP, ipc_death, NULL);
+
+	/* Ignore SIGPIPE -- If we don't, the process can be aborted
+	 * if we try writing to a client that has disconnected. */
+	g_assert( signal( SIGPIPE, SIG_IGN ) != SIG_ERR );
 }
 
 static gboolean ipc_new(GIOChannel* src, GIOCondition cond, gpointer data)
