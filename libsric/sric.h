@@ -36,6 +36,17 @@ typedef enum _sric_error {
 	SRIC_ERROR_BROADCAST       /**< cannot listen on broadcast addr           */
 } sric_error;
 
+typedef enum _sric_dev_class {
+	SRIC_MASTER_DEVICE=0,
+	SRIC_CLASS_POWER,
+	SRIC_CLASS_MOTOR,
+	SRIC_CLASS_JOINTIO,
+	SRIC_CLASS_SERVO,
+	SRIC_CLASS_PCSRIC,
+	SRIC_CLASS_BROADCAST = -2,
+	SRIC_CLASS_NO_DEVICE = -1
+} sric_dev_class;
+
 /**
  * A libsric context.
  */
