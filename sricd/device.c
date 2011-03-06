@@ -62,6 +62,8 @@ static void device_drop_client_notes(int address, client* c)
 			free(cur);
 			return;
 		}
+
+		iter = g_list_next(iter);
 	}
 
 	return;
