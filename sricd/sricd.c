@@ -23,6 +23,7 @@ static void print_help_and_exit(const char* pname)
 	printf("\t-d\trun as daemon (default)\n");
 	printf("\t-f\tkeep in foreground\n");
 	printf("\t-h\tprint this help\n");
+	printf("\t-p\tpath to PID file\n");
 	printf("\t-s\tspecify the location of the socket\n");
 	printf("\t-v\tincrease verbosity (provide twice for even more)\n");
 	printf("\t-u\tspecify the serial port device path\n");
@@ -44,6 +45,7 @@ static const char* restart_file;
 
 static const char* socket_path;
 static const char* sdev_path;
+static const char* pid_path = NULL;
 
 void restart()
 {
@@ -72,7 +74,7 @@ int main(int argc, char** argv)
 	restart_file = argv[0];
 	rv = gettimeofday(&tv1, 0);
 	assert(rv == 0);
-	while ((arg = getopt(argc, argv, "hvVfds:u:")) != -1) {
+	while ((arg = getopt(argc, argv, "hvVfdp:s:u:")) != -1) {
 		switch (arg) {
 		case 'h':
 		case '?':
@@ -89,6 +91,10 @@ int main(int argc, char** argv)
 
 		case 'd':
 			fg = 0;
+			break;
+
+		case 'p':
+			pid_path = optarg;
 			break;
 
 		case 'v':
@@ -111,6 +117,18 @@ int main(int argc, char** argv)
 		wlog("backgrounding");
 		background();
 	}
+
+	if( pid_path != NULL ) {
+		int pid = getpid();
+		FILE *pid_file = fopen( pid_path, "w" );
+		if( pid_file == NULL ) {
+			wlog( "Couldn't open PID file." );
+			return 1;
+		}
+		fprintf( pid_file, "%i\n", pid );
+		fclose( pid_file );
+	}
+
 	rv = gettimeofday(&tv2, 0);
 	assert(rv == 0);
 	time1 = tv1.tv_sec * 1000000 + tv1.tv_usec;
