@@ -1,7 +1,7 @@
 # Variable defs for all Makefiles in build
 
-CFLAGS := -Wall -g
-LDFLAGS :=
+CFLAGS += -Wall -g
+LDFLAGS +=
 
 HOSTCC ?= $(CC)
 
