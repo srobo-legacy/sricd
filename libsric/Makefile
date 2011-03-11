@@ -17,7 +17,7 @@ libsric.a: sric.o
 	ar -cqs $@ $^
 
 libsric.so: sric.o
-	$(CC) $^ -o $@ -shared
+	$(CC) $(LDFLAGS) $^ -o $@ -shared
 
 .PHONY: clean
 
