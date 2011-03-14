@@ -8,6 +8,8 @@ extern "C"
 
 void ipc_init(const char* socket_path);
 
+void ipc_listen( void );
+
 #ifdef __cplusplus
 }
 #endif
