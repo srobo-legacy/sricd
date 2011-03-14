@@ -4,6 +4,7 @@
 #include "escape.h"
 #include "device.h"
 #include "frame.h"
+#include "ipc.h"
 #include "sric-if.h"
 #include "sric-enum.h"
 #include "log.h"
@@ -285,8 +286,12 @@ static void proc_rx_frame(void)
 	}
 
 	if( !enumerated ) {
-		if( !sric_enum_rx(f) )
+		if( !sric_enum_rx(f) ) {
 			enumerated = true;
+
+			/* Now start listening for commands */
+			ipc_listen();
+		}
 	} else {
 		frame rxed_frame;
 
