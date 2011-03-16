@@ -18,6 +18,7 @@
 
 static const char* sock_path;
 
+static int sock;
 static GIOChannel* ipc_gio = NULL;
 
 static gboolean ipc_new(GIOChannel* src, GIOCondition cond, gpointer data);
@@ -31,27 +32,22 @@ static gboolean ipc_client_death(GIOChannel* gio,
 
 static void ipc_boot(void)
 {
-	int s, rv;
+	int rv;
 	struct sockaddr_un addr;
 	socklen_t len;
-	s = socket(PF_UNIX, SOCK_STREAM, 0);
-	assert(s);
+	sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	assert(sock);
 	addr.sun_family = AF_UNIX;
 	strcpy(addr.sun_path, sock_path);
 	len = sizeof (addr);
 	rv = unlink(sock_path);
 	assert(rv == 0 || errno == ENOENT);
-	rv = bind(s, (struct sockaddr*)&addr, len);
+	rv = bind(sock, (struct sockaddr*)&addr, len);
 	assert(rv == 0);
-	rv = listen(s, 5);
+	wlog("created IPC socket as fd %d", sock);
+
+	rv = listen(sock, 100);
 	assert(rv == 0);
-	wlog("created IPC socket as fd %d", s);
-
-	ipc_gio = g_io_channel_unix_new(s);
-	g_io_channel_set_close_on_unref(ipc_gio, TRUE);
-
-	g_io_add_watch(ipc_gio, G_IO_IN, ipc_new, NULL);
-	g_io_add_watch(ipc_gio, G_IO_HUP, ipc_death, NULL);
 
 	/* Ignore SIGPIPE -- If we don't, the process can be aborted
 	 * if we try writing to a client that has disconnected. */
@@ -405,3 +401,13 @@ void ipc_init(const char* socket_path)
 	ipc_boot();
 }
 
+void ipc_listen( void )
+{
+	ipc_gio = g_io_channel_unix_new(sock);
+	g_io_channel_set_close_on_unref(ipc_gio, TRUE);
+
+	g_io_add_watch(ipc_gio, G_IO_IN, ipc_new, NULL);
+	g_io_add_watch(ipc_gio, G_IO_HUP, ipc_death, NULL);
+
+	wlog("Enumeration finished: listening for commands.");
+}
