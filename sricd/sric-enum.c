@@ -41,6 +41,8 @@ static enum_state_t state = S_IDLE;
 typedef enum {
 	/* Start enumeration */
 	EV_START_ENUM,
+	/* Finished flushing the token */
+	EV_FLUSH_DONE,
 	/* Have captured  token */
 	EV_TOKEN_CATCH_TIMEOUT,
 	/* The bus has been reset */
@@ -184,6 +186,8 @@ void sric_enum_fsm( enum_event_t ev )
 
 	case S_IDLE:
 		if( ev == EV_START_ENUM ) {
+			send_tok_advance( 0 );
+			send_tok_advance( 0 );
 			gw_cmd_req_token();
 			g_timeout_add( 100, kill_token_timeout, NULL );
 			state = S_KILLING_TOKEN;
@@ -314,16 +318,18 @@ bool sric_enum_rx( packed_frame_t *f )
 
 	/* If this is an ack from the newest address on the bus, then it's just
 	 * received an ASSIGN_ADDR. */
-	} else if ((f->source_address & 0x7F) == current_next_address &&
-					(f->dest_address & 0x80)) {
-		sric_enum_fsm(EV_NEW_DEV_ACK);
+	} else if( state != S_IDLE ) {
+		if ((f->source_address & 0x7F) == current_next_address &&
+		    (f->dest_address & 0x80)) {
+			sric_enum_fsm(EV_NEW_DEV_ACK);
 
-	/* Otherwise it can only be a response to addr info. */
-	} else if ((f->dest_address & 0x80) && state == S_FETCHING_CLASSES &&
-			f->payload_len == 1) {
-		addr_info_replies[f->source_address & 0x7F] = true;
-		device_classes[f->source_address & 0x7F] = f->payload[0];
-		sric_enum_fsm(EV_ADDR_INFO_ACK);
+			/* Otherwise it can only be a response to addr info. */
+		} else if ((f->dest_address & 0x80) && state == S_FETCHING_CLASSES &&
+			   f->payload_len == 1) {
+			addr_info_replies[f->source_address & 0x7F] = true;
+			device_classes[f->source_address & 0x7F] = f->payload[0];
+			sric_enum_fsm(EV_ADDR_INFO_ACK);
+		}
 	}
 
 	/* Return false when done */
