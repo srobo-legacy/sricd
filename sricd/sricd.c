@@ -11,6 +11,7 @@
 #include <string.h>
 #include <errno.h>
 #include <glib.h>
+#include <stdbool.h>
 
 const char* DEFAULT_SOCKET_PATH = "/tmp/sricd.sock";
 const char* DEFAULT_SERIAL_DEV  = "/dev/sric-a";
@@ -23,6 +24,7 @@ static void print_help_and_exit(const char* pname)
 	printf("\t-d\trun as daemon (default)\n");
 	printf("\t-f\tkeep in foreground\n");
 	printf("\t-h\tprint this help\n");
+	printf("\t-i\tignore the first SIGTERM received\n");
 	printf("\t-p\tpath to PID file\n");
 	printf("\t-s\tspecify the location of the socket\n");
 	printf("\t-v\tincrease verbosity (provide twice for even more)\n");
@@ -46,6 +48,7 @@ static const char* restart_file;
 static const char* socket_path;
 static const char* sdev_path;
 static const char* pid_path = NULL;
+static bool ignore_sigterm = false;
 
 void restart()
 {
@@ -61,6 +64,17 @@ void restart()
 	exit(1);
 }
 
+static void handle_sigterm( int signum )
+{
+	if( ignore_sigterm ) {
+		wlog( "SIGTERM received -- ignoring this time only." );
+		ignore_sigterm = false;
+		return;
+	}
+
+	exit(0);
+}
+
 int main(int argc, char** argv)
 {
 	int arg, rv;
@@ -74,7 +88,7 @@ int main(int argc, char** argv)
 	restart_file = argv[0];
 	rv = gettimeofday(&tv1, 0);
 	assert(rv == 0);
-	while ((arg = getopt(argc, argv, "hvVfdp:s:u:")) != -1) {
+	while ((arg = getopt(argc, argv, "hvVfdip:s:u:")) != -1) {
 		switch (arg) {
 		case 'h':
 		case '?':
@@ -109,9 +123,14 @@ int main(int argc, char** argv)
 		case 'u':
 			sdev_path = optarg;
 			break;
+
+		case 'i':
+			ignore_sigterm = true;
+			break;
 		}
 	}
 	signal(SIGUSR1, restart);
+	signal(SIGTERM, handle_sigterm);
 	init(socket_path, sdev_path);
 	if (!fg) {
 		wlog("backgrounding");
