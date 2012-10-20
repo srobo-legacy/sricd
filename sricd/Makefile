@@ -15,7 +15,7 @@ depend: *.c
 
 sricd: client.o init.o output-queue.o sricd.o ipc.o log.o escape.o \
 	device.o sric-if.o crc16/crc16.o sric-enum.o
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CC) -o $@ $^ $(LDFLAGS)
 
 crc16/crc16.o:
 	cd crc16 ; make
