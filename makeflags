@@ -5,6 +5,8 @@ LDFLAGS +=
 
 HOSTCC ?= $(CC)
 
+PREFIX ?= /usr
+
 ifeq ($(shell uname),Darwin)
 	CFLAGS += -arch i386
 	LDFLAGS += -arch i386
